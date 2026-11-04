@@ -674,7 +674,7 @@ function vSet() {
   ${vIcons()}
   <section class="set"><h2>Immagini delle carte</h2><p>Ogni carta può avere la sua immagine: dalla scheda della carta con “Immagine”, oppure da “Modifica”. Qui puoi caricarne molte insieme: il nome di ogni file deve essere il codice della carta, per esempio CS01-1.jpg. ${allCards().filter(c => !imgSrc(c)).length} carte su ${allCards().length} non hanno ancora un’immagine.</p>
     <div class="btns"><label class="btn alt" style="cursor:pointer;position:relative"><span>Scegli le immagini</span><input id="bulkImg" type="file" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>${S.bulk ? `<p>${esc(S.bulk)}</p>` : ''}</section>
-  <section class="set"><h2>Esporta e importa</h2><p>“Esporta” salva un unico file con tutto: carte, mazzi, regolamento, icone e impostazioni. Quando importi un file, scegli per ogni parte se aggiungere, aggiornare o sostituire.</p>
+  <section class="set"><h2>Esporta e importa</h2><p>“Esporta” salva un unico file con tutto: carte, mazzi, regolamento, icone e impostazioni. Le immagini delle carte sono incluse nel file (può diventare pesante). Quando importi un file, scegli per ogni parte se aggiungere, aggiornare o sostituire.</p>
     <div class="btns">${btn('Esporta tutto', 'exportAll', {cls: 'alt'})}<label class="btn alt" style="cursor:pointer;position:relative"><span>Importa da file</span><input id="impFile" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
     ${impPanel()}</section>
   <section class="set"><h2>Pulizia</h2>${nEx ? `<p>Ci sono ${nEx} carte di esempio.</p><div class="btns">${conf('ex', 'Elimina le carte di esempio', 'delExamples')}</div>` : '<p>Nessuna carta di esempio presente.</p>'}
@@ -973,12 +973,20 @@ function changeQty(id, delta, deckId) {
 
 /* ---------- esporta / importa ---------- */
 const listOf = x => Array.isArray(x) ? x : Object.values(x || {});
+const blobToUrl = b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error('read')); fr.readAsDataURL(b); });
 async function exportAll() {
-  const data = {app: 'marvel-battleworld', version: 2, exportedAt: new Date().toISOString(), cards: allCards(), decks: Object.values(S.decks), rules: S.rules, icons: Object.values(ICONS), prefs: S.prefs};
-  const filename = 'marvel-battleworld-' + new Date().toLocaleDateString('sv-SE') + '.json', text = JSON.stringify(data);
+  const cards = allCards(), withImg = cards.filter(c => c.img), files = {};
+  for (let i = 0; i < withImg.length; i += 8) {
+    toast('Preparo le immagini… ' + Math.min(i + 8, withImg.length) + ' / ' + withImg.length);
+    await Promise.all(withImg.slice(i, i + 8).map(async c => { try { const r = await fetch('/_blob/' + c.img); if (r.ok) files[c.id] = await blobToUrl(await r.blob()); } catch (e) {} }));
+  }
+  const head = {app: 'marvel-battleworld', version: 3, exportedAt: new Date().toISOString(), decks: Object.values(S.decks), rules: S.rules, icons: Object.values(ICONS), prefs: S.prefs};
+  const parts = [JSON.stringify(head).slice(0, -1), ',"cards":[']; cards.forEach((c, i) => { parts.push((i ? ',' : '') + JSON.stringify(files[c.id] ? Object.assign({}, c, {imgFile: files[c.id]}) : c)); }); parts.push(']}');
+  const blob = new Blob(parts, {type: 'application/json'}), filename = 'marvel-battleworld-' + new Date().toLocaleDateString('sv-SE') + '.json';
+  const miss = withImg.length - Object.keys(files).length;
   try {
-    if (DL) { await DL.save({filename, data: text}); toast('File salvato'); }
-    else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type: 'application/json'})); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Esportazione pronta'); }
+    if (DL) { await DL.save({filename, data: blob}); toast(miss ? 'File salvato. ' + miss + ' immagini non lette' : 'File salvato'); }
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Esportazione pronta'); }
   } catch (e) { if (!e || e.code !== 'declined') toast('Esportazione non riuscita'); }
 }
 function impPanel() {
@@ -1001,10 +1009,15 @@ async function importRun() {
   const chunk = async (items, fn) => { for (let i = 0; i < items.length; i += 25) { await Promise.all(items.slice(i, i + 25).map(fn)); toast('Importazione… ' + Math.min(i + 25, items.length) + ' / ' + items.length); } };
   try {
     if (md.cards && md.cards !== 'skip') {
-      const inc = listOf(d.cards).filter(r => r && r.code && r.nome).map(r => { const id = slug(r.id || r.code); return id ? Object.assign(normCard(id, r), {id, createdAt: r.createdAt || Date.now()}) : null; }).filter(Boolean);
+      const inc = listOf(d.cards).filter(r => r && r.code && r.nome).map(r => { const id = slug(r.id || r.code); return id ? Object.assign(normCard(id, r), {id, createdAt: r.createdAt || Date.now(), imgFile: r.imgFile || ''}) : null; }).filter(Boolean);
       const ids = new Set(inc.map(c => c.id));
       if (md.cards === 'replace') { const keep = new Set(inc.map(c => c.img).filter(Boolean)); allCards().filter(c => !ids.has(c.id)).forEach(c => { if (c.img && ASSETS && !keep.has(c.img)) ASSETS.delete(c.img).catch(() => {}); delCard(c.id); }); }
-      await chunk(md.cards === 'add' ? inc.filter(c => !S.cards[c.id]) : inc, putCard);
+      const prep = async c => {
+        const f = c.imgFile; delete c.imgFile;
+        if (f) { const ex = S.cards[c.id]; if (!(ex && ex.img && ex.img === c.img)) { try { if (ASSETS) { const u = await ASSETS.upload(await (await fetch(f)).blob(), {type: 'image/jpeg'}); c.img = u.id; c.imgData = ''; } else { c.img = ''; c.imgData = f; } } catch (e) { c.img = ''; c.imgData = f; } } }
+        return putCard(c);
+      };
+      await chunk(md.cards === 'add' ? inc.filter(c => !S.cards[c.id]) : inc, prep);
     }
     if (md.decks && md.decks !== 'skip') {
       const inc = listOf(d.decks).filter(r => r && r.nome).map(r => normDeck(r.id ? (slug(r.id) || 'd' + uid()) : 'd' + uid(), r));
