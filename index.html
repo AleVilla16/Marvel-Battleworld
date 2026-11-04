@@ -1,21 +1,6 @@
-<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Marvel Battleworld</title>
-<meta name="description" content="Carte, mazzi e regolamento di Marvel Battleworld">
-<meta name="theme-color" content="#262626">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Battleworld">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script src="/storage.js"></script>
-</head>
-<body>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <style>
 /* Layout: dark sticky app bar (menu, wordmark, search), full-screen menu with red chevrons, slanted red buttons,
@@ -429,7 +414,7 @@ const S = {
   prefs: Object.assign({grid: 'big'}, lsGet('bw:prefs', {})),
   rulesEdit: false, deckForm: false, menuSub: {}, confirm: '', exportText: '', dirty: false, det: {}, bulk: ''
 };
-let DB = null, ASSETS = null, E = null, detailId = null, pickerQ = '', pickerClasse = new Set();
+let DB = null, ASSETS = null, DL = null, E = null, detailId = null, pickerQ = '', pickerClasse = new Set();
 const queue = {};
 
 /* ---------- salvataggio ---------- */
@@ -479,7 +464,7 @@ const normDeck = (id, d) => ({id, nome: d.nome || 'Mazzo', cards: d.cards || {},
 
 async function initData() {
   const use = n => (window.claude && claude.use) ? claude.use(n).catch(() => null) : Promise.resolve(null);
-  DB = await use('db'); ASSETS = await use('assets');
+  DB = await use('db'); ASSETS = await use('assets'); DL = await use('downloads');
   if (!DB) {
     const l = lsGet('bw:data', {cards: {}, decks: {}, rules: ''});
     Object.entries(l.cards || {}).forEach(([id, d]) => S.cards[id] = normCard(id, d));
@@ -689,10 +674,9 @@ function vSet() {
   ${vIcons()}
   <section class="set"><h2>Immagini delle carte</h2><p>Ogni carta può avere la sua immagine: dalla scheda della carta con “Immagine”, oppure da “Modifica”. Qui puoi caricarne molte insieme: il nome di ogni file deve essere il codice della carta, per esempio CS01-1.jpg. ${allCards().filter(c => !imgSrc(c)).length} carte su ${allCards().length} non hanno ancora un’immagine.</p>
     <div class="btns"><label class="btn alt" style="cursor:pointer;position:relative"><span>Scegli le immagini</span><input id="bulkImg" type="file" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>${S.bulk ? `<p>${esc(S.bulk)}</p>` : ''}</section>
-  <section class="set"><h2>Esporta e importa</h2><p>Esporta carte, mazzi e regolamento come testo da conservare. Per importare incolla il testo esportato e premi Importa: le carte con lo stesso codice vengono aggiornate.</p>
-    <div class="btns">${btn('Prepara esportazione', 'exportPrep', {cls: 'alt'})}${S.exportText ? btn('Copia', 'exportCopy', {cls: 'alt'}) : ''}</div>
-    ${S.exportText ? `<textarea class="mono" id="exportBox" readonly>${esc(S.exportText)}</textarea>` : ''}
-    <label class="fl"><span>Incolla qui per importare</span><textarea class="mono" id="importBox" placeholder='{"cards":[…],"decks":[…]}'></textarea></label><div class="btns">${btn('Importa', 'importGo', {cls: 'alt'})}</div></section>
+  <section class="set"><h2>Esporta e importa</h2><p>“Esporta” salva un unico file con tutto: carte, mazzi, regolamento, icone e impostazioni. Quando importi un file, scegli per ogni parte se aggiungere, aggiornare o sostituire.</p>
+    <div class="btns">${btn('Esporta tutto', 'exportAll', {cls: 'alt'})}<label class="btn alt" style="cursor:pointer;position:relative"><span>Importa da file</span><input id="impFile" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
+    ${impPanel()}</section>
   <section class="set"><h2>Pulizia</h2>${nEx ? `<p>Ci sono ${nEx} carte di esempio.</p><div class="btns">${conf('ex', 'Elimina le carte di esempio', 'delExamples')}</div>` : '<p>Nessuna carta di esempio presente.</p>'}
     <div class="btns">${conf('cards', 'Elimina tutte le carte', 'wipeCards')}</div><div class="btns">${conf('decks', 'Elimina tutti i mazzi', 'wipeDecks')}</div></section><div style="height:44px"></div></div>`;
 }
@@ -839,7 +823,7 @@ function readImage(file) {
 async function saveCard() {
   const code = $('#e-code').value.trim(), nome = $('#e-nome').value.trim();
   if (!code || !nome) { toast('Servono almeno codice e nome'); return; }
-  const id = slug(code);
+  const id = (E.orig && E.orig.code === code) ? E.orig.id : slug(code);
   if (!id) { toast('Il codice carta non è valido'); return; }
   const oldId = E.orig ? E.orig.id : null;
   if (S.cards[id] && id !== oldId) { toast('Esiste già una carta con questo codice'); return; }
@@ -987,6 +971,58 @@ function changeQty(id, delta, deckId) {
   putDeck(d);
 }
 
+/* ---------- esporta / importa ---------- */
+const listOf = x => Array.isArray(x) ? x : Object.values(x || {});
+async function exportAll() {
+  const data = {app: 'marvel-battleworld', version: 2, exportedAt: new Date().toISOString(), cards: allCards(), decks: Object.values(S.decks), rules: S.rules, icons: Object.values(ICONS), prefs: S.prefs};
+  const filename = 'marvel-battleworld-' + new Date().toLocaleDateString('sv-SE') + '.json', text = JSON.stringify(data);
+  try {
+    if (DL) { await DL.save({filename, data: text}); toast('File salvato'); }
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type: 'application/json'})); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Esportazione pronta'); }
+  } catch (e) { if (!e || e.code !== 'declined') toast('Esportazione non riuscita'); }
+}
+function impPanel() {
+  const m = S.imp; if (!m) return '';
+  const d = m.data, cl = listOf(d.cards).filter(r => r && r.code && r.nome), dl = listOf(d.decks).filter(r => r && r.nome), il = listOf(d.icons).filter(i => i && i.kind && i.name), hasRules = typeof d.rules === 'string' && d.rules.trim(), hasPrefs = !!(d.prefs && d.prefs.grid);
+  const STD = [['skip', 'Non importare'], ['add', 'Aggiungi solo i nuovi'], ['update', 'Aggiungi e aggiorna gli esistenti'], ['replace', 'Sostituisci tutto (cancella gli attuali)']];
+  const row = (k, label, info, opts) => `<label class="fl"><span>${label}</span><span class="muted" style="font-size:15px">${info}</span><select data-imp="${k}">${opts.map(([v, l]) => `<option value="${v}"${m.mode[k] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
+  const rows = [];
+  if (cl.length) rows.push(row('cards', 'Carte', cl.length + ' nel file, ' + cl.filter(r => S.cards[slug(r.id || r.code)]).length + ' già presenti', STD));
+  if (dl.length) rows.push(row('decks', 'Mazzi', dl.length + ' nel file, ' + dl.filter(r => r.id && S.decks[slug(r.id)]).length + ' già presenti', STD));
+  if (il.length) rows.push(row('icons', 'Icone', il.length + ' nel file, ' + il.filter(i => icoGet(i.kind, i.name)).length + ' già presenti', STD));
+  if (hasRules) rows.push(row('rules', 'Regolamento', S.rules.trim() ? 'Ne hai già uno' : 'Il tuo è vuoto', [['skip', 'Non importare'], ['add', 'Solo se quello attuale è vuoto'], ['replace', 'Sostituisci quello attuale']]));
+  if (hasPrefs) rows.push(row('prefs', 'Impostazioni', 'Dimensione delle schede', [['skip', 'Non importare'], ['replace', 'Applica quelle del file']]));
+  const warn = Object.values(m.mode).includes('replace');
+  return `<div class="note form" style="margin-top:8px"><div><b>File: ${esc(m.name)}</b></div>${rows.join('') || '<span>Nel file non ho trovato dati da importare.</span>'}${warn ? '<div style="color:var(--red-text)">⚠ “Sostituisci” elimina le voci attuali che non sono nel file.</div>' : ''}<div class="btns">${rows.length ? btn('Importa', 'importRun') : ''}${btn('Annulla', 'importCancel', {cls: 'alt'})}</div></div>`;
+}
+async function importRun() {
+  const m = S.imp; if (!m) return;
+  const d = m.data, md = m.mode; S.imp = null; renderAll(); toast('Importazione in corso…');
+  const chunk = async (items, fn) => { for (let i = 0; i < items.length; i += 25) { await Promise.all(items.slice(i, i + 25).map(fn)); toast('Importazione… ' + Math.min(i + 25, items.length) + ' / ' + items.length); } };
+  try {
+    if (md.cards && md.cards !== 'skip') {
+      const inc = listOf(d.cards).filter(r => r && r.code && r.nome).map(r => { const id = slug(r.id || r.code); return id ? Object.assign(normCard(id, r), {id, createdAt: r.createdAt || Date.now()}) : null; }).filter(Boolean);
+      const ids = new Set(inc.map(c => c.id));
+      if (md.cards === 'replace') { const keep = new Set(inc.map(c => c.img).filter(Boolean)); allCards().filter(c => !ids.has(c.id)).forEach(c => { if (c.img && ASSETS && !keep.has(c.img)) ASSETS.delete(c.img).catch(() => {}); delCard(c.id); }); }
+      await chunk(md.cards === 'add' ? inc.filter(c => !S.cards[c.id]) : inc, putCard);
+    }
+    if (md.decks && md.decks !== 'skip') {
+      const inc = listOf(d.decks).filter(r => r && r.nome).map(r => normDeck(r.id ? (slug(r.id) || 'd' + uid()) : 'd' + uid(), r));
+      const ids = new Set(inc.map(x => x.id));
+      if (md.decks === 'replace') Object.keys(S.decks).filter(id => !ids.has(id)).forEach(delDeck);
+      await chunk(md.decks === 'add' ? inc.filter(x => !S.decks[x.id]) : inc, x => putDeck(x, true));
+    }
+    if (md.icons && md.icons !== 'skip') {
+      const inc = listOf(d.icons).filter(i => i && i.kind && i.name), keys = new Set(inc.map(i => icoKey(i.kind, i.name)));
+      if (md.icons === 'replace') Object.values(ICONS).filter(o => !keys.has(icoKey(o.kind, o.name))).forEach(o => delIcon(o.kind, o.name));
+      await chunk(md.icons === 'add' ? inc.filter(i => !icoGet(i.kind, i.name)) : inc, i => putIcon(i.kind, i.name, {data: i.data || '', color: i.color || '', custom: !!i.custom}));
+    }
+    if (md.rules && md.rules !== 'skip' && typeof d.rules === 'string' && (md.rules === 'replace' || !S.rules.trim())) await putRules(d.rules);
+    if (md.prefs === 'replace' && d.prefs && d.prefs.grid) { S.prefs.grid = d.prefs.grid; lsSet('bw:prefs', S.prefs); }
+    renderAll(); toast('Importazione completata');
+  } catch (e) { renderAll(); toast('Importazione non riuscita'); }
+}
+
 /* ---------- azioni ---------- */
 const ACT = {
   menu() { renderMenu(); $('#menu').classList.add('open'); syncLock(); },
@@ -1039,23 +1075,8 @@ const ACT = {
   rulesCancel() { S.rulesEdit = false; renderAll(); },
   rulesSave() { const v = $('#rulesText').value; S.rulesEdit = false; putRules(v); toast('Regolamento salvato'); },
   grid(t, v) { S.prefs.grid = v; lsSet('bw:prefs', S.prefs); renderAll(); },
-  exportPrep() { S.exportText = JSON.stringify({version: 1, cards: allCards().map(c => Object.assign({}, c)), decks: Object.values(S.decks), rules: S.rules, icons: Object.values(ICONS)}, null, 1); renderAll(); },
-  exportCopy() {
-    const box = $('#exportBox');
-    const fallback = () => { box.focus(); box.select(); toast('Testo selezionato: copialo a mano'); };
-    try { navigator.clipboard.writeText(S.exportText).then(() => toast('Copiato'), fallback); } catch (e) { fallback(); }
-  },
-  async importGo() {
-    let data; try { data = JSON.parse($('#importBox').value); } catch (e) { toast('Il testo non è valido'); return; }
-    const cards = Array.isArray(data.cards) ? data.cards : Object.values(data.cards || {});
-    const decks = Array.isArray(data.decks) ? data.decks : Object.values(data.decks || {});
-    let n = 0;
-    for (const raw of cards) { if (!raw || !raw.code || !raw.nome) continue; const id = slug(raw.code); if (!id) continue; await putCard(Object.assign(normCard(id, raw), {id, createdAt: raw.createdAt || Date.now()})); n++; }
-    for (const raw of decks) { if (!raw || !raw.nome) continue; const id = raw.id ? slug(raw.id) : 'd' + uid(); await putDeck(normDeck(id, raw)); }
-    for (const i of (Array.isArray(data.icons) ? data.icons : [])) { if (i && i.kind && i.name) await putIcon(i.kind, i.name, {data: i.data || '', color: i.color || '', custom: !!i.custom}); }
-    if (data.rules && !S.rules.trim()) await putRules(String(data.rules));
-    toast(n + ' carte importate');
-  },
+  exportAll, importRun,
+  importCancel() { S.imp = null; renderAll(); },
   delExamples() { S.confirm = ''; allCards().filter(c => c.esempio).forEach(c => delCard(c.id)); toast('Carte di esempio eliminate'); },
   wipeCards() { S.confirm = ''; allCards().forEach(c => { if (c.img && ASSETS) ASSETS.delete(c.img).catch(() => {}); delCard(c.id); }); toast('Carte eliminate'); },
   wipeDecks() { S.confirm = ''; Object.keys(S.decks).forEach(delDeck); toast('Mazzi eliminati'); },
@@ -1096,6 +1117,13 @@ document.addEventListener('change', async e => {
     const k = t.dataset.kind, n = t.dataset.name, f = t.files[0];
     try { const data = await readIcon(f); await putIcon(k, n, {data}); toast('Icona salvata'); } catch (err) { toast('Non riesco a leggere questa immagine'); }
   }
+  else if (t.id === 'impFile' && t.files && t.files[0]) {
+    const f = t.files[0]; let data; t.value = '';
+    try { data = JSON.parse(await f.text()); } catch (err) { toast('Il file non è valido'); return; }
+    if (!data || typeof data !== 'object' || !(data.cards || data.decks || data.rules || data.icons)) { toast('Questo file non contiene dati dell’app'); return; }
+    S.imp = {data, name: f.name, mode: {cards: 'add', decks: 'add', icons: 'add', rules: 'add', prefs: 'skip'}}; renderAll();
+  }
+  else if (t.dataset && t.dataset.imp && S.imp) { S.imp.mode[t.dataset.imp] = t.value; renderAll(); }
   else if (t.dataset && t.dataset.iconcolor) { putIcon(t.dataset.kind, t.dataset.name, {color: t.value}); }
   else if (t.id === 'quickFile' && t.files && t.files[0]) {
     const f = t.files[0], id = detailId; t.value = '';
@@ -1122,7 +1150,5 @@ onRoute();
 initData();
 })();
 </script>
-<script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}
-</script>
+
 </body></html>
