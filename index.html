@@ -500,7 +500,7 @@ img.ci{object-fit:contain}
 
 <button class="fab" data-act="search" aria-label="Cerca e filtra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
 <input type="file" id="pdfFile" accept="application/pdf,.pdf" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
-<input type="file" id="quickFile" accept="image/*" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
+<input type="file" id="quickFile" accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
 <div id="zoom" class="zoom" role="dialog" aria-label="Carta a tutto schermo" data-act="zoomClose"><button class="ib zoom-x" data-act="zoomClose" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button><div class="zoom-in" id="zoom-in"></div></div>
 <div id="toast" aria-live="polite"></div>
 
@@ -945,7 +945,7 @@ function vSet() {
   ${setPdf()}
   ${vIcons()}
   <section class="set"><h2>Immagini delle carte</h2><p>Ogni carta può avere la sua immagine: dalla scheda della carta con “Immagine”, oppure da “Modifica”. Qui puoi caricarne molte insieme: il nome di ogni file deve essere il codice della carta, per esempio CS01-1.jpg. ${allCards().filter(c => !imgSrc(c)).length} carte su ${allCards().length} non hanno ancora un’immagine.</p>
-    <div class="btns"><label class="btn alt" style="cursor:pointer;position:relative"><span>Scegli le immagini</span><input id="bulkImg" type="file" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>${S.bulk ? `<p>${esc(S.bulk)}</p>` : ''}</section>
+    <div class="btns"><label class="btn alt" style="cursor:pointer;position:relative"><span>Scegli le immagini</span><input id="bulkImg" type="file" accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>${S.bulk ? `<p>${esc(S.bulk)}</p>` : ''}</section>
   <section class="set"><h2>Esporta e importa</h2><p>“Esporta” salva un unico file con tutto: carte, mazzi, l’intera schermata Regolamento (aree, fasi e FAQ), icone e impostazioni. Le immagini delle carte sono incluse nel file (può diventare pesante). Se hai caricato il PDF del regolamento, il file è uno .zip che contiene anche il PDF. Quando importi un file, scegli per ogni parte se aggiungere, aggiornare o sostituire.</p>
     <div class="btns">${btn('Esporta tutto', 'exportAll', {cls: 'alt'})}<label class="btn alt" style="cursor:pointer;position:relative"><span>Importa da file</span><input id="impFile" type="file" accept=".json,.zip,application/json,application/zip" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
     ${impPanel()}</section>
@@ -1068,7 +1068,7 @@ function openEdit(id) {
   const pillsAb = (idn, arr, cur) => `<div class="chips" id="${idn}">${arr.map(x => { const f = cur.find(y => abBase(y) === x); return `<button type="button" class="chip" data-act="togglePress" aria-pressed="${!!f}" data-v="${esc(f || x)}">${esc(f || x)}</button>`; }).join('')}</div>`;
   const ms = d.mossaSecondaria;
   $('#ed-body').innerHTML = `<div class="form">
-    <div><div class="lbl">Immagine della carta</div><div class="pick-img"><div id="edArt" style="width:120px">${art(Object.assign({}, d, {id: ''}))}</div><div class="col"><label class="btn alt sm" style="cursor:pointer;margin:0 7px"><span>Scegli immagine</span><input id="edFile" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label><button class="link" data-act="removeImg" type="button" style="text-align:left">Rimuovi immagine</button><span class="muted" id="edImgInfo" style="font-size:15px"></span></div></div></div>
+    <div><div class="lbl">Immagine della carta</div><div class="pick-img"><div id="edArt" style="width:120px">${art(Object.assign({}, d, {id: ''}))}</div><div class="col"><label class="btn alt sm" style="cursor:pointer;margin:0 7px"><span>Scegli immagine</span><input id="edFile" type="file" accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label><button class="link" data-act="removeImg" type="button" style="text-align:left">Rimuovi immagine</button><span class="muted" id="edImgInfo" style="font-size:15px"></span></div></div></div>
     <div class="row2"><label class="fl"><span>Set</span><input id="e-set" type="number" inputmode="numeric" min="1" value="${d.set ?? ''}"></label><label class="fl"><span>N° nel set</span><input id="e-num" type="number" inputmode="numeric" min="1" value="${d.numero ?? ''}"></label></div>
     <div class="row2"><label class="fl"><span>Codice carta *</span><input id="e-code" value="${esc(d.code === d.id ? d.code : d.code)}" autocomplete="off" placeholder="Es. BW-001"></label><label class="fl"><span>Tipo carta</span>${sel('e-tipo', TIPI, d.tipo)}</label></div>
     <label class="fl"><span>Nome *</span><input id="e-nome" value="${esc(d.nome)}" autocomplete="off"></label>
@@ -1094,7 +1094,10 @@ function readImage(file) {
     const url = URL.createObjectURL(file), im = new Image();
     im.onload = () => {
       const draw = (max, q) => new Promise(r => { const k = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k)); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); cv.toBlob(b => r({blob: b, url: cv.toDataURL('image/jpeg', q)}), 'image/jpeg', q); });
-      Promise.all([draw(1000, .86), draw(420, .7)]).then(([big, small]) => { URL.revokeObjectURL(url); res({blob: big.blob, preview: big.url, small: small.url}); });
+      /* l'originale si carica così com'è (qualità piena); si ricomprime solo se supera il limite di 19 MB */
+      const keep = /^image\/(jpeg|png|webp|gif|avif)$/i.test(file.type) && file.size <= 19 * 1024 * 1024;
+      const hq = keep ? Promise.resolve({blob: file}) : new Promise(r => { const k = Math.min(1, 3200 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(im.width * k)); cv.height = Math.max(1, Math.round(im.height * k)); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); cv.toBlob(b => b && b.type === 'image/webp' ? r({blob: b}) : cv.toBlob(j => r({blob: j}), 'image/jpeg', .95), 'image/webp', .95); });
+      Promise.all([hq, draw(1000, .9), draw(420, .7)]).then(([full, big, small]) => { URL.revokeObjectURL(url); res({blob: full.blob, preview: big.url, small: small.url}); });
     };
     im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
     im.src = url;
@@ -1123,7 +1126,7 @@ async function saveCard() {
   if (E.removed) { c.img = ''; c.imgData = ''; }
   if (E.blob) {
     let ok = false;
-    if (ASSETS) { try { const r = await ASSETS.upload(E.blob, {type: 'image/jpeg'}); c.img = r.id; c.imgData = ''; ok = true; } catch (e) { ok = false; } }
+    if (ASSETS) { try { const r = await ASSETS.upload(E.blob, {type: E.blob.type || 'image/jpeg'}); c.img = r.id; c.imgData = ''; ok = true; } catch (e) { ok = false; } }
     if (!ok) { c.img = ''; c.imgData = E.small; }
   }
   if (oldAsset && oldAsset !== c.img && ASSETS) ASSETS.delete(oldAsset).catch(() => {});
@@ -1168,7 +1171,7 @@ function delIcon(kind, name) {
 }
 async function setCardImage(c, file) {
   const r = await readImage(file); let img = '', imgData = '';
-  if (ASSETS && r.blob) { try { const u = await ASSETS.upload(r.blob, {type: 'image/jpeg'}); img = u.id; } catch (e) { img = ''; } }
+  if (ASSETS && r.blob) { try { const u = await ASSETS.upload(r.blob, {type: r.blob.type || 'image/jpeg'}); img = u.id; } catch (e) { img = ''; } }
   if (!img) imgData = r.small;
   const old = c.img;
   await putCard(Object.assign({}, c, {img, imgData}));
@@ -1199,7 +1202,7 @@ function vIcons() {
     const canReset = !!o && (deletable ? has : true);
     const prev = has ? `<img src="${esc(o.data)}" alt="">` : k === 'classe' ? classIcon(n, 'big') : k === 'rarita' ? `<i class="rdot" style="--rc:${rarColor(n)}"></i>` : k === 'simbolo' ? `<span class="muted">(${esc(n)})</span>` : '<span class="muted">–</span>';
     const col = (k === 'classe' || k === 'rarita') ? `<input type="color" class="colin" value="${colorOf(k, n)}" data-iconcolor="1" data-kind="${k}" data-name="${esc(n)}" aria-label="Colore di ${esc(n)}">` : '';
-    return `<div class="icrow"><div class="icprev">${prev}</div><div class="ictx"><b>${esc(n)}</b>${k === 'simbolo' ? `<span>(${esc(n)})${SYM_HINT[n] ? ' · ' + SYM_HINT[n] : ''}</span>` : ''}</div>${col}<label class="btn alt sm" style="margin:0 7px;cursor:pointer"><span>${has ? 'Cambia' : 'Carica'}</span><input type="file" accept="image/*" data-iconfile="1" data-kind="${k}" data-name="${esc(n)}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label>${canReset ? `<button class="link" data-act="iconReset" data-kind="${k}" data-name="${esc(n)}">Ripristina</button>` : ''}${deletable ? `<button class="link" data-act="iconDel" data-kind="${k}" data-name="${esc(n)}">Elimina</button>` : ''}</div>`;
+    return `<div class="icrow"><div class="icprev">${prev}</div><div class="ictx"><b>${esc(n)}</b>${k === 'simbolo' ? `<span>(${esc(n)})${SYM_HINT[n] ? ' · ' + SYM_HINT[n] : ''}</span>` : ''}</div>${col}<label class="btn alt sm" style="margin:0 7px;cursor:pointer"><span>${has ? 'Cambia' : 'Carica'}</span><input type="file" accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" data-iconfile="1" data-kind="${k}" data-name="${esc(n)}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label>${canReset ? `<button class="link" data-act="iconReset" data-kind="${k}" data-name="${esc(n)}">Ripristina</button>` : ''}${deletable ? `<button class="link" data-act="iconDel" data-kind="${k}" data-name="${esc(n)}">Elimina</button>` : ''}</div>`;
   };
   const addForm = k => `<div class="icadd"><input class="icname" id="ni-${k}" maxlength="40" autocomplete="off" placeholder="${k === 'simbolo' ? 'Nuovo simbolo, es. X (senza parentesi)' : k === 'classe' ? 'Nuova classe' : k === 'rarita' ? 'Nuova rarità' : 'Nuova affiliazione'}">${k === 'classe' || k === 'rarita' ? `<input type="color" class="colin" id="nc-${k}" value="#e0352e" aria-label="Colore">` : ''}${btn('Aggiungi', 'iconNew', {cls: 'sm', v: k})}</div>`;
   const group = k => {
@@ -1433,7 +1436,7 @@ async function importRun() {
       if (md.cards === 'replace') { const keep = new Set(inc.map(c => c.img).filter(Boolean)); allCards().filter(c => !ids.has(c.id)).forEach(c => { if (c.img && ASSETS && !keep.has(c.img)) ASSETS.delete(c.img).catch(() => {}); delCard(c.id); }); }
       const prep = async c => {
         const f = c.imgFile; delete c.imgFile;
-        if (f) { const ex = S.cards[c.id]; if (!(ex && ex.img && ex.img === c.img)) { try { if (ASSETS) { const u = await ASSETS.upload(await (await fetch(f)).blob(), {type: 'image/jpeg'}); c.img = u.id; c.imgData = ''; } else { c.img = ''; c.imgData = f; } } catch (e) { c.img = ''; c.imgData = f; } } }
+        if (f) { const ex = S.cards[c.id]; if (!(ex && ex.img && ex.img === c.img)) { try { if (ASSETS) { const ib = await (await fetch(f)).blob(), u = await ASSETS.upload(ib, {type: ib.type || 'image/jpeg'}); c.img = u.id; c.imgData = ''; } else { c.img = ''; c.imgData = f; } } catch (e) { c.img = ''; c.imgData = f; } } }
         return putCard(c);
       };
       await chunk(md.cards === 'add' ? inc.filter(c => !S.cards[c.id]) : inc, prep);
