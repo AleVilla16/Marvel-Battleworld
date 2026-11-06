@@ -378,7 +378,7 @@ body:not([data-view="carte"]) .top .ib[data-act="search"]{visibility:hidden}
   box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--oc),0 8px 18px -8px var(--oc)}
 .vita .orb{--oc:#22c472;background:radial-gradient(circle at 35% 28%,#6ff0a6,#1fa463 62%,#0c5e37)}
 .glo .orb{--oc:#e0352e;background:radial-gradient(circle at 35% 28%,#ff6b60,#c3241d 62%,#7d1410)}
-.orb .oi{position:absolute;inset:18%;width:64%;height:64%;opacity:.38;fill:#fff;pointer-events:none}
+.orb .oi{position:absolute;inset:7%;width:86%;height:86%;opacity:.34;fill:#fff;pointer-events:none}
 .orb img.oi{object-fit:contain;opacity:.5}
 .orb output{position:relative;font:800 calc(var(--o)*.46)/1 var(--font-display);font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(0,0,0,.25)}
 .orb input{position:relative;width:calc(var(--o)*.8);background:rgba(0,0,0,.35);border:2px solid #fff;border-radius:8px;color:#fff;text-align:center;font:800 calc(var(--o)*.36)/1 var(--font-display);padding:2px 0;-moz-appearance:textfield}
@@ -419,13 +419,21 @@ img.ci{object-fit:contain}
 .aff{width:1.3em;height:1.3em;object-fit:contain;flex:none}
 .aff.lg{width:100%;height:100%}
 .affl{display:inline-flex;align-items:center;gap:8px}
-.aff-grid{display:grid;grid-template-columns:1fr;gap:8px;padding-top:22px;max-width:640px}
-.aff-tile{cursor:pointer;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:12px;display:flex;align-items:center;gap:12px;min-width:0}
-.aff-ic{width:52px;height:52px;flex:none;display:grid;place-items:center;background:var(--raise);overflow:hidden}
-.aff-ph{font:800 20px/1 var(--font-display);font-style:normal;color:var(--muted)}
-.aff-tx{display:flex;flex-direction:column;gap:3px;min-width:0}
-.aff-tx b{font:700 19px/1.05 var(--font-display);letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
-.aff-tx i{font:600 14px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-style:normal}
+.aff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding-top:22px}
+.aff-tile{cursor:pointer;aspect-ratio:1;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;min-width:0;transition:border-color .15s,transform .15s}
+.aff-tile:hover{border-color:var(--red);transform:translateY(-2px)}
+.aff-ic{width:62%;aspect-ratio:1;flex:none;display:grid;place-items:center;overflow:hidden}
+.aff-ic .aff.lg{object-fit:contain}
+.aff-ph{width:100%;height:100%;display:grid;place-items:center;background:var(--raise);border-radius:50%;font:800 clamp(24px,8vw,38px)/1 var(--font-display);font-style:normal;color:var(--muted)}
+.aff-tx{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;width:100%}
+.aff-tx b{font:700 17px/1.05 var(--font-display);letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
+.aff-tx i{font:600 13px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-style:normal}
+@media (max-width:420px){.aff-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+.affls{display:flex;flex-wrap:wrap;gap:8px 16px}
+button.affl{border:0;background:none;color:var(--fg);font:inherit;padding:0;cursor:pointer}
+button.affl:hover{color:var(--red-text)}
+.aff-new{display:flex;gap:8px;align-items:center;margin-top:10px;max-width:420px}
+.aff-new input{flex:1;min-width:0}
 .set.tight{padding-top:10px}
 .dhd{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface);border:1px solid var(--line);padding:14px;cursor:pointer;text-align:left;font:700 22px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase}
 .dhd>span:first-child{flex:1}
@@ -527,6 +535,7 @@ const CLASS_ICON = {
 let ICONS = {};
 const SYM_BASE = ['F','P','D','R','G','E','D6','D8','D10'];
 const SYM_HINT = {F:'Forza',P:'Potere',D:'Danno',R:'Resistenza',G:'Gloria',D6:'Dado a 6 facce',D8:'Dado a 8 facce',D10:'Dado a 10 facce'};
+const affList = d => { const a = Array.isArray(d.affiliazioni) ? d.affiliazioni : (d.affiliazione ? String(d.affiliazione).split(/\s*[,;]\s*/) : []); return [...new Set(a.map(x => String(x || '').trim()).filter(Boolean))]; };
 const ICON_KINDS = {classe:'Classi', rarita:'Rarità', affiliazione:'Affiliazioni', simbolo:'Simboli nel testo'};
 const icoKey = (k, n) => k + '|' + n;
 const icoGet = (k, n) => ICONS[icoKey(k, n)] || null;
@@ -642,7 +651,7 @@ function putRules(text) {
 }
 const normCard = (id, d) => ({
   id, code: d.code || id, set: setOf(d, id), tipo: d.tipo || 'Personaggio', nome: d.nome || '', sottonome: d.sottonome || '', citazione: d.citazione || '',
-  affiliazione: d.affiliazione || '', classe: d.classe || '', costo: num(d.costo), forza: num(d.forza), resistenza: num(d.resistenza),
+  affiliazioni: affList(d), affiliazione: affList(d)[0] || '', classe: d.classe || '', costo: num(d.costo), forza: num(d.forza), resistenza: num(d.resistenza),
   gloria: num(d.gloria), spostamento: num(d.spostamento), rarita: d.rarita || '', estrazione: !!d.estrazione,
   caratteristiche: Array.isArray(d.caratteristiche) ? d.caratteristiche : [], abilita: Array.isArray(d.abilita) ? d.abilita : [],
   mossaSpeciale: d.mossaSpeciale || {nome: '', desc: ''}, mossaAttiva: d.mossaAttiva || '', mossaSecondaria: d.mossaSecondaria || null,
@@ -657,9 +666,10 @@ let affFatto = false, cardsOk = false, iconsOk = false;
 function runAffReset() {
   const canon = s => norm(s).replace(/[^a-z0-9]/g, ''), map = {};
   AFFILIAZIONI.forEach(a => { map[canon(a)] = a; });
-  const todo = allCards().filter(c => c.affiliazione && (map[canon(c.affiliazione)] || '') !== c.affiliazione);
-  todo.forEach(c => { c.affiliazione = map[canon(c.affiliazione)] || ''; S.cards[c.id] = c; });
-  if (DB) todo.forEach(c => chain('c/' + c.id, () => DB.collection('cards').doc(c.id).update({affiliazione: c.affiliazione})).catch(dbErr));
+  const fix = c => [...new Set(c.affiliazioni.map(a => map[canon(a)]).filter(Boolean))];
+  const todo = allCards().filter(c => c.affiliazioni.length && fix(c).join('|') !== c.affiliazioni.join('|'));
+  todo.forEach(c => { c.affiliazioni = fix(c); c.affiliazione = c.affiliazioni[0] || ''; S.cards[c.id] = c; });
+  if (DB) todo.forEach(c => chain('c/' + c.id, () => DB.collection('cards').doc(c.id).update({affiliazioni: c.affiliazioni, affiliazione: c.affiliazione})).catch(dbErr));
   Object.values(ICONS).filter(o => o.kind === 'affiliazione').forEach(o => {
     const m = map[canon(o.name)];
     if (!m) delIcon('affiliazione', o.name);
@@ -727,7 +737,8 @@ function applyFilters(list, f = S.filters) {
   let r = list.filter(c => {
     if (q && !(norm(c.nome).includes(q) || norm(c.sottonome).includes(q) || norm(c.code).includes(q) || (c.numero != null && q.replace(/^n°?\s*/, '') === String(c.numero)))) return false;
     if (f.set.size && !f.set.has(c.set)) return false;
-    for (const k of ['tipo','affiliazione','classe','rarita']) if (f[k].size && !f[k].has(c[k])) return false;
+    for (const k of ['tipo','classe','rarita']) if (f[k].size && !f[k].has(c[k])) return false;
+    if (f.affiliazione.size && !c.affiliazioni.some(a => f.affiliazione.has(a))) return false;
     for (const [k] of STATS) {
       const [lo, hi] = f.range[k]; const v = c[k];
       if (lo === '' && hi === '') continue;
@@ -762,7 +773,7 @@ function applyFilters(list, f = S.filters) {
 }
 const allCards = () => Object.values(S.cards);
 const AFFILIAZIONI = ["Avengers", "A Force", "Agent of atlas", "Asgardian", "Black Order", "Brotherhood of mutant", "Cabal", "Crime Syndicate", "Dark Avengers", "Defenders", "HYDRA", "Illuminati", "Inhumans", "Midnight Sons", "New Avengers", "New Warriors", "Omega Flight", "Runaways", "SHIELD", "Sinister Six", "SWORD", "Thunderbolts", "Wakanda", "Weapon X", "Web Warriors", "Winter Guard", "X-Men", "Young Avengers", "Guardiani della Galassia", "Convocation of Wizard", "Hellfire Club", "New Mutants", "Trashengers"];
-const affiliazioni = () => [...new Set([...AFFILIAZIONI, ...allCards().map(c => c.affiliazione), ...icoNames('affiliazione')].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
+const affiliazioni = () => [...new Set([...AFFILIAZIONI, ...allCards().flatMap(c => c.affiliazioni), ...icoNames('affiliazione')].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
 const activeFilterCount = (f = S.filters) => (f.q.trim() ? 1 : 0) + f.set.size + f.tipo.size + f.affiliazione.size + f.classe.size + f.rarita.size + f.caratteristiche.size + f.abilita.size + (f.estrazione ? 1 : 0) + (f.completa ? 1 : 0) + (f.preferite ? 1 : 0) + STATS.filter(([k]) => f.range[k][0] !== '' || f.range[k][1] !== '').length;
 
 /* ---------- componenti ---------- */
@@ -852,7 +863,7 @@ function vClassi() {
 }
 function vAffil() {
   if (!S.loaded) return loadingBlock();
-  const cnt = {}; allCards().forEach(c => { if (c.affiliazione) cnt[c.affiliazione] = (cnt[c.affiliazione] || 0) + 1; });
+  const cnt = {}; allCards().forEach(c => c.affiliazioni.forEach(a => { cnt[a] = (cnt[a] || 0) + 1; }));
   const list = affiliazioni();
   const tiles = list.map(a => `<button class="aff-tile" data-act="goAff" data-v="${esc(a)}"><span class="aff-ic">${affIcon(a, 'lg') || '<i class="aff-ph">' + esc(initials(a)) + '</i>'}</span><span class="aff-tx"><b>${esc(a)}</b><i>${cnt[a] || 0} ${(cnt[a] || 0) === 1 ? 'carta' : 'carte'}</i></span></button>`).join('');
   return `<div class="gut"><div class="page-hd"><h1>Affiliazioni</h1><div class="count">${list.length} ${list.length === 1 ? 'affiliazione' : 'affiliazioni'}. Tocca un’affiliazione per vederne le carte. Le icone si caricano da Impostazioni.</div></div>${list.length ? `<div class="aff-grid">${tiles}</div>` : `<div class="empty"><h2>Nessuna affiliazione</h2><p>Compaiono quando le inserisci nelle carte, oppure le crei da Impostazioni.</p>${btn('Impostazioni', 'nav', {v: 'impostazioni', cls: 'alt'})}</div>`}<div style="height:40px"></div></div>`;
@@ -1029,7 +1040,7 @@ function openDetail(id) {
     <div><div class="d-name">${esc(c.nome)}</div>${c.sottonome ? `<div class="d-sub">${esc(c.sottonome)}</div>` : ''}${q ? `<div class="quote">${/^[“"«]/.test(q) ? rich(q) : '“' + rich(q) + '”'}</div>` : ''}</div>
     <div class="chips">${c.set != null ? staticChip(setName(c.set)) : ''}${c.numero != null ? staticChip('N° ' + c.numero) : ''}${staticChip(c.tipo)}${c.classe ? staticChip(c.classe, c.classe) : ''}${c.rarita ? staticChip(c.rarita, null, c.rarita) : ''}${staticChip('Estrazione: ' + (c.estrazione ? 'Sì' : 'No'))}${c.esempio ? staticChip('Esempio') : ''}${c.preferita ? '<span class="chip static" style="border-color:#f5b301">★ Preferita</span>' : ''}${c.completa ? '' : '<span class="chip static" style="border-color:#f5b301">⚠ Incompleta</span>'}</div>
     ${linkUrl(c.link) ? `<div><div class="lbl">Link</div><a class="clink" href="${esc(linkUrl(c.link))}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 10a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg><span>${esc(linkUrl(c.link).replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''))}</span></a></div>` : ''}
-    ${c.affiliazione ? `<div><div class="lbl">Affiliazione</div><span class="affl">${affIcon(c.affiliazione)}${esc(c.affiliazione)}</span></div>` : ''}
+    ${c.affiliazioni.length ? `<div><div class="lbl">${c.affiliazioni.length > 1 ? 'Affiliazioni' : 'Affiliazione'}</div><div class="affls">${c.affiliazioni.map(a => `<button class="affl" data-act="goAff" data-v="${esc(a)}">${affIcon(a)}${esc(a)}</button>`).join('')}</div></div>` : ''}
     <div class="sgrid">${stats}</div></div></div>
     <div class="form" style="margin-top:24px">
     ${c.caratteristiche.length ? `<div><div class="lbl">Caratteristiche</div><div class="chips">${c.caratteristiche.map(x => staticChip(x)).join('')}</div></div>` : ''}
@@ -1075,7 +1086,7 @@ function openEdit(id) {
     <label class="fl"><span>Sottonome</span><input id="e-sub" value="${esc(d.sottonome)}" autocomplete="off"></label>
     <label class="fl"><span>Link</span><input id="e-link" type="url" inputmode="url" value="${esc(d.link || '')}" autocomplete="off" placeholder="Es. https://marvel.fandom.com/wiki/…"></label>
     <label class="fl"><span>Citazione</span><textarea id="e-quote" style="min-height:76px">${esc(d.citazione)}</textarea></label>
-    <label class="fl"><span>Affiliazione</span><input id="e-aff" list="affList" value="${esc(d.affiliazione)}" autocomplete="off"><datalist id="affList">${affiliazioni().map(a => `<option value="${esc(a)}">`).join('')}</datalist></label>
+    <div><div class="lbl">Affiliazioni <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· puoi sceglierne più di una</span></div>${pills('e-aff', [...new Set([...affiliazioni(), ...d.affiliazioni])], d.affiliazioni)}<div class="aff-new"><input id="e-aff-new" placeholder="Nuova affiliazione…" autocomplete="off" aria-label="Nuova affiliazione"><button type="button" class="btn alt sm" data-act="affAdd"><span>Aggiungi</span></button></div></div>
     <div class="row2"><label class="fl"><span>Classe</span>${sel('e-classe', classi(), d.classe || CLASSI[0])}</label><label class="fl"><span>Rarità</span><select id="e-rar"><option value="">Non indicata</option>${rarita().map(x => `<option${x === d.rarita ? ' selected' : ''}>${x}</option>`).join('')}</select></label></div>
     <div class="row3">${STATS.map(([k, l]) => `<label class="fl"><span>${l}</span><input id="e-${k}" type="number" inputmode="numeric" min="0" value="${d[k] ?? ''}"></label>`).join('')}</div>
     <div><div class="lbl">Stato della carta</div><div class="chips"><button type="button" class="chip" id="e-compl" data-act="togglePress" aria-pressed="${!!d.completa}">Carta completa</button></div><div class="muted" style="font-size:15px;margin-top:6px">Se non è completa, in alto a sinistra della carta compare l’icona di attenzione.</div></div>
@@ -1113,7 +1124,7 @@ async function saveCard() {
   const pressed = idn => $$('#' + idn + ' [aria-pressed="true"]').map(b => b.dataset.v);
   const has2 = $('#e-has2').getAttribute('aria-pressed') === 'true';
   const c = {
-    id, code, tipo: $('#e-tipo').value, nome, sottonome: $('#e-sub').value.trim(), citazione: $('#e-quote').value.trim(), affiliazione: $('#e-aff').value.trim(),
+    id, code, tipo: $('#e-tipo').value, nome, sottonome: $('#e-sub').value.trim(), citazione: $('#e-quote').value.trim(), affiliazioni: pressed('e-aff'), affiliazione: pressed('e-aff')[0] || '',
     classe: $('#e-classe').value, rarita: $('#e-rar').value, estrazione: $('#e-estr').value === 'si',
     caratteristiche: pressed('e-car'), abilita: pressed('e-abi'),
     mossaSpeciale: {nome: $('#e-ms-n').value.trim(), desc: $('#e-ms-d').value.trim()}, mossaAttiva: $('#e-ma').value.trim(),
@@ -1198,7 +1209,7 @@ const colorOf = (k, n) => { const o = icoGet(k, n); if (o && /^#[0-9a-f]{6}$/i.t
 function vIcons() {
   const row = (k, n) => {
     const o = icoGet(k, n), has = !!(o && o.data);
-    const deletable = k === 'affiliazione' ? !!(o && o.custom) && !allCards().some(c => c.affiliazione === n) : !isBase(k, n);
+    const deletable = k === 'affiliazione' ? !!(o && o.custom) && !allCards().some(c => c.affiliazioni.includes(n)) : !isBase(k, n);
     const canReset = !!o && (deletable ? has : true);
     const prev = has ? `<img src="${esc(o.data)}" alt="">` : k === 'classe' ? classIcon(n, 'big') : k === 'rarita' ? `<i class="rdot" style="--rc:${rarColor(n)}"></i>` : k === 'simbolo' ? `<span class="muted">(${esc(n)})</span>` : '<span class="muted">–</span>';
     const col = (k === 'classe' || k === 'rarita') ? `<input type="color" class="colin" value="${colorOf(k, n)}" data-iconcolor="1" data-kind="${k}" data-name="${esc(n)}" aria-label="Colore di ${esc(n)}">` : '';
@@ -1371,7 +1382,7 @@ async function exportExcel() {
   block('Per classe', uniq(c => [c.classe || 'Senza classe'], classi()), (c, k) => (c.classe || 'Senza classe') === k);
   block('Per tipo di carta', uniq(c => [c.tipo], TIPI), (c, k) => c.tipo === k);
   block('Per rarità', uniq(c => [c.rarita || 'Non indicata'], rarita()), (c, k) => (c.rarita || 'Non indicata') === k);
-  block('Per affiliazione', uniq(c => [c.affiliazione || 'Nessuna']), (c, k) => (c.affiliazione || 'Nessuna') === k);
+  block('Per affiliazione', uniq(c => c.affiliazioni.length ? c.affiliazioni : ['Nessuna']), (c, k) => k === 'Nessuna' ? !c.affiliazioni.length : c.affiliazioni.includes(k));
   block('Per caratteristica', uniq(c => c.caratteristiche, CARATT), (c, k) => c.caratteristiche.includes(k));
   block('Per abilità speciale', uniq(c => c.abilita.map(abBase), ABIL), (c, k) => c.abilita.some(y => abBase(y) === k));
   block('Estrazione', ['Sì', 'No'], (c, k) => (c.estrazione ? 'Sì' : 'No') === k);
@@ -1388,7 +1399,7 @@ async function exportExcel() {
   sheets.push({name: 'Statistiche', rows, styles, widths: [34, ...head.slice(1).map(() => 22)]});
 
   /* un foglio per set */
-  const COLS = [['Codice', c => c.code, 12], ['N°', c => c.numero ?? '', 6], ['Set', c => c.set ?? '', 5], ['Tipo', c => c.tipo, 12], ['Nome', c => c.nome, 24], ['Sottonome', c => c.sottonome, 26], ['Classe', c => c.classe, 12], ['Affiliazione', c => c.affiliazione, 20],
+  const COLS = [['Codice', c => c.code, 12], ['N°', c => c.numero ?? '', 6], ['Set', c => c.set ?? '', 5], ['Tipo', c => c.tipo, 12], ['Nome', c => c.nome, 24], ['Sottonome', c => c.sottonome, 26], ['Classe', c => c.classe, 12], ['Affiliazioni', c => c.affiliazioni.join(', '), 26],
     ...STATS.map(([k, l]) => [l, c => c[k] ?? '', 10]), ['Rarità', c => c.rarita, 12], ['Estrazione', c => c.estrazione ? 'Sì' : 'No', 10], ['Caratteristiche', c => c.caratteristiche.join(', '), 30], ['Abilità speciali', c => c.abilita.join(', '), 22],
     ['Mossa speciale', c => c.mossaSpeciale.nome, 22], ['Descrizione mossa speciale', c => c.mossaSpeciale.desc, 50], ['Mossa attiva', c => c.mossaAttiva, 50],
     ['Mossa secondaria', c => c.mossaSecondaria ? c.mossaSecondaria.nome : '', 22], ['Descrizione mossa secondaria', c => c.mossaSecondaria ? c.mossaSecondaria.desc : '', 40],
@@ -1750,6 +1761,13 @@ const ACT = {
   fav() { const c = S.cards[detailId]; if (!c) return; const n = Object.assign({}, c, {preferita: !c.preferita}); putCard(n); toast(n.preferita ? 'Aggiunta ai preferiti' : 'Tolta dai preferiti'); openDetail(detailId); },
   navFav() { closeMenu(); closeSheets(); resetFilters(f => { f.preferite = 'si'; }); setView('carte'); renderAll(); },
   saveCard,
+  affAdd() {
+    const inp = $('#e-aff-new'), v = inp.value.trim(); if (!v) { inp.focus(); return; }
+    const box = $('#e-aff'), ex = [...box.querySelectorAll('.chip')].find(b => b.dataset.v.toLowerCase() === v.toLowerCase());
+    if (ex) ex.setAttribute('aria-pressed', 'true');
+    else { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.act = 'togglePress'; b.dataset.v = v; b.setAttribute('aria-pressed', 'true'); b.textContent = v; box.appendChild(b); }
+    inp.value = ''; inp.focus();
+  },
   togglePress(t) { t.setAttribute('aria-pressed', t.getAttribute('aria-pressed') !== 'true'); },
   toggle2(t) { const on = t.getAttribute('aria-pressed') !== 'true'; t.setAttribute('aria-pressed', on); $('#e-2box').style.display = on ? '' : 'none'; },
   removeImg() { E.img = ''; E.imgData = ''; E.blob = null; E.removed = true; refreshEdArt(); $('#edImgInfo').textContent = 'L’immagine verrà rimossa al salvataggio.'; },
@@ -1847,6 +1865,7 @@ function refreshEdArt() {
 document.addEventListener('focusout', () => { setTimeout(() => { if (S.dirty) { const a = document.activeElement; if (!(a && $('#view').contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) renderView(); } }, 60); });
 document.addEventListener('error', e => { if (e.target && e.target.tagName === 'IMG') e.target.remove(); }, true);
 document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'e-aff-new') { e.preventDefault(); ACT.affAdd(); return; }
   if (e.target.dataset && e.target.dataset.gedit && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); commitGameEdit(e.target, e.key === 'Escape'); return; }
   if (e.key === 'Escape' && $('#zoom').classList.contains('open')) { ACT.zoomClose(); return; }
   if (e.key === 'Escape') { const open = $$('.sheet.open'); if (open.length) closeSheet(open[open.length - 1].id); else closeMenu(); }
