@@ -946,8 +946,8 @@ function vSet() {
   ${vIcons()}
   <section class="set"><h2>Immagini delle carte</h2><p>Ogni carta può avere la sua immagine: dalla scheda della carta con “Immagine”, oppure da “Modifica”. Qui puoi caricarne molte insieme: il nome di ogni file deve essere il codice della carta, per esempio CS01-1.jpg. ${allCards().filter(c => !imgSrc(c)).length} carte su ${allCards().length} non hanno ancora un’immagine.</p>
     <div class="btns"><label class="btn alt" style="cursor:pointer;position:relative"><span>Scegli le immagini</span><input id="bulkImg" type="file" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>${S.bulk ? `<p>${esc(S.bulk)}</p>` : ''}</section>
-  <section class="set"><h2>Esporta e importa</h2><p>“Esporta” salva un unico file con tutto: carte, mazzi, regolamento, icone e impostazioni. Le immagini delle carte sono incluse nel file (può diventare pesante). Quando importi un file, scegli per ogni parte se aggiungere, aggiornare o sostituire.</p>
-    <div class="btns">${btn('Esporta tutto', 'exportAll', {cls: 'alt'})}<label class="btn alt" style="cursor:pointer;position:relative"><span>Importa da file</span><input id="impFile" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
+  <section class="set"><h2>Esporta e importa</h2><p>“Esporta” salva un unico file con tutto: carte, mazzi, l’intera schermata Regolamento (aree, fasi e FAQ), icone e impostazioni. Le immagini delle carte sono incluse nel file (può diventare pesante). Se hai caricato il PDF del regolamento, il file è uno .zip che contiene anche il PDF. Quando importi un file, scegli per ogni parte se aggiungere, aggiornare o sostituire.</p>
+    <div class="btns">${btn('Esporta tutto', 'exportAll', {cls: 'alt'})}<label class="btn alt" style="cursor:pointer;position:relative"><span>Importa da file</span><input id="impFile" type="file" accept=".json,.zip,application/json,application/zip" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
     ${impPanel()}</section>
   <section class="set"><h2>Pulizia</h2>${nEx ? `<p>Ci sono ${nEx} carte di esempio.</p><div class="btns">${conf('ex', 'Elimina le carte di esempio', 'delExamples')}</div>` : '<p>Nessuna carta di esempio presente.</p>'}
     <div class="btns">${conf('cards', 'Elimina tutte le carte', 'wipeCards')}</div><div class="btns">${conf('decks', 'Elimina tutti i mazzi', 'wipeDecks')}</div></section>
@@ -1260,22 +1260,33 @@ async function exportAll() {
     toast('Preparo le immagini… ' + Math.min(i + 8, withImg.length) + ' / ' + withImg.length);
     await Promise.all(withImg.slice(i, i + 8).map(async c => { try { const r = await fetch('/_blob/' + c.img); if (r.ok) files[c.id] = await blobToUrl(await r.blob()); } catch (e) {} }));
   }
-  const head = {app: 'marvel-battleworld', version: 3, exportedAt: new Date().toISOString(), decks: Object.values(S.decks), rules: S.rules, icons: Object.values(ICONS), prefs: S.prefs};
+  const rp = S.rulesPdf, hasPdf = pdfParts(rp).length > 0;
+  const head = {app: 'marvel-battleworld', version: 4, exportedAt: new Date().toISOString(), decks: Object.values(S.decks), rules: S.rules, rulesAreas: rulesAreas(), rulesPdfName: hasPdf ? (rp.name || 'regolamento.pdf') : '', icons: Object.values(ICONS), prefs: S.prefs};
   const parts = [JSON.stringify(head).slice(0, -1), ',"cards":[']; cards.forEach((c, i) => { parts.push((i ? ',' : '') + JSON.stringify(files[c.id] ? Object.assign({}, c, {imgFile: files[c.id]}) : c)); }); parts.push(']}');
-  const blob = new Blob(parts, {type: 'application/json'}), filename = 'marvel-battleworld-' + new Date().toLocaleDateString('sv-SE') + '.json';
+  const day = new Date().toLocaleDateString('sv-SE');
+  let blob = new Blob(parts, {type: 'application/json'}), filename = 'marvel-battleworld-' + day + '.json', pdfMiss = false;
+  if (hasPdf) {
+    try {
+      toast('Aggiungo il PDF del regolamento…');
+      const pdf = await rulesPdfBlob();
+      const json = new Uint8Array(await blob.arrayBuffer());
+      blob = zipStore([['marvel-battleworld.json', json], ['regolamento.pdf', new Uint8Array(await pdf.arrayBuffer())]], 'application/zip');
+      filename = 'marvel-battleworld-' + day + '.zip';
+    } catch (e) { pdfMiss = true; }
+  }
   const miss = withImg.length - Object.keys(files).length;
   try {
-    if (DL) { await DL.save({filename, data: blob}); toast(miss ? 'File salvato. ' + miss + ' immagini non lette' : 'File salvato'); }
+    if (DL) { await DL.save({filename, data: blob}); toast(pdfMiss ? 'File salvato, ma senza il PDF del regolamento' : miss ? 'File salvato. ' + miss + ' immagini non lette' : 'File salvato'); }
     else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); toast('Esportazione pronta'); }
   } catch (e) { if (!e || e.code !== 'declined') toast('Esportazione non riuscita'); }
 }
 /* ---------- esporta in Excel (file .xlsx generato direttamente nella pagina) ---------- */
 const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
-function zipStore(files) {
+function zipStore(files, type) {
   const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
   files.forEach(([name, text]) => {
-    const n = enc.encode(name), d = enc.encode(text), crc = crc32(d);
+    const n = enc.encode(name), d = typeof text === 'string' ? enc.encode(text) : text, crc = crc32(d);
     const lh = new DataView(new ArrayBuffer(30));
     [[0, 0x04034b50, 4], [4, 20, 2], [6, 0x0800, 2], [8, 0, 2], [10, 0, 2], [12, 0x21, 2], [14, crc, 4], [18, d.length, 4], [22, d.length, 4], [26, n.length, 2], [28, 0, 2]].forEach(([o, v, l]) => l === 4 ? lh.setUint32(o, v, true) : lh.setUint16(o, v, true));
     const ch = new DataView(new ArrayBuffer(46));
@@ -1284,7 +1295,23 @@ function zipStore(files) {
   });
   const csize = cen.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
   [[0, 0x06054b50, 4], [4, 0, 2], [6, 0, 2], [8, files.length, 2], [10, files.length, 2], [12, csize, 4], [16, off, 4], [20, 0, 2]].forEach(([o, v, l]) => l === 4 ? end.setUint32(o, v, true) : end.setUint16(o, v, true));
-  return new Blob([...parts, ...cen, new Uint8Array(end.buffer)], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  return new Blob([...parts, ...cen, new Uint8Array(end.buffer)], {type: type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+/* legge uno zip senza compressione (quello creato da questa app) */
+function unzipStore(buf) {
+  const u = new Uint8Array(buf), v = new DataView(u.buffer, u.byteOffset, u.byteLength), dec = new TextDecoder(), out = {};
+  let e = u.length - 22; while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('zip');
+  let p = v.getUint32(e + 16, true); const cnt = v.getUint16(e + 10, true);
+  for (let i = 0; i < cnt; i++) {
+    if (v.getUint32(p, true) !== 0x02014b50) throw new Error('zip');
+    const method = v.getUint16(p + 10, true), size = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+    const name = dec.decode(u.subarray(p + 46, p + 46 + nl));
+    if (method !== 0) throw new Error('zip-method');
+    const ds = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true);
+    out[name] = u.subarray(ds, ds + size); p += 46 + nl + xl + cl;
+  }
+  return out;
 }
 const xEsc = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const colName = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = (i - m - 1) / 26; } return s; };
@@ -1368,6 +1395,12 @@ async function exportExcel() {
     sheets.push({name: sName(n) + (n != null && SETS[n] ? ' ' + SETS[n] : ''), rows: [COLS.map(x => x[0]), ...list.map(c => COLS.map(x => x[1](c)))], styles: {0: 2}, widths: COLS.map(x => x[2]), freeze: true, filter: true});
   });
 
+  /* regolamento e FAQ */
+  { const A = rulesAreas(), rr = [['Area', 'Riepilogo', 'Fase', 'Titolo della fase', 'Spiegazione']];
+    A.sections.forEach(x => secSteps(x).forEach((st, k) => rr.push([k ? '' : x.title || '', k ? '' : secSummary(x), k + 1, st.title || '', String(st.body || '').replace(/\*\*/g, '')])));
+    sheets.push({name: 'Regolamento', rows: rr, styles: {0: 2}, widths: [26, 44, 7, 28, 80], freeze: true});
+    const fr = [['Domanda', 'Risposta'], ...A.faq.map(x => [x.q || '', String(x.a || '').replace(/\*\*/g, '')])];
+    sheets.push({name: 'FAQ', rows: fr, styles: {0: 2}, widths: [60, 80], freeze: true}); }
   const blob = makeXlsx(sheets), filename = 'marvel-battleworld-carte-' + new Date().toLocaleDateString('sv-SE') + '.xlsx';
   try {
     if (DL) { await DL.save({filename, data: blob}); toast('File Excel salvato'); }
@@ -1376,14 +1409,15 @@ async function exportExcel() {
 }
 function impPanel() {
   const m = S.imp; if (!m) return '';
-  const d = m.data, cl = listOf(d.cards).filter(r => r && r.code && r.nome), dl = listOf(d.decks).filter(r => r && r.nome), il = listOf(d.icons).filter(i => i && i.kind && i.name), hasRules = typeof d.rules === 'string' && d.rules.trim(), hasPrefs = !!(d.prefs && d.prefs.grid);
+  const d = m.data, cl = listOf(d.cards).filter(r => r && r.code && r.nome), dl = listOf(d.decks).filter(r => r && r.nome), il = listOf(d.icons).filter(i => i && i.kind && i.name), hasRules = (typeof d.rules === 'string' && d.rules.trim()) || !!(d.rulesAreas && Array.isArray(d.rulesAreas.sections)), hasPrefs = !!(d.prefs && d.prefs.grid);
   const STD = [['skip', 'Non importare'], ['add', 'Aggiungi solo i nuovi'], ['update', 'Aggiungi e aggiorna gli esistenti'], ['replace', 'Sostituisci tutto (cancella gli attuali)']];
   const row = (k, label, info, opts) => `<label class="fl"><span>${label}</span><span class="muted" style="font-size:15px">${info}</span><select data-imp="${k}">${opts.map(([v, l]) => `<option value="${v}"${m.mode[k] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
   const rows = [];
   if (cl.length) rows.push(row('cards', 'Carte', cl.length + ' nel file, ' + cl.filter(r => S.cards[slug(r.id || r.code)]).length + ' già presenti', STD));
   if (dl.length) rows.push(row('decks', 'Mazzi', dl.length + ' nel file, ' + dl.filter(r => r.id && S.decks[slug(r.id)]).length + ' già presenti', STD));
   if (il.length) rows.push(row('icons', 'Icone', il.length + ' nel file, ' + il.filter(i => icoGet(i.kind, i.name)).length + ' già presenti', STD));
-  if (hasRules) rows.push(row('rules', 'Regolamento', S.rules.trim() ? 'Ne hai già uno' : 'Il tuo è vuoto', [['skip', 'Non importare'], ['add', 'Solo se quello attuale è vuoto'], ['replace', 'Sostituisci quello attuale']]));
+  if (hasRules) rows.push(row('rules', 'Regolamento (aree e FAQ)', S.rulesAreas || S.rules.trim() ? 'Hai già modificato il tuo' : 'Il tuo è quello iniziale', [['skip', 'Non importare'], ['add', 'Solo se il tuo non è stato modificato'], ['replace', 'Sostituisci quello attuale']]));
+  if (m.pdf) rows.push(row('pdf', 'PDF del regolamento', esc(m.pdf.name) + (pdfParts(S.rulesPdf).length ? ' · ne hai già uno' : ''), [['skip', 'Non importare'], ['add', 'Solo se non ne hai già uno'], ['replace', 'Sostituisci quello attuale']]));
   if (hasPrefs) rows.push(row('prefs', 'Impostazioni', 'Dimensione delle schede', [['skip', 'Non importare'], ['replace', 'Applica quelle del file']]));
   const warn = Object.values(m.mode).includes('replace');
   return `<div class="note form" style="margin-top:8px"><div><b>File: ${esc(m.name)}</b></div>${rows.join('') || '<span>Nel file non ho trovato dati da importare.</span>'}${warn ? '<div style="color:var(--red-text)">⚠ “Sostituisci” elimina le voci attuali che non sono nel file.</div>' : ''}<div class="btns">${rows.length ? btn('Importa', 'importRun') : ''}${btn('Annulla', 'importCancel', {cls: 'alt'})}</div></div>`;
@@ -1415,7 +1449,14 @@ async function importRun() {
       if (md.icons === 'replace') Object.values(ICONS).filter(o => !keys.has(icoKey(o.kind, o.name))).forEach(o => delIcon(o.kind, o.name));
       await chunk(md.icons === 'add' ? inc.filter(i => !icoGet(i.kind, i.name)) : inc, i => putIcon(i.kind, i.name, {data: i.data || '', color: i.color || '', custom: !!i.custom}));
     }
-    if (md.rules && md.rules !== 'skip' && typeof d.rules === 'string' && (md.rules === 'replace' || !S.rules.trim())) await putRules(d.rules);
+    if (md.rules && md.rules !== 'skip') {
+      const fresh = !S.rulesAreas && !S.rules.trim();
+      if (md.rules === 'replace' || fresh) {
+        if (typeof d.rules === 'string') await putRules(d.rules);
+        if (d.rulesAreas && Array.isArray(d.rulesAreas.sections)) saveAreas({sections: d.rulesAreas.sections, faq: Array.isArray(d.rulesAreas.faq) ? d.rulesAreas.faq : []});
+      }
+    }
+    if (m.pdf && md.pdf && md.pdf !== 'skip' && (md.pdf === 'replace' || !pdfParts(S.rulesPdf).length)) await uploadRulesPdf(m.pdf);
     if (md.prefs === 'replace' && d.prefs && d.prefs.grid) { S.prefs.grid = d.prefs.grid; lsSet('bw:prefs', S.prefs); }
     renderAll(); toast('Importazione completata');
   } catch (e) { renderAll(); toast('Importazione non riuscita'); }
@@ -1575,17 +1616,18 @@ function saveAreas(A) {
   if (S.mode === 'db') chain('meta/rulesAreas', () => DB.doc('meta/rulesAreas').set({sections: A.sections, faq: A.faq})).catch(dbErr);
   else persistLocal();
 }
+async function rulesPdfBlob() {
+  const parts = pdfParts(S.rulesPdf); if (!parts.length) throw new Error('nodata');
+  if (parts.length === 1) return new Blob([await partBytes(parts[0])], {type: 'application/pdf'});
+  const L = await loadPdfLib(), out = await L.PDFDocument.create({updateMetadata: false});
+  for (const part of parts) { const src = await L.PDFDocument.load(await partBytes(part), {ignoreEncryption: true, updateMetadata: false}); (await out.copyPages(src, src.getPageIndices())).forEach(pg => out.addPage(pg)); }
+  return new Blob([await out.save({useObjectStreams: true})], {type: 'application/pdf'});
+}
 async function downloadRulesPdf() {
   const r = S.rulesPdf, parts = pdfParts(r); if (!parts.length || S.pdfDl) return;
   S.pdfDl = true; renderAll(); toast('Preparo il download…');
   try {
-    let blob;
-    if (parts.length === 1) blob = new Blob([await partBytes(parts[0])], {type: 'application/pdf'});
-    else {
-      const L = await loadPdfLib(), out = await L.PDFDocument.create({updateMetadata: false});
-      for (const part of parts) { const src = await L.PDFDocument.load(await partBytes(part), {ignoreEncryption: true, updateMetadata: false}); (await out.copyPages(src, src.getPageIndices())).forEach(pg => out.addPage(pg)); }
-      blob = new Blob([await out.save({useObjectStreams: true})], {type: 'application/pdf'});
-    }
+    const blob = await rulesPdfBlob();
     const filename = /\.pdf$/i.test(r.name || '') ? r.name : (r.name || 'regolamento') + '.pdf';
     if (DL) { await DL.save({filename, data: blob}); toast('PDF salvato'); }
     else { const a = document.createElement('a'), u = URL.createObjectURL(blob); a.href = u; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); toast('PDF scaricato'); }
@@ -1773,10 +1815,17 @@ document.addEventListener('change', async e => {
     try { const data = await readIcon(f); await putIcon(k, n, {data}); toast('Icona salvata'); } catch (err) { toast('Non riesco a leggere questa immagine'); }
   }
   else if (t.id === 'impFile' && t.files && t.files[0]) {
-    const f = t.files[0]; let data; t.value = '';
-    try { data = JSON.parse(await f.text()); } catch (err) { toast('Il file non è valido'); return; }
-    if (!data || typeof data !== 'object' || !(data.cards || data.decks || data.rules || data.icons)) { toast('Questo file non contiene dati dell’app'); return; }
-    S.imp = {data, name: f.name, mode: {cards: 'add', decks: 'add', icons: 'add', rules: 'add', prefs: 'skip'}}; renderAll();
+    const f = t.files[0]; let data, pdf = null; t.value = '';
+    try {
+      if (/\.zip$/i.test(f.name) || /zip/.test(f.type)) {
+        const z = unzipStore(await f.arrayBuffer()), jn = Object.keys(z).find(k => /\.json$/i.test(k)), pn = Object.keys(z).find(k => /\.pdf$/i.test(k));
+        if (!jn) throw new Error('nojson');
+        data = JSON.parse(new TextDecoder().decode(z[jn]));
+        if (pn) pdf = new File([z[pn]], data.rulesPdfName || 'regolamento.pdf', {type: 'application/pdf'});
+      } else data = JSON.parse(await f.text());
+    } catch (err) { toast('Il file non è valido'); return; }
+    if (!data || typeof data !== 'object' || !(data.cards || data.decks || data.rules || data.icons || data.rulesAreas)) { toast('Questo file non contiene dati dell’app'); return; }
+    S.imp = {data, pdf, name: f.name, mode: {cards: 'add', decks: 'add', icons: 'add', rules: 'add', pdf: pdf ? 'add' : 'skip', prefs: 'skip'}}; renderAll();
   }
   else if (t.dataset && t.dataset.imp && S.imp) { S.imp.mode[t.dataset.imp] = t.value; renderAll(); }
   else if (t.dataset && t.dataset.iconcolor) { putIcon(t.dataset.kind, t.dataset.name, {color: t.value}); }
