@@ -1777,7 +1777,7 @@ function vStampa() {
     </section>
 
     <section class="pr-sec"><h2><span>2</span>File delle carte e retro</h2>
-      <p class="muted">Carica i file delle carte (immagini o PDF) chiamati con il codice della carta, per esempio <b>CS01-1.png</b> o <b>CS01 - 1.pdf</b>. Se per una carta non carichi un file, viene usata l’immagine salvata nell’app. Le immagini vanno preparate a 68×95 mm (con abbondanza) o a 62×89 mm (misura finita).</p>
+      <p class="muted">Carica i file delle carte (immagini o PDF) chiamati con il codice della carta, per esempio <b>CS01-1.png</b> o <b>CS01 - 1.pdf</b>. Se per una carta non carichi un file, viene usata l’immagine salvata nell’app. Ogni file viene messo dentro il riquadro di taglio 62×89 mm (proporzioni 62:89); l’abbondanza intorno resta nera come nel modello.</p>
       <div class="pr-up"><label class="btn alt" style="cursor:pointer;position:relative"><span>Carica i file delle carte</span><input id="pr-files" type="file" multiple accept="image/*,.webp,.jpg,.jpeg,.png,.pdf,application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label><label class="btn alt sm" style="cursor:pointer;position:relative"><span>Scegli una cartella</span><input id="pr-dir" type="file" webkitdirectory directory multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label>${Object.keys(PR.files).length ? btn('Svuota', 'prClearFiles', {cls: 'alt sm'}) : ''}</div>
       <div class="pr-save"><b>Salva le immagini nelle carte</b><p class="muted">Carica tutte le immagini delle carte (chiamate con il codice) e salvale nell’app in qualità piena: le ritrovi nelle schede delle carte e qui in Stampa, senza doverle ricaricare la prossima volta.</p>
         <div class="pr-up"><label class="btn sm" style="cursor:pointer;position:relative"><span>Carica e salva le immagini</span><input id="pr-save" type="file" multiple accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label><label class="btn alt sm" style="cursor:pointer;position:relative"><span>Da una cartella</span><input id="pr-save-dir" type="file" webkitdirectory directory multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
@@ -1825,17 +1825,13 @@ async function prEmbed(out, src) {
   const ep = await out.embedPage(sp, {left: mb.x, bottom: mb.y, right: mb.x + mb.width, top: mb.y + mb.height});
   return {w: mb.width, h: mb.height, pdf: true, trim: hasTrim ? {x: tb.x - mb.x, y: tb.y - mb.y, w: tb.width, h: tb.height} : null, draw: (pg, o) => pg.drawPage(ep, o)};
 }
-/* posiziona la grafica: con abbondanza → riempie l'abbondanza; a misura finita → riempie il taglio (e sotto copre l'abbondanza) */
+/* come nel modello: abbondanza nera (0 0 0), la grafica della carta sta tutta dentro il riquadro di taglio 62×89 mm */
 function prPlace(L, pg, art) {
-  const [bx0, by0, bx1, by1] = PRINT_SPEC.bleed, [tx0, ty0, tx1, ty1] = PRINT_SPEC.trim, bw = bx1 - bx0, bh = by1 - by0, tw = tx1 - tx0, th = ty1 - ty0;
-  const cover = (x0, y0, w, h) => { const k = Math.max(w / art.w, h / art.h), dw = art.w * k, dh = art.h * k; return {x: x0 + (w - dw) / 2, y: y0 + (h - dh) / 2, width: dw, height: dh}; };
-  pg.pushOperators(L.pushGraphicsState(), L.rectangle(bx0, by0, bw, bh), L.clip(), L.endPath());
-  if (art.trim) { const k = tw / art.trim.w; art.draw(pg, {x: tx0 - art.trim.x * k, y: ty0 - art.trim.y * k, width: art.w * k, height: art.h * k}); }
-  else {
-    const r = art.w / art.h, rb = bw / bh, rt = tw / th;
-    if (Math.abs(r - rb) <= Math.abs(r - rt)) art.draw(pg, cover(bx0, by0, bw, bh));
-    else { art.draw(pg, cover(bx0, by0, bw, bh)); art.draw(pg, cover(tx0, ty0, tw, th)); }
-  }
+  const [bx0, by0, bx1, by1] = PRINT_SPEC.bleed, [tx0, ty0, tx1, ty1] = PRINT_SPEC.trim, tw = tx1 - tx0, th = ty1 - ty0;
+  pg.drawRectangle({x: bx0, y: by0, width: bx1 - bx0, height: by1 - by0, color: L.rgb(0, 0, 0), borderWidth: 0});
+  pg.pushOperators(L.pushGraphicsState(), L.rectangle(tx0, ty0, tw, th), L.clip(), L.endPath());
+  if (art.trim) { const k = Math.min(tw / art.trim.w, th / art.trim.h), dw = art.trim.w * k, dh = art.trim.h * k, ox = tx0 + (tw - dw) / 2, oy = ty0 + (th - dh) / 2; art.draw(pg, {x: ox - art.trim.x * k, y: oy - art.trim.y * k, width: art.w * k, height: art.h * k}); }
+  else { const k = Math.min(tw / art.w, th / art.h), dw = art.w * k, dh = art.h * k; art.draw(pg, {x: tx0 + (tw - dw) / 2, y: ty0 + (th - dh) / 2, width: dw, height: dh}); }
   pg.pushOperators(L.popGraphicsState());
 }
 function prPage(L, out) {
