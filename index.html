@@ -86,7 +86,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .cf-b{border:0;cursor:pointer;background:var(--raise);color:var(--fg);font:700 14px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;padding:10px 12px}
 .cf-b.yes{background:#a11d18;color:#fff}
 #sh-detail .sheet-hd h2{flex:1}
-#sh-detail.confirming #dt-fav{display:none}
+#sh-detail.confirming #dt-fav,#sh-detail.confirming #dt-pr{display:none}
+.prbtn[aria-pressed="true"]{background:var(--red);color:#fff}
+.prbtn svg{width:24px;height:24px}
 @media (max-width:480px){.cf-q{display:none}#sh-detail.confirming #dt-title{visibility:hidden}}
 #sh-detail .ib svg{width:24px;height:24px}
 .zoomart{display:block;width:100%;border:0;padding:0;background:none;cursor:zoom-in}
@@ -136,6 +138,54 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .faq-it[open] summary{border-bottom:1px solid var(--line)}
 .faq-a{display:flex;gap:10px;align-items:flex-start;padding:12px 18px 14px}
 .faq-a .prose{flex:1;padding-top:0;max-width:none}
+.pr-go{display:flex;flex-direction:column;align-items:center;gap:10px;margin:26px 0 8px;text-align:center}
+.pr-btn{display:inline-flex;align-items:center;gap:14px;border:0;cursor:pointer;background:var(--red);color:#fff;padding:16px 34px 16px 26px;font:800 26px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;transform:skewX(-14deg);box-shadow:0 12px 26px -10px rgba(224,53,46,.8);transition:filter .15s,transform .15s}
+.pr-btn>*{transform:skewX(14deg)}
+.pr-btn svg{width:38px;height:38px}
+.pr-btn:hover:not(:disabled){filter:brightness(1.08)}
+.pr-btn:disabled{background:var(--raise);color:var(--muted);box-shadow:none;cursor:not-allowed}
+.pr-sec{margin-top:34px;max-width:900px}
+.pr-sec h2{display:flex;align-items:center;gap:12px;font:800 28px/1 var(--font-display);letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px}
+.pr-sec h2 span{width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-size:18px}
+.pr-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pr-tools input{flex:1;min-width:200px}
+.pr-count{margin:12px 0 8px;font:700 15px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--red-text)}
+.pr-list{max-height:380px;overflow:auto;border:1px solid var(--line);background:var(--surface)}
+.pr-row{display:grid;grid-template-columns:auto 110px 1fr auto;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.pr-row:last-child{border-bottom:0}
+.pr-row:hover{background:var(--raise)}
+.pr-row input{width:20px;height:20px;accent-color:var(--red)}
+.pr-row b{font:700 16px/1 var(--font-display);letter-spacing:.04em}
+.pr-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-row i{font:600 12px/1 var(--font-display);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:520px){.pr-row{grid-template-columns:auto 84px 1fr}.pr-row i{display:none}}
+.pr-note{margin-top:16px}
+.pr-note-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.pr-note textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;min-height:120px}
+.pr-up{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.pr-stat{margin-top:12px}
+.pr-save{margin-top:18px;border:1px solid var(--line);border-left:4px solid var(--red);background:var(--surface);padding:14px 16px}
+.pr-save b{font:700 18px/1.1 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
+.pr-save p.muted{margin-top:4px}
+.pr-stat .bad,.pr-miss{color:var(--red-text)}
+.pr-miss{font-size:14px;margin-top:6px}
+.pr-retro{display:flex;gap:16px;align-items:center;margin-top:20px;border:1px solid var(--line);background:var(--surface);padding:14px}
+.pr-retro-prev{width:68px;aspect-ratio:68/95;flex:none;background:var(--raise);display:grid;place-items:center;overflow:hidden;border-radius:4px}
+.pr-retro-prev img{width:100%;height:100%;object-fit:cover}
+.pr-retro-prev span{font:700 12px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pr-retro b{font:700 18px/1.1 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
+.xi{margin-top:16px;border:1px solid var(--line);border-left:4px solid var(--red);background:var(--surface);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.xi-sum{display:flex;flex-direction:column;gap:4px;padding-left:18px}
+.xi-list{max-height:260px;overflow:auto;border-top:1px solid var(--line);padding:10px 0 0 18px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.af-top{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+.af-logo{width:min(160px,40vw);aspect-ratio:1;flex:none;display:grid;place-items:center;overflow:hidden}
+.af-logo .aff.lg{object-fit:contain}
+.af-logo .aff-ph{font-size:48px}
+.af-info{flex:1;min-width:220px}
+.af-ab{font:800 28px/1.05 var(--font-display);letter-spacing:.04em;text-transform:uppercase;margin:6px 0 10px}
+.afd{margin-top:12px;border-left:3px solid var(--red);padding:2px 0 2px 12px}
+.afd>b{font:700 17px/1.2 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
+.afd .prose{padding-top:4px;font-size:16px}
 .pdf-card{margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--line);background:var(--surface);padding:18px 20px;max-width:640px}
 .pdf-ic{width:54px;height:66px;flex:none;background:#e0352e;color:#fff;display:grid;place-items:center;font:800 15px/1 var(--font-display);letter-spacing:.08em;clip-path:polygon(0 0,72% 0,100% 22%,100% 100%,0 100%)}
 .pdf-meta{flex:1;min-width:160px}
@@ -315,6 +365,9 @@ body:not([data-view="carte"]) .top .ib[data-act="search"]{visibility:hidden}
 .f-num{position:absolute;right:3cqw;bottom:3cqw;z-index:3;background:rgba(0,0,0,.72);color:#fff;font:700 6.4cqw/1 var(--font-display);letter-spacing:.06em;padding:1.6cqw 2.6cqw;border-radius:2cqw;pointer-events:none}
 .f-code{position:absolute;left:3cqw;bottom:3cqw;z-index:3;background:rgba(0,0,0,.72);color:#fff;font:700 6.4cqw/1 var(--font-display);letter-spacing:.06em;padding:1.6cqw 2.6cqw;border-radius:2cqw;pointer-events:none;max-width:55%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .art.mini .f-num,.art.mini .f-code{display:none}
+.f-pr{position:absolute;left:3cqw;top:16cqw;z-index:3;width:13cqw;height:13cqw;padding:2cqw;border-radius:50%;background:var(--red);color:#fff;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.6);display:grid;place-items:center}
+.f-pr svg{width:100%;height:100%}
+.art.mini .f-pr{display:none}
 .f-fav{position:absolute;right:3cqw;top:16cqw;z-index:3;width:13cqw;height:13cqw;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
 .f-fav svg,.favbtn svg{width:100%;height:100%;display:block;fill:#f5b301;stroke:#161616;stroke-width:1.2;stroke-linejoin:round}
 .art.mini .f-fav{top:auto;bottom:4cqw;right:4cqw;width:30cqw;height:30cqw}
@@ -472,7 +525,7 @@ button.affl:hover{color:var(--red-text)}
 </nav>
 
 <section class="sheet" id="sh-detail" aria-label="Dettaglio carta">
-  <div class="sheet-hd"><div class="gut"><h2 id="dt-title">Carta</h2><div class="hd-r"><span id="dt-acts" class="hd-r"></span><button class="ib favbtn" id="dt-fav" data-act="fav" aria-pressed="false" aria-label="Aggiungi ai preferiti" title="Preferita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></button><button class="ib" data-act="closeSheet" data-v="sh-detail" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div></div>
+  <div class="sheet-hd"><div class="gut"><h2 id="dt-title">Carta</h2><div class="hd-r"><span id="dt-acts" class="hd-r"></span><button class="ib prbtn" id="dt-pr" data-act="prToggle" aria-pressed="false" aria-label="Aggiungi alla lista stampa" title="Lista stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg></button><button class="ib favbtn" id="dt-fav" data-act="fav" aria-pressed="false" aria-label="Aggiungi ai preferiti" title="Preferita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></button><button class="ib" data-act="closeSheet" data-v="sh-detail" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div></div>
   <div class="sheet-bd"><div class="gut wrap" id="dt-body"></div></div>
   <button class="navarr prev" id="dt-prev" data-act="prevCard" aria-label="Carta precedente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"><path d="M15 4 7 12l8 8"/></svg></button>
   <button class="navarr next" id="dt-next" data-act="nextCard" aria-label="Carta successiva"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"><path d="M9 4l8 8-8 8"/></svg></button>
@@ -490,6 +543,11 @@ button.affl:hover{color:var(--red-text)}
   <div class="sheet-ft"><div class="gut wrap"><span class="muted" id="pk-info" style="margin-right:auto"></span><button class="btn" data-act="closeSheet" data-v="sh-pick"><span>Fatto</span></button></div></div>
 </section>
 
+<section class="sheet" id="sh-aff" aria-label="Affiliazione">
+  <div class="sheet-hd"><div class="gut"><h2 id="af-title">Affiliazione</h2><div class="hd-r"><button class="ib" id="af-pen" data-act="afEdit" aria-label="Modifica abilità" title="Modifica abilità"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button><button class="ib" data-act="closeSheet" data-v="sh-aff" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div></div>
+  <div class="sheet-bd"><div class="gut wrap" id="af-body"></div></div>
+  <div class="sheet-ft"><div class="gut wrap" id="af-ft"></div></div>
+</section>
 <section class="sheet" id="sh-rule" aria-label="Regolamento">
   <div class="sheet-hd"><div class="gut"><h2 id="ru-title">Regolamento</h2><div class="hd-r"><button class="ib" id="ru-pen" data-act="ruEdit" aria-label="Modifica" title="Modifica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button><button class="ib" data-act="closeSheet" data-v="sh-rule" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div></div>
   <div class="sheet-bd"><div class="gut wrap" id="ru-body"></div></div>
@@ -574,7 +632,7 @@ const CARATT = ['Eroe','Antieroe','Cattivo','Alieno','Alleanza','Alleato','Andro
 const ABIL = ['Protettore','Temerario','Aggressivo','Resistente','Evasivo','Aiutante','Agile','Protetto','Evoluzione','Soccorritore'];
 const STATS = [['costo','Costo'],['forza','Forza'],['resistenza','Resistenza'],['gloria','Gloria'],['spostamento','Costo di spostamento']];
 const SORTS = [['set','Set e codice'],['numero','Set e N°'],['code','Codice carta'],['nome','Nome'],['tipo','Tipo carta'],['classe','Classe'],['costo','Costo'],['forza','Forza'],['resistenza','Resistenza'],['gloria','Gloria'],['spostamento','Costo di spostamento'],['rarita','Rarità'],['added','Ultime aggiunte']];
-const VIEWS = ['home','mazzi','carte','classi','affiliazioni','regolamento','impostazioni'];
+const VIEWS = ['home','mazzi','carte','classi','affiliazioni','regolamento','stampa','impostazioni'];
 const PAGE = 60;
 const SETS = {1:'Secret War',2:'Contest of Champions',3:'Marvels',4:'Secret Warrior',5:'Marvel Cinematic Universe'};
 const setName = n => n == null ? 'Senza set' : 'Set ' + n + (SETS[n] ? ' · ' + SETS[n] : '');
@@ -601,7 +659,7 @@ const fmt = n => n == null ? '–' : (Math.round(n * 10) / 10).toString().replac
 
 const newFilters = () => ({
   q: '', tipo: new Set(), affiliazione: new Set(), classe: new Set(), rarita: new Set(),
-  caratteristiche: new Set(), abilita: new Set(), caMode: 'any', abMode: 'any', estrazione: '', completa: '', preferite: '',
+  caratteristiche: new Set(), abilita: new Set(), caMode: 'any', abMode: 'any', estrazione: '', completa: '', preferite: '', stampa: '',
   range: {costo: ['',''], forza: ['',''], resistenza: ['',''], gloria: ['',''], spostamento: ['','']},
   set: new Set(), sort: 'set', dir: 'asc'
 });
@@ -617,7 +675,7 @@ const queue = {};
 
 /* ---------- salvataggio ---------- */
 const chain = (key, fn) => { const p = (queue[key] || Promise.resolve()).catch(() => {}).then(fn); queue[key] = p; return p; };
-const persistLocal = () => lsSet('bw:data', {cards: S.cards, decks: S.decks, rules: S.rules, icons: ICONS, rulesPdf: S.rulesPdf || null, rulesAreas: S.rulesAreas || null});
+const persistLocal = () => lsSet('bw:data', {cards: S.cards, decks: S.decks, rules: S.rules, icons: ICONS, rulesPdf: S.rulesPdf || null, rulesAreas: S.rulesAreas || null, print: S.print || null, affAb: S.affAb || {}});
 const dbErr = e => toast('Salvataggio non riuscito' + (e && e.code ? ' (' + e.code + ')' : ''));
 const cleanCard = c => { const o = Object.assign({}, c); delete o.id; return o; };
 
@@ -705,7 +763,7 @@ async function initData() {
     const l = lsGet('bw:data', {cards: {}, decks: {}, rules: ''});
     Object.entries(l.cards || {}).forEach(([id, d]) => S.cards[id] = normCard(id, d));
     Object.entries(l.decks || {}).forEach(([id, d]) => S.decks[id] = normDeck(id, d));
-    S.rules = l.rules || ''; ICONS = l.icons || {}; S.mode = 'local'; S.rulesPdf = l.rulesPdf || null; S.rulesAreas = l.rulesAreas || null; S.loaded = true; renderAll(); fillNumeri(); cardsOk = iconsOk = true; maybeAffReset(); return;
+    S.rules = l.rules || ''; ICONS = l.icons || {}; S.mode = 'local'; S.rulesPdf = l.rulesPdf || null; S.rulesAreas = l.rulesAreas || null; S.print = l.print || null; S.affAb = l.affAb || {}; S.loaded = true; renderAll(); fillNumeri(); cardsOk = iconsOk = true; maybeAffReset(); return;
   }
   S.mode = 'db';
   const timer = setTimeout(() => { S.slow = true; renderAll(); }, 10000);
@@ -727,6 +785,8 @@ async function initData() {
     if (!(snap.metadata && snap.metadata.fromCache)) { iconsOk = true; maybeAffReset(); }
   }, fail);
   DB.doc('meta/rules').onSnapshot(snap => { S.rules = snap.exists ? (snap.data().text || '') : ''; renderAll(); }, fail);
+  DB.doc('meta/affAbilities').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : {}; S.affAb = d.map && typeof d.map === 'object' ? d.map : {}; if (!AF.edit) { renderAll(); if ($('#sh-aff').classList.contains('open')) renderAff(); } }, () => {});
+  DB.doc('meta/print').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : null; S.print = d && Array.isArray(d.ids) ? {ids: d.ids} : null; if (S.view === 'stampa' && !PR.busy) renderAll(); }, () => {});
   DB.doc('meta/rulesAreas').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : null; S.rulesAreas = d && Array.isArray(d.sections) ? {sections: d.sections, faq: Array.isArray(d.faq) ? d.faq : []} : null; if (!S.rsEdit) renderAll(); }, () => {});
   DB.doc('meta/rulesPdf').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : {}; S.rulesPdf = (d.parts && d.parts.length) || d.id ? d : null; renderAll(); }, () => {});
 }
@@ -749,6 +809,7 @@ function applyFilters(list, f = S.filters) {
     if (f.estrazione === 'si' && !c.estrazione) return false;
     if (f.estrazione === 'no' && c.estrazione) return false;
     if (f.preferite === 'si' && !c.preferita) return false;
+    if (f.stampa === 'si' && !inPrint(c)) return false;
     if (f.completa === 'si' && !c.completa) return false;
     if (f.completa === 'no' && c.completa) return false;
     if (f.caratteristiche.size) { const a = [...f.caratteristiche]; if (!(f.caMode === 'all' ? a.every(x => c.caratteristiche.includes(x)) : a.some(x => c.caratteristiche.includes(x)))) return false; }
@@ -774,7 +835,7 @@ function applyFilters(list, f = S.filters) {
 const allCards = () => Object.values(S.cards);
 const AFFILIAZIONI = ["Avengers", "A Force", "Agent of atlas", "Asgardian", "Black Order", "Brotherhood of mutant", "Cabal", "Crime Syndicate", "Dark Avengers", "Defenders", "HYDRA", "Illuminati", "Inhumans", "Midnight Sons", "New Avengers", "New Warriors", "Omega Flight", "Runaways", "SHIELD", "Sinister Six", "SWORD", "Thunderbolts", "Wakanda", "Weapon X", "Web Warriors", "Winter Guard", "X-Men", "Young Avengers", "Guardiani della Galassia", "Convocation of Wizard", "Hellfire Club", "New Mutants", "Trashengers"];
 const affiliazioni = () => [...new Set([...AFFILIAZIONI, ...allCards().flatMap(c => c.affiliazioni), ...icoNames('affiliazione')].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'it'));
-const activeFilterCount = (f = S.filters) => (f.q.trim() ? 1 : 0) + f.set.size + f.tipo.size + f.affiliazione.size + f.classe.size + f.rarita.size + f.caratteristiche.size + f.abilita.size + (f.estrazione ? 1 : 0) + (f.completa ? 1 : 0) + (f.preferite ? 1 : 0) + STATS.filter(([k]) => f.range[k][0] !== '' || f.range[k][1] !== '').length;
+const activeFilterCount = (f = S.filters) => (f.q.trim() ? 1 : 0) + f.set.size + f.tipo.size + f.affiliazione.size + f.classe.size + f.rarita.size + f.caratteristiche.size + f.abilita.size + (f.estrazione ? 1 : 0) + (f.completa ? 1 : 0) + (f.stampa ? 1 : 0) + (f.preferite ? 1 : 0) + STATS.filter(([k]) => f.range[k][0] !== '' || f.range[k][1] !== '').length;
 
 /* ---------- componenti ---------- */
 const ICON_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3l9 9-9 9"/></svg>';
@@ -785,7 +846,7 @@ const imgSrc = c => c.imgData || (c.img ? '/_blob/' + c.img : '');
 
 function art(c, mini) {
   const src = imgSrc(c);
-  return `<div class="art${mini ? ' mini' : ''}" style="${ccVar(c.classe)}"><div class="face"><div class="f-top"><span class="f-cost">${c.costo ?? ''}</span><span class="f-type">${classIcon(c.classe, 'fi', '#fff')}${esc(c.tipo)}</span></div><div class="f-ini">${esc(initials(c.nome))}</div><div><div class="f-name">${esc(c.nome)}</div><div class="f-sub">${esc(c.sottonome)}</div></div></div>${src ? `<img src="${esc(src)}" alt="${esc(c.nome)}" loading="lazy" decoding="async">` : ''}${c.preferita ? `<span class="f-fav" title="Preferita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span>` : ''}${c.code ? `<span class="f-code">${esc(c.code)}</span>` : ''}${c.numero != null ? `<span class="f-num">N° ${esc(c.numero)}</span>` : ''}${c.completa ? '' : WARN_SVG}</div>`;
+  return `<div class="art${mini ? ' mini' : ''}" style="${ccVar(c.classe)}"><div class="face"><div class="f-top"><span class="f-cost">${c.costo ?? ''}</span><span class="f-type">${classIcon(c.classe, 'fi', '#fff')}${esc(c.tipo)}</span></div><div class="f-ini">${esc(initials(c.nome))}</div><div><div class="f-name">${esc(c.nome)}</div><div class="f-sub">${esc(c.sottonome)}</div></div></div>${src ? `<img src="${esc(src)}" alt="${esc(c.nome)}" loading="lazy" decoding="async">` : ''}${inPrint(c) ? `<span class="f-pr" title="Nella lista stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/></svg></span>` : ''}${c.preferita ? `<span class="f-fav" title="Preferita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span>` : ''}${c.code ? `<span class="f-code">${esc(c.code)}</span>` : ''}${c.numero != null ? `<span class="f-num">N° ${esc(c.numero)}</span>` : ''}${c.completa ? '' : WARN_SVG}</div>`;
 }
 function tile(c) {
   const st = [['costo','COS'],['forza','FOR'],['resistenza','RES'],['gloria','GLO']].map(([k, l]) => `<span><b>${c[k] ?? '–'}</b><i>${l}</i></span>`).join('');
@@ -831,6 +892,7 @@ function filterSummary() {
   ['tipo','affiliazione','classe','rarita','caratteristiche','abilita'].forEach(k => f[k].forEach(v => add(v, k + ':' + v)));
   STATS.forEach(([k, l]) => { const [lo, hi] = f.range[k]; if (lo !== '' || hi !== '') add(`${l} ${lo !== '' ? lo : '0'}–${hi !== '' ? hi : '∞'}`, 'range:' + k); });
   if (f.preferite) add('★ Solo preferite', 'preferite');
+  if (f.stampa) add('Solo lista stampa', 'stampa');
   if (f.completa) add(f.completa === 'si' ? 'Carte complete' : 'Carte incomplete', 'completa');
   if (f.estrazione) add('Estrazione: ' + (f.estrazione === 'si' ? 'Sì' : 'No'), 'estrazione');
   return out.length ? `<div class="chips" style="padding-top:14px">${out.join('')}<button class="link" data-act="fClearAll" style="padding:10px 6px">Azzera tutto</button></div>` : '';
@@ -865,7 +927,7 @@ function vAffil() {
   if (!S.loaded) return loadingBlock();
   const cnt = {}; allCards().forEach(c => c.affiliazioni.forEach(a => { cnt[a] = (cnt[a] || 0) + 1; }));
   const list = affiliazioni();
-  const tiles = list.map(a => `<button class="aff-tile" data-act="goAff" data-v="${esc(a)}"><span class="aff-ic">${affIcon(a, 'lg') || '<i class="aff-ph">' + esc(initials(a)) + '</i>'}</span><span class="aff-tx"><b>${esc(a)}</b><i>${cnt[a] || 0} ${(cnt[a] || 0) === 1 ? 'carta' : 'carte'}</i></span></button>`).join('');
+  const tiles = list.map(a => `<button class="aff-tile" data-act="afOpen" data-v="${esc(a)}"><span class="aff-ic">${affIcon(a, 'lg') || '<i class="aff-ph">' + esc(initials(a)) + '</i>'}</span><span class="aff-tx"><b>${esc(a)}</b><i>${cnt[a] || 0} ${(cnt[a] || 0) === 1 ? 'carta' : 'carte'}</i></span></button>`).join('');
   return `<div class="gut"><div class="page-hd"><h1>Affiliazioni</h1><div class="count">${list.length} ${list.length === 1 ? 'affiliazione' : 'affiliazioni'}. Tocca un’affiliazione per vederne le carte. Le icone si caricano da Impostazioni.</div></div>${list.length ? `<div class="aff-grid">${tiles}</div>` : `<div class="empty"><h2>Nessuna affiliazione</h2><p>Compaiono quando le inserisci nelle carte, oppure le crei da Impostazioni.</p>${btn('Impostazioni', 'nav', {v: 'impostazioni', cls: 'alt'})}</div>`}<div style="height:40px"></div></div>`;
 }
 function vMazzi() {
@@ -963,13 +1025,15 @@ function vSet() {
   <section class="set"><h2>Pulizia</h2>${nEx ? `<p>Ci sono ${nEx} carte di esempio.</p><div class="btns">${conf('ex', 'Elimina le carte di esempio', 'delExamples')}</div>` : '<p>Nessuna carta di esempio presente.</p>'}
     <div class="btns">${conf('cards', 'Elimina tutte le carte', 'wipeCards')}</div><div class="btns">${conf('decks', 'Elimina tutti i mazzi', 'wipeDecks')}</div></section>
   <section class="set"><h2>Esporta in Excel</h2><p>Scarica un file Excel con tutte le carte, un foglio per ogni set, e un foglio “Statistiche” con il conteggio delle carte di ogni set per classe, tipo di carta, rarità, affiliazione, caratteristica, abilità speciale, estrazione e completezza, più i valori medi per classe.</p>
-    <div class="btns">${btn('Esporta in Excel', 'exportExcel')}</div></section><div style="height:44px"></div></div>`;
+    <div class="btns">${btn('Esporta in Excel', 'exportExcel')}<label class="btn alt" style="cursor:pointer;position:relative"><span>Reimporta da Excel</span><input id="xlsxFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
+    <p class="muted" style="font-size:14px;margin-top:10px">Modifica il file esportato (fogli dei set, “Regolamento” e “FAQ”) e reimportalo: prima di applicare vedi un riepilogo delle modifiche. Le righe nuove con un codice che non esiste creano nuove carte; le righe cancellate dal file non eliminano carte.</p>
+    ${xiPanel()}</section><div style="height:44px"></div></div>`;
 }
 function renderView() {
   const v = $('#view'), a = document.activeElement;
   if (a && v.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { S.dirty = true; return; }
   S.dirty = false;
-  v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, impostazioni: vSet}[S.view] || vHome)();
+  v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, stampa: vStampa, impostazioni: vSet}[S.view] || vHome)();
 }
 function renderMenu() {
   const row = (id, label, sub) => `<button class="nav-row${S.view === id ? ' on' : ''}" data-act="${sub ? 'sub' : 'nav'}" data-v="${id}"${sub ? ` aria-expanded="${!!S.menuSub[id]}"` : ''}>${label}${sub ? ICON_CHEV : ''}</button>`;
@@ -977,9 +1041,9 @@ function renderMenu() {
   $('#menuNav').innerHTML =
     row('home', 'Home') +
     row('mazzi', 'I tuoi mazzi', 1) + `<div class="sub${S.menuSub.mazzi ? ' open' : ''}"><button data-act="nav" data-v="mazzi">Tutti i mazzi</button>${dec.map(d => `<button data-act="deckOpen" data-v="${esc(d.id)}">${esc(d.nome)}</button>`).join('')}<button data-act="newDeckGo" style="color:var(--red-text)">+ Nuovo mazzo</button></div>` +
-    row('carte', 'Carte', 1) + `<div class="sub${S.menuSub.carte ? ' open' : ''}"><button data-act="navCarte" data-v="">Tutte le carte</button><button data-act="navFav">★ Preferite</button>${Object.keys(SETS).map(n => `<button data-act="goSet" data-v="${n}">Set ${n} · ${esc(SETS[n])}</button>`).join('')}${TIPI.map(t => `<button data-act="navCarte" data-v="${t}">${TIPI_PL[t]}</button>`).join('')}</div>` +
+    row('carte', 'Carte', 1) + `<div class="sub${S.menuSub.carte ? ' open' : ''}"><button data-act="navCarte" data-v="">Tutte le carte</button><button data-act="navFav">★ Preferite</button><button data-act="navPrint">Lista stampa</button>${Object.keys(SETS).map(n => `<button data-act="goSet" data-v="${n}">Set ${n} · ${esc(SETS[n])}</button>`).join('')}${TIPI.map(t => `<button data-act="navCarte" data-v="${t}">${TIPI_PL[t]}</button>`).join('')}</div>` +
     row('classi', 'Classi', 1) + `<div class="sub${S.menuSub.classi ? ' open' : ''}"><button data-act="nav" data-v="classi">Panoramica</button>${classi().map(k => `<button data-act="goClass" data-v="${k}">${classIcon(k)}${k}</button>`).join('')}</div>` +
-    `<button class="nav-row" data-act="game">Gioca</button>` + row('affiliazioni', 'Affiliazioni') + row('regolamento', 'Regolamento') + row('impostazioni', 'Impostazioni');
+    `<button class="nav-row" data-act="game">Gioca</button>` + row('affiliazioni', 'Affiliazioni') + row('regolamento', 'Regolamento') + row('stampa', 'Stampa') + row('impostazioni', 'Impostazioni');
   $('#menuFt').textContent = 'Marvel Battleworld · ' + allCards().length + ' carte · ' + Object.keys(S.decks).length + ' mazzi';
 }
 function applyTheme() { if (S.prefs.theme === 'light') document.documentElement.dataset.theme = 'light'; else document.documentElement.removeAttribute('data-theme'); }
@@ -1017,6 +1081,7 @@ function openFilter() {
     ${grp('Valori (da – a)', STATS.map(([k, l]) => `<div class="rng"><span>${l}</span><input type="number" inputmode="numeric" min="0" placeholder="Da" data-range="${k}" data-i="0" value="${esc(f.range[k][0])}" aria-label="${l}, minimo"><input type="number" inputmode="numeric" min="0" placeholder="A" data-range="${k}" data-i="1" value="${esc(f.range[k][1])}" aria-label="${l}, massimo"></div>`).join(''))}
     ${grp('Rarità', `<div class="chips">${rarita().map(r => chip(r, {f: 'rarita', rdot: r, on: f.rarita.has(r)})).join('')}</div>`)}
     ${grp('Preferite', seg('preferite', [['', 'Tutte le carte'], ['si', '★ Solo preferite']], f.preferite))}
+    ${grp('Lista stampa', seg('stampa', [['', 'Tutte le carte'], ['si', 'Solo lista stampa']], f.stampa))}
     ${grp('Completezza', seg('completa', [['', 'Tutte'], ['si', 'Complete'], ['no', 'Incomplete']], f.completa))}
     ${grp('Estrazione', seg('estrazione', [['', 'Tutte'], ['si', 'Sì'], ['no', 'No']], f.estrazione))}
     ${grp('Caratteristiche', `${seg('caMode', [['any', 'Almeno una'], ['all', 'Tutte']], f.caMode)}<div class="chips">${CARATT.map(c => chip(c, {f: 'caratteristiche', on: f.caratteristiche.has(c)})).join('')}</div>`)}
@@ -1031,6 +1096,7 @@ function openDetail(id) {
   const c = S.cards[id]; if (!c) return;
   detailId = id; closeMenu();
   $('#dt-title').textContent = c.code;
+  { const pb = $('#dt-pr'), on = inPrint(c); pb.setAttribute('aria-pressed', on); pb.setAttribute('aria-label', on ? 'Togli dalla lista stampa' : 'Aggiungi alla lista stampa'); }
   { const fb = $('#dt-fav'); fb.setAttribute('aria-pressed', !!c.preferita); fb.setAttribute('aria-label', c.preferita ? 'Togli dai preferiti' : 'Aggiungi ai preferiti'); }
   const decks = Object.values(S.decks).sort((a, b) => (b.updated || 0) - (a.updated || 0));
   const q = String(c.citazione || '').trim();
@@ -1040,7 +1106,7 @@ function openDetail(id) {
     <div><div class="d-name">${esc(c.nome)}</div>${c.sottonome ? `<div class="d-sub">${esc(c.sottonome)}</div>` : ''}${q ? `<div class="quote">${/^[“"«]/.test(q) ? rich(q) : '“' + rich(q) + '”'}</div>` : ''}</div>
     <div class="chips">${c.set != null ? staticChip(setName(c.set)) : ''}${c.numero != null ? staticChip('N° ' + c.numero) : ''}${staticChip(c.tipo)}${c.classe ? staticChip(c.classe, c.classe) : ''}${c.rarita ? staticChip(c.rarita, null, c.rarita) : ''}${staticChip('Estrazione: ' + (c.estrazione ? 'Sì' : 'No'))}${c.esempio ? staticChip('Esempio') : ''}${c.preferita ? '<span class="chip static" style="border-color:#f5b301">★ Preferita</span>' : ''}${c.completa ? '' : '<span class="chip static" style="border-color:#f5b301">⚠ Incompleta</span>'}</div>
     ${linkUrl(c.link) ? `<div><div class="lbl">Link</div><a class="clink" href="${esc(linkUrl(c.link))}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 10a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg><span>${esc(linkUrl(c.link).replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''))}</span></a></div>` : ''}
-    ${c.affiliazioni.length ? `<div><div class="lbl">${c.affiliazioni.length > 1 ? 'Affiliazioni' : 'Affiliazione'}</div><div class="affls">${c.affiliazioni.map(a => `<button class="affl" data-act="goAff" data-v="${esc(a)}">${affIcon(a)}${esc(a)}</button>`).join('')}</div></div>` : ''}
+    ${c.affiliazioni.length ? `<div><div class="lbl">${c.affiliazioni.length > 1 ? 'Affiliazioni' : 'Affiliazione'}</div><div class="affls">${c.affiliazioni.map(a => `<button class="affl" data-act="afOpen" data-v="${esc(a)}">${affIcon(a)}${esc(a)}</button>`).join('')}</div>${c.affiliazioni.filter(a => affAb(a) && (affAb(a).nome || affAb(a).desc)).map(a => `<div class="afd"><b>${esc(affAb(a).nome || 'Abilità')}</b> <span class="muted">· ${esc(a)}</span><div class="prose">${md(affAb(a).desc || '')}</div></div>`).join('')}</div>` : ''}
     <div class="sgrid">${stats}</div></div></div>
     <div class="form" style="margin-top:24px">
     ${c.caratteristiche.length ? `<div><div class="lbl">Caratteristiche</div><div class="chips">${c.caratteristiche.map(x => staticChip(x)).join('')}</div></div>` : ''}
@@ -1275,7 +1341,7 @@ async function exportAll() {
     await Promise.all(withImg.slice(i, i + 8).map(async c => { try { const r = await fetch('/_blob/' + c.img); if (r.ok) files[c.id] = await blobToUrl(await r.blob()); } catch (e) {} }));
   }
   const rp = S.rulesPdf, hasPdf = pdfParts(rp).length > 0;
-  const head = {app: 'marvel-battleworld', version: 4, exportedAt: new Date().toISOString(), decks: Object.values(S.decks), rules: S.rules, rulesAreas: rulesAreas(), rulesPdfName: hasPdf ? (rp.name || 'regolamento.pdf') : '', icons: Object.values(ICONS), prefs: S.prefs};
+  const head = {app: 'marvel-battleworld', version: 4, exportedAt: new Date().toISOString(), decks: Object.values(S.decks), rules: S.rules, rulesAreas: rulesAreas(), affAb: S.affAb || {}, rulesPdfName: hasPdf ? (rp.name || 'regolamento.pdf') : '', icons: Object.values(ICONS), prefs: S.prefs};
   const parts = [JSON.stringify(head).slice(0, -1), ',"cards":[']; cards.forEach((c, i) => { parts.push((i ? ',' : '') + JSON.stringify(files[c.id] ? Object.assign({}, c, {imgFile: files[c.id]}) : c)); }); parts.push(']}');
   const day = new Date().toLocaleDateString('sv-SE');
   let blob = new Blob(parts, {type: 'application/json'}), filename = 'marvel-battleworld-' + day + '.json', pdfMiss = false;
@@ -1414,7 +1480,9 @@ async function exportExcel() {
     A.sections.forEach(x => secSteps(x).forEach((st, k) => rr.push([k ? '' : x.title || '', k ? '' : secSummary(x), k + 1, st.title || '', String(st.body || '').replace(/\*\*/g, '')])));
     sheets.push({name: 'Regolamento', rows: rr, styles: {0: 2}, widths: [26, 44, 7, 28, 80], freeze: true});
     const fr = [['Domanda', 'Risposta'], ...A.faq.map(x => [x.q || '', String(x.a || '').replace(/\*\*/g, '')])];
-    sheets.push({name: 'FAQ', rows: fr, styles: {0: 2}, widths: [60, 80], freeze: true}); }
+    sheets.push({name: 'FAQ', rows: fr, styles: {0: 2}, widths: [60, 80], freeze: true});
+    const ar = [['Affiliazione', 'Abilità', 'Descrizione abilità', 'Carte'], ...affiliazioni().map(a => [a, (affAb(a) || {}).nome || '', String((affAb(a) || {}).desc || '').replace(/\*\*/g, ''), cards.filter(c => c.affiliazioni.includes(a)).length])];
+    sheets.push({name: 'Affiliazioni', rows: ar, styles: {0: 2}, widths: [28, 30, 70, 8], freeze: true}); }
   const blob = makeXlsx(sheets), filename = 'marvel-battleworld-carte-' + new Date().toLocaleDateString('sv-SE') + '.xlsx';
   try {
     if (DL) { await DL.save({filename, data: blob}); toast('File Excel salvato'); }
@@ -1463,6 +1531,7 @@ async function importRun() {
       if (md.icons === 'replace') Object.values(ICONS).filter(o => !keys.has(icoKey(o.kind, o.name))).forEach(o => delIcon(o.kind, o.name));
       await chunk(md.icons === 'add' ? inc.filter(i => !icoGet(i.kind, i.name)) : inc, i => putIcon(i.kind, i.name, {data: i.data || '', color: i.color || '', custom: !!i.custom}));
     }
+    if (md.rules && md.rules !== 'skip' && d.affAb && typeof d.affAb === 'object') { const map = Object.assign({}, S.affAb || {}); Object.entries(d.affAb).forEach(([k, v]) => { if (md.rules === 'replace' || !map[k]) map[k] = v; }); saveAffAb(map); }
     if (md.rules && md.rules !== 'skip') {
       const fresh = !S.rulesAreas && !S.rules.trim();
       if (md.rules === 'replace' || fresh) {
@@ -1676,6 +1745,303 @@ function renderRule() {
 function ruStartEdit() { const x = ruSec(); RU.edit = x ? {title: x.title || '', summary: secSummary(x), steps: secSteps(x).map(s => ({title: s.title || '', body: s.body || ''}))} : {title: '', summary: '', steps: [{title: '', body: ''}]}; S.confirm = ''; renderRule(); }
 function ruCollect() { const e = RU.edit; e.title = $('#ru-t').value; e.summary = $('#ru-s').value; e.steps.forEach((s, i) => { s.title = $(`[data-ru-st="${i}"]`).value; s.body = $(`[data-ru-sb="${i}"]`).value; }); }
 
+/* ---------- stampa: PDF tipografico 62×89 mm (abbondanza 3 mm, segni di taglio), fronte/retro alternati ---------- */
+const PT = 72 / 25.4;
+const PRINT_SPEC = {media: [0, 0, 221.1027, 297.63825], trim: [22.6772, 22.6772, 198.4255, 274.96105], bleed: [14.17325, 14.17325, 206.92945, 283.465],
+  marks: [[22.6772, 280.63035, 22.6772, 294.8036], [2.83465, 274.96105, 17.0079, 274.96105], [198.4255, 280.63035, 198.4255, 294.8036], [204.0948, 274.96105, 218.26805, 274.96105],
+    [22.6772, 17.0079, 22.6772, 2.83465], [2.83465, 22.6772, 17.0079, 22.6772], [198.4255, 17.0079, 198.4255, 2.83465], [204.0948, 22.6772, 218.26805, 22.6772]], markW: 0.5};
+let PR = {files: {}, retro: null, q: '', busy: false, msg: ''};
+const prKey = s => String(s || '').toLowerCase().replace(/\.[a-z0-9]+$/i, '').replace(/[^a-z0-9]/g, '');
+const inPrint = c => !!(S.print && S.print.ids && S.print.ids.includes(c.id));
+const prIds = () => { const ids = (S.print && S.print.ids) || []; return ids.filter(id => S.cards[id]); };
+const prOrdered = () => prIds().map(id => S.cards[id]).sort((a, b) => nat(a.code, b.code));
+function prSave(ids) {
+  S.print = {ids};
+  if (S.mode === 'db') chain('meta/print', () => DB.doc('meta/print').set({ids})).catch(dbErr); else persistLocal();
+}
+const prNote = () => prOrdered().map(c => c.code).join('\n');
+function prFileFor(c) { return PR.files[prKey(c.code)] || null; }
+function vStampa() {
+  if (!S.loaded) return loadingBlock();
+  const sel = prOrdered(), n = sel.length, withFile = sel.filter(prFileFor).length, withApp = sel.filter(c => !prFileFor(c) && imgSrc(c)).length, miss = n - withFile - withApp;
+  const ready = n > 0 && PR.retro && miss === 0 && !PR.busy;
+  const why = !n ? 'Seleziona almeno una carta.' : !PR.retro ? 'Carica il file del retro.' : miss ? `Mancano le immagini di ${miss} ${miss === 1 ? 'carta' : 'carte'}.` : '';
+  return `<div class="gut"><div class="page-hd"><h1>Stampa</h1><div class="count">Crea il PDF per la tipografia: carte 62×89 mm con 3 mm di abbondanza e segni di taglio, una pagina fronte e una retro per ogni carta.</div></div>
+    <div class="pr-go"><button class="pr-btn" data-act="prPrint"${ready ? '' : ' disabled'} aria-label="Crea il PDF di stampa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="1.5"/><path d="M6 14h12v7H6z"/><circle cx="17.5" cy="11.8" r=".6" fill="currentColor"/></svg><span>${PR.busy ? esc(PR.msg || 'Preparo il PDF…') : 'Stampa'}</span></button><p class="muted">${PR.busy ? 'Non chiudere la pagina finché il file non è pronto.' : ready ? `${n} ${n === 1 ? 'carta' : 'carte'} · ${n * 2} pagine (fronte e retro)` : why}</p></div>
+
+    <section class="pr-sec"><h2><span>1</span>Lista stampa</h2><p class="muted" style="margin-bottom:12px">Spunta le carte qui, oppure aggiungile dalla scheda di ogni carta con l’icona della stampante.</p>
+      <div class="pr-tools"><input id="pr-q" type="search" placeholder="Cerca per codice o nome…" value="${esc(PR.q)}" autocomplete="off" aria-label="Cerca carte"><button class="btn alt sm" data-act="prAll"><span>Seleziona visibili</span></button><button class="btn alt sm" data-act="prNone"><span>Deseleziona tutte</span></button></div>
+      <div class="pr-count" id="pr-count">${n} ${n === 1 ? 'carta selezionata' : 'carte selezionate'}</div>
+      <div class="pr-list" id="pr-list">${prListHtml()}</div>
+      <div class="pr-note"><div class="pr-note-hd"><b>Nota · codici selezionati in ordine</b><button class="btn alt sm" data-act="prCopy"${n ? '' : ' disabled'}><span>Copia</span></button></div><textarea id="pr-note" readonly rows="6" placeholder="I codici delle carte selezionate compaiono qui.">${esc(prNote())}</textarea></div>
+    </section>
+
+    <section class="pr-sec"><h2><span>2</span>File delle carte e retro</h2>
+      <p class="muted">Carica i file delle carte (immagini o PDF) chiamati con il codice della carta, per esempio <b>CS01-1.png</b> o <b>CS01 - 1.pdf</b>. Se per una carta non carichi un file, viene usata l’immagine salvata nell’app. Le immagini vanno preparate a 68×95 mm (con abbondanza) o a 62×89 mm (misura finita).</p>
+      <div class="pr-up"><label class="btn alt" style="cursor:pointer;position:relative"><span>Carica i file delle carte</span><input id="pr-files" type="file" multiple accept="image/*,.webp,.jpg,.jpeg,.png,.pdf,application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label><label class="btn alt sm" style="cursor:pointer;position:relative"><span>Scegli una cartella</span><input id="pr-dir" type="file" webkitdirectory directory multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label>${Object.keys(PR.files).length ? btn('Svuota', 'prClearFiles', {cls: 'alt sm'}) : ''}</div>
+      <div class="pr-save"><b>Salva le immagini nelle carte</b><p class="muted">Carica tutte le immagini delle carte (chiamate con il codice) e salvale nell’app in qualità piena: le ritrovi nelle schede delle carte e qui in Stampa, senza doverle ricaricare la prossima volta.</p>
+        <div class="pr-up"><label class="btn sm" style="cursor:pointer;position:relative"><span>Carica e salva le immagini</span><input id="pr-save" type="file" multiple accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label><label class="btn alt sm" style="cursor:pointer;position:relative"><span>Da una cartella</span><input id="pr-save-dir" type="file" webkitdirectory directory multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div>
+        ${S.bulk ? `<p class="pr-stat">${esc(S.bulk)}</p>` : ''}</div>
+      <p class="pr-stat">${n ? `<b>${withFile}</b> con file caricato · <b>${withApp}</b> con immagine dell’app · <b${miss ? ' class="bad"' : ''}>${miss}</b> senza immagine` : 'Seleziona prima le carte.'}</p>
+      ${miss ? `<p class="pr-miss">Senza immagine: ${sel.filter(c => !prFileFor(c) && !imgSrc(c)).slice(0, 30).map(c => esc(c.code)).join(', ')}${miss > 30 ? '…' : ''}</p>` : ''}
+      <div class="pr-retro"><div class="pr-retro-prev">${PR.retro ? (PR.retro.type === 'application/pdf' ? '<span>PDF</span>' : `<img src="${PR.retroUrl}" alt="Retro">`) : '<span>Retro</span>'}</div><div><b>Retro di tutte le carte</b><p class="muted" style="margin:4px 0 12px">${PR.retro ? esc(PR.retro.name) : 'Nessun file caricato.'}</p><label class="btn alt sm" style="cursor:pointer;position:relative;margin:0 7px"><span>${PR.retro ? 'Cambia retro' : 'Carica il retro'}</span><input id="pr-retro" type="file" accept="image/*,.webp,.jpg,.jpeg,.png,.pdf,application/pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></label></div></div>
+      <p class="muted" style="font-size:14px;margin-top:14px">I file caricati con “Carica i file delle carte” e il retro restano solo finché non chiudi la pagina. Le immagini caricate con “Carica e salva le immagini” restano invece salvate nelle carte.</p>
+    </section><div style="height:40px"></div></div>`;
+}
+function prListHtml() {
+  const ids = new Set(prIds()), q = norm(PR.q.trim());
+  const list = allCards().filter(c => !q || norm(c.code).includes(q) || norm(c.nome).includes(q) || norm(c.sottonome).includes(q)).sort((a, b) => nat(a.code, b.code));
+  if (!list.length) return '<p class="muted" style="padding:14px">Nessuna carta trovata.</p>';
+  return list.slice(0, 600).map(c => `<label class="pr-row"><input type="checkbox" data-pr="${esc(c.id)}"${ids.has(c.id) ? ' checked' : ''}><b>${esc(c.code)}</b><span>${esc(c.nome)}${c.sottonome ? ' · ' + esc(c.sottonome) : ''}</span><i>${prFileFor(c) ? 'file' : imgSrc(c) ? 'app' : '—'}</i></label>`).join('') + (list.length > 600 ? `<p class="muted" style="padding:10px 14px">Mostro le prime 600: usa la ricerca per trovare le altre.</p>` : '');
+}
+function prRefresh() {
+  const a = document.activeElement, keep = a && a.id === 'pr-q', y = $('#pr-list') ? $('#pr-list').scrollTop : 0, sy = window.scrollY;
+  if (a && $('#view').contains(a)) a.blur();
+  renderAll();
+  if ($('#pr-list')) $('#pr-list').scrollTop = y; window.scrollTo(0, sy);
+  if (keep) { const q = $('#pr-q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+}
+async function prBytes(src) {
+  /* restituisce {kind:'jpg'|'png'|'pdf', bytes} senza ricomprimere quando possibile */
+  let blob = src;
+  if (typeof src === 'string') { const r = await fetch(src); if (!r.ok) throw new Error('img'); blob = await r.blob(); }
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const sig = bytes.slice(0, 8);
+  if (sig[0] === 0x25 && sig[1] === 0x50 && sig[2] === 0x44 && sig[3] === 0x46) return {kind: 'pdf', bytes};
+  if (sig[0] === 0xFF && sig[1] === 0xD8) return {kind: 'jpg', bytes};
+  if (sig[0] === 0x89 && sig[1] === 0x50) return {kind: 'png', bytes};
+  /* WebP, GIF, AVIF…: conversione in PNG senza perdita */
+  const bmp = await createImageBitmap(blob), cv = document.createElement('canvas'); cv.width = bmp.width; cv.height = bmp.height;
+  cv.getContext('2d').drawImage(bmp, 0, 0);
+  const png = await new Promise(r => cv.toBlob(r, 'image/png'));
+  return {kind: 'png', bytes: new Uint8Array(await png.arrayBuffer())};
+}
+async function prEmbed(out, src) {
+  const b = await prBytes(src);
+  if (b.kind === 'jpg') { const im = await out.embedJpg(b.bytes); return {w: im.width, h: im.height, draw: (pg, o) => pg.drawImage(im, o)}; }
+  if (b.kind === 'png') { const im = await out.embedPng(b.bytes); return {w: im.width, h: im.height, draw: (pg, o) => pg.drawImage(im, o)}; }
+  const L = window.PDFLib, src2 = await L.PDFDocument.load(b.bytes, {ignoreEncryption: true, updateMetadata: false}), sp = src2.getPage(0);
+  const mb = sp.getMediaBox(), tb = sp.getTrimBox(), hasTrim = tb && (Math.abs(tb.width - mb.width) > .5 || Math.abs(tb.height - mb.height) > .5);
+  const ep = await out.embedPage(sp, {left: mb.x, bottom: mb.y, right: mb.x + mb.width, top: mb.y + mb.height});
+  return {w: mb.width, h: mb.height, pdf: true, trim: hasTrim ? {x: tb.x - mb.x, y: tb.y - mb.y, w: tb.width, h: tb.height} : null, draw: (pg, o) => pg.drawPage(ep, o)};
+}
+/* posiziona la grafica: con abbondanza → riempie l'abbondanza; a misura finita → riempie il taglio (e sotto copre l'abbondanza) */
+function prPlace(L, pg, art) {
+  const [bx0, by0, bx1, by1] = PRINT_SPEC.bleed, [tx0, ty0, tx1, ty1] = PRINT_SPEC.trim, bw = bx1 - bx0, bh = by1 - by0, tw = tx1 - tx0, th = ty1 - ty0;
+  const cover = (x0, y0, w, h) => { const k = Math.max(w / art.w, h / art.h), dw = art.w * k, dh = art.h * k; return {x: x0 + (w - dw) / 2, y: y0 + (h - dh) / 2, width: dw, height: dh}; };
+  pg.pushOperators(L.pushGraphicsState(), L.rectangle(bx0, by0, bw, bh), L.clip(), L.endPath());
+  if (art.trim) { const k = tw / art.trim.w; art.draw(pg, {x: tx0 - art.trim.x * k, y: ty0 - art.trim.y * k, width: art.w * k, height: art.h * k}); }
+  else {
+    const r = art.w / art.h, rb = bw / bh, rt = tw / th;
+    if (Math.abs(r - rb) <= Math.abs(r - rt)) art.draw(pg, cover(bx0, by0, bw, bh));
+    else { art.draw(pg, cover(bx0, by0, bw, bh)); art.draw(pg, cover(tx0, ty0, tw, th)); }
+  }
+  pg.pushOperators(L.popGraphicsState());
+}
+function prPage(L, out) {
+  const pg = out.addPage([PRINT_SPEC.media[2], PRINT_SPEC.media[3]]), s = PRINT_SPEC;
+  pg.setMediaBox(...[s.media[0], s.media[1], s.media[2] - s.media[0], s.media[3] - s.media[1]]);
+  pg.setBleedBox(s.bleed[0], s.bleed[1], s.bleed[2] - s.bleed[0], s.bleed[3] - s.bleed[1]);
+  pg.setTrimBox(s.trim[0], s.trim[1], s.trim[2] - s.trim[0], s.trim[3] - s.trim[1]);
+  return pg;
+}
+function prMarks(L, pg) { PRINT_SPEC.marks.forEach(([x0, y0, x1, y1]) => pg.drawLine({start: {x: x0, y: y0}, end: {x: x1, y: y1}, thickness: PRINT_SPEC.markW, color: L.rgb(0, 0, 0)})); }
+async function prPrint() {
+  const sel = prOrdered(); if (!sel.length || !PR.retro || PR.busy) return;
+  PR.busy = true; PR.msg = 'Preparo il PDF…'; prRefresh();
+  const setMsg = m => { PR.msg = m; const b = $('.pr-btn span'); if (b) b.textContent = m; };
+  try {
+    const L = await loadPdfLib(), out = await L.PDFDocument.create();
+    out.setTitle('Marvel Battleworld · stampa ' + sel.length + ' carte'); out.setCreator('Marvel Battleworld'); out.setProducer('pdf-lib (https://github.com/Hopding/pdf-lib)');
+    const retro = await prEmbed(out, PR.retro);
+    for (let i = 0; i < sel.length; i++) {
+      const c = sel[i]; setMsg(`Carta ${i + 1} di ${sel.length}…`);
+      const f = prFileFor(c), art = await prEmbed(out, f || imgSrc(c));
+      const fr = prPage(L, out); prPlace(L, fr, art); prMarks(L, fr);
+      const rt = prPage(L, out); prPlace(L, rt, retro); prMarks(L, rt);
+    }
+    setMsg('Salvo il PDF…');
+    const bytes = await out.save({useObjectStreams: false});
+    const blob = new Blob([bytes], {type: 'application/pdf'}), filename = 'stampa-carte-62x89mm-' + sel.length + 'carte-' + new Date().toLocaleDateString('sv-SE') + '.pdf';
+    if (DL) { await DL.save({filename, data: blob}); toast('PDF di stampa salvato'); }
+    else { const a = document.createElement('a'), u = URL.createObjectURL(blob); a.href = u; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); toast('PDF di stampa pronto'); }
+  } catch (e) { if (!e || e.code !== 'declined') toast(e && e.message === 'pdflib' ? 'Non riesco a preparare il PDF: controlla la connessione' : 'Non riesco a creare il PDF: controlla i file caricati'); }
+  PR.busy = false; PR.msg = ''; prRefresh();
+}
+
+/* ---------- reimporta il file Excel esportato ---------- */
+async function inflateRaw(u8) {
+  if (typeof DecompressionStream === 'undefined') throw new Error('nodecomp');
+  const ds = new DecompressionStream('deflate-raw'), w = ds.writable.getWriter(); w.write(u8); w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+async function unzipAny(buf) {
+  const u = new Uint8Array(buf), v = new DataView(u.buffer, u.byteOffset, u.byteLength), dec = new TextDecoder(), out = {};
+  let e = u.length - 22; while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('zip');
+  let p = v.getUint32(e + 16, true); const cnt = v.getUint16(e + 10, true);
+  for (let i = 0; i < cnt; i++) {
+    const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+    const name = dec.decode(u.subarray(p + 46, p + 46 + nl)), ds = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true), raw = u.subarray(ds, ds + csize);
+    out[name] = method === 0 ? raw : method === 8 ? await inflateRaw(raw) : null;
+    p += 46 + nl + xl + cl;
+  }
+  return out;
+}
+const colIdx = ref => { const m = /^([A-Z]+)/.exec(ref || ''); if (!m) return -1; let n = 0; for (const ch of m[1]) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+async function readXlsx(file) {
+  const z = await unzipAny(await file.arrayBuffer()), dec = new TextDecoder(), P = new DOMParser();
+  const xml = path => { const b = z[path] || z[path.replace(/^\//, '')]; return b ? P.parseFromString(dec.decode(b), 'application/xml') : null; };
+  const wb = xml('xl/workbook.xml'); if (!wb) throw new Error('xlsx');
+  const rels = xml('xl/_rels/workbook.xml.rels'), relMap = {};
+  if (rels) [...rels.getElementsByTagName('Relationship')].forEach(r => { relMap[r.getAttribute('Id')] = r.getAttribute('Target'); });
+  const ss = xml('xl/sharedStrings.xml'), shared = ss ? [...ss.getElementsByTagName('si')].map(si => [...si.getElementsByTagName('t')].map(t => t.textContent).join('')) : [];
+  const sheets = {};
+  [...wb.getElementsByTagName('sheet')].forEach(sh => {
+    const rid = sh.getAttribute('r:id') || sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+    let target = relMap[rid] || ''; if (!target) return;
+    target = target.startsWith('/') ? target.slice(1) : 'xl/' + target.replace(/^\.\//, '');
+    const doc = xml(target); if (!doc) return;
+    const rows = [];
+    [...doc.getElementsByTagName('row')].forEach(r => {
+      const ri = Number(r.getAttribute('r')) - 1, row = [];
+      [...r.getElementsByTagName('c')].forEach(c => {
+        const ci = colIdx(c.getAttribute('r')), t = c.getAttribute('t'), vEl = c.getElementsByTagName('v')[0];
+        let val = '';
+        if (t === 's') val = shared[Number(vEl ? vEl.textContent : 0)] ?? '';
+        else if (t === 'inlineStr') val = [...c.getElementsByTagName('t')].map(x => x.textContent).join('');
+        else if (t === 'b') val = vEl && vEl.textContent === '1' ? 'Sì' : 'No';
+        else if (vEl) val = t === 'str' ? vEl.textContent : (isFinite(Number(vEl.textContent)) ? Number(vEl.textContent) : vEl.textContent);
+        if (ci >= 0) row[ci] = val;
+      });
+      rows[ri >= 0 ? ri : rows.length] = row;
+    });
+    sheets[sh.getAttribute('name')] = Array.from(rows, r => Array.from(r || [], x => x ?? ''));
+  });
+  return sheets;
+}
+const xs = v => v == null ? '' : String(v).trim();
+const xn = v => { const s = xs(v).replace(',', '.'); if (s === '' || s === '–' || s === '-') return null; const n = Number(s); return Number.isFinite(n) ? n : null; };
+const xb = v => /^(s[iì]|yes|true|1|x)$/i.test(xs(v));
+const xlist = v => xs(v).split(/\s*[,;]\s*/).filter(Boolean);
+const XI_FIELDS = [
+  ['N°', 'numero', xn], ['Set', 'set', xn], ['Tipo', 'tipo', xs], ['Nome', 'nome', xs], ['Sottonome', 'sottonome', xs], ['Classe', 'classe', xs], ['Affiliazioni', 'affiliazioni', xlist], ['Affiliazione', 'affiliazioni', xlist],
+  ...STATS.map(([k, l]) => [l, k, xn]), ['Rarità', 'rarita', xs], ['Estrazione', 'estrazione', xb], ['Caratteristiche', 'caratteristiche', xlist], ['Abilità speciali', 'abilita', xlist],
+  ['Mossa speciale', 'ms.nome', xs], ['Descrizione mossa speciale', 'ms.desc', xs], ['Mossa attiva', 'mossaAttiva', xs], ['Mossa secondaria', 'm2.nome', xs], ['Descrizione mossa secondaria', 'm2.desc', xs],
+  ['Citazione', 'citazione', xs], ['Link', 'link', v => linkUrl(xs(v))], ['Completa', 'completa', xb], ['Preferita', 'preferita', xb]];
+const XI_LABEL = {numero: 'N°', set: 'Set', tipo: 'Tipo', nome: 'Nome', sottonome: 'Sottonome', classe: 'Classe', affiliazioni: 'Affiliazioni', rarita: 'Rarità', estrazione: 'Estrazione', caratteristiche: 'Caratteristiche', abilita: 'Abilità', mossaSpeciale: 'Mossa speciale', mossaAttiva: 'Mossa attiva', mossaSecondaria: 'Mossa secondaria', citazione: 'Citazione', link: 'Link', completa: 'Completa', preferita: 'Preferita'};
+STATS.forEach(([k, l]) => { XI_LABEL[k] = l; });
+const xiSame = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+function xiAnalyse(sheets) {
+  const byKey = {}; allCards().forEach(c => { byKey[prKey(c.code)] = c; });
+  const changes = [], created = [], seen = new Set();
+  Object.entries(sheets).forEach(([name, rows]) => {
+    const head = (rows[0] || []).map(xs), ci = head.indexOf('Codice');
+    if (ci < 0 || !head.includes('Nome')) return;
+    rows.slice(1).forEach(r => {
+      const code = xs(r[ci]); if (!code) return;
+      const k = prKey(code); if (seen.has(k)) return; seen.add(k);
+      const old = byKey[k], base = old ? JSON.parse(JSON.stringify(old)) : normCard(slug(code), {code}), next = JSON.parse(JSON.stringify(base));
+      next.code = old ? old.code : code;
+      const ms = Object.assign({nome: '', desc: ''}, next.mossaSpeciale || {}), m2 = Object.assign({nome: '', desc: ''}, next.mossaSecondaria || {});
+      let touchedM2 = false;
+      XI_FIELDS.forEach(([label, key, conv]) => {
+        const i = head.indexOf(label); if (i < 0) return;
+        const v = conv(r[i]);
+        if (key === 'ms.nome') ms.nome = v; else if (key === 'ms.desc') ms.desc = v;
+        else if (key === 'm2.nome') { m2.nome = v; touchedM2 = true; } else if (key === 'm2.desc') { m2.desc = v; touchedM2 = true; }
+        else next[key] = v;
+      });
+      next.mossaSpeciale = ms;
+      if (touchedM2) next.mossaSecondaria = m2.nome || m2.desc ? m2 : null;
+      next.affiliazione = (next.affiliazioni || [])[0] || '';
+      if (!old) { if (!next.nome) return; next.createdAt = Date.now(); created.push(normCard(next.id, next)); return; }
+      const nn = normCard(old.id, next), diff = Object.keys(XI_LABEL).filter(f => !xiSame(old[f], nn[f]));
+      if (diff.length) changes.push({card: nn, fields: diff});
+    });
+  });
+  let rules = null;
+  const rs = sheets['Regolamento'];
+  if (rs && rs.length) {
+    const head = rs[0].map(xs), ia = head.indexOf('Area'), ir = head.indexOf('Riepilogo'), it = head.indexOf('Titolo della fase'), ib = head.indexOf('Spiegazione');
+    if (ia >= 0 && it >= 0 && ib >= 0) {
+      const cur = rulesAreas(), byTitle = {}; cur.sections.forEach(x => { byTitle[norm(x.title || '')] = x; });
+      const secs = []; let s = null;
+      rs.slice(1).forEach(r => {
+        const a = xs(r[ia]), st = {title: xs(r[it]), body: xs(r[ib]).replace(/\r\n/g, '\n')};
+        if (a) { const ex = byTitle[norm(a)]; s = {id: ex ? ex.id : 's' + Date.now().toString(36) + secs.length, title: a, summary: ir >= 0 ? xs(r[ir]) : '', steps: []}; secs.push(s); }
+        if (s && (st.title || st.body)) s.steps.push(st);
+      });
+      const fq = sheets['FAQ'], faq = [];
+      if (fq && fq.length) { const fh = fq[0].map(xs), iq = fh.indexOf('Domanda'), ia2 = fh.indexOf('Risposta'), byQ = {}; cur.faq.forEach(x => { byQ[norm(x.q || '')] = x; });
+        if (iq >= 0) fq.slice(1).forEach((r, n) => { const q = xs(r[iq]); if (!q) return; const ex = byQ[norm(q)]; faq.push({id: ex ? ex.id : 'q' + Date.now().toString(36) + n, q, a: ia2 >= 0 ? xs(r[ia2]) : ''}); }); }
+      const next = {sections: secs.filter(x => x.steps.length), faq: fq ? faq : cur.faq};
+      const strip = A => JSON.stringify({s: A.sections.map(x => [x.title, x.summary || secSummary(x), secSteps(x).map(y => [y.title, String(y.body || '').replace(/\*\*/g, '')])]), f: A.faq.map(x => [x.q, String(x.a || '').replace(/\*\*/g, '')])});
+      if (next.sections.length && strip(next) !== strip(cur)) {
+        /* il file Excel non ha il grassetto: dove il testo non è cambiato tengo quello originale */
+        next.sections.forEach(x => { const o = cur.sections.find(y => y.id === x.id); if (!o) return; const os = secSteps(o); x.steps = x.steps.map((st, i) => os[i] && os[i].title === st.title && String(os[i].body || '').replace(/\*\*/g, '') === st.body ? os[i] : st); if (x.summary === secSummary(o)) x.summary = o.summary || x.summary; });
+        next.faq.forEach(x => { const o = cur.faq.find(y => y.id === x.id); if (o && String(o.a || '').replace(/\*\*/g, '') === x.a) x.a = o.a; });
+        rules = next;
+      }
+    }
+  }
+  let affAbNext = null;
+  const as = sheets['Affiliazioni'];
+  if (as && as.length) {
+    const ah = as[0].map(xs), ia = ah.indexOf('Affiliazione'), inn = ah.indexOf('Abilità'), idd = ah.indexOf('Descrizione abilità');
+    if (ia >= 0 && (inn >= 0 || idd >= 0)) {
+      const map = Object.assign({}, S.affAb || {}); let changed = 0;
+      as.slice(1).forEach(r => { const a = xs(r[ia]); if (!a) return; const nome = inn >= 0 ? xs(r[inn]) : '', desc = idd >= 0 ? xs(r[idd]).replace(/\r\n/g, '\n') : ''; const o = map[a];
+        const same = o ? (o.nome || '') === nome && String(o.desc || '').replace(/\*\*/g, '') === desc : !nome && !desc;
+        if (same) return; changed++; if (nome || desc) map[a] = {nome, desc}; else delete map[a]; });
+      if (changed) affAbNext = {map, changed};
+    }
+  }
+  return {changes, created, rules, affAb: affAbNext};
+}
+let XI = null;
+function xiPanel() {
+  if (!XI) return '';
+  if (XI.busy) return `<div class="xi"><p>Leggo il file…</p></div>`;
+  const {changes, created, rules, name} = XI, nothing = !changes.length && !created.length && !rules && !XI.affAb;
+  const list = changes.slice(0, 40).map(x => `<li><b>${esc(x.card.code)}</b> ${esc(x.card.nome)} · <span class="muted">${x.fields.map(f => esc(XI_LABEL[f] || f)).join(', ')}</span></li>`).join('');
+  return `<div class="xi"><p><b>${esc(name)}</b></p>
+    ${nothing ? '<p>Nessuna differenza rispetto ai dati attuali.</p>' : `<ul class="xi-sum"><li><b>${changes.length}</b> ${changes.length === 1 ? 'carta modificata' : 'carte modificate'}</li><li><b>${created.length}</b> ${created.length === 1 ? 'carta nuova' : 'carte nuove'}${created.length ? ': ' + created.slice(0, 12).map(c => esc(c.code)).join(', ') + (created.length > 12 ? '…' : '') : ''}</li><li>Regolamento e FAQ: <b>${rules ? 'modificati' : 'nessuna modifica'}</b></li><li>Abilità delle affiliazioni: <b>${XI.affAb ? XI.affAb.changed + ' modificate' : 'nessuna modifica'}</b></li></ul>
+    ${list ? `<ul class="xi-list">${list}${changes.length > 40 ? `<li class="muted">…e altre ${changes.length - 40}</li>` : ''}</ul>` : ''}`}
+    <div class="btns">${nothing ? '' : btn('Applica le modifiche', 'xiApply')}${btn(nothing ? 'Chiudi' : 'Annulla', 'xiCancel', {cls: 'alt'})}</div></div>`;
+}
+async function xiApply() {
+  if (!XI || XI.busy) return;
+  const {changes, created, rules} = XI, all = [...changes.map(x => x.card), ...created];
+  all.forEach(c => { const n = normCard(c.id, c); S.cards[n.id] = n; });
+  if (S.mode === 'db') all.forEach(c => chain('c/' + c.id, () => DB.collection('cards').doc(c.id).set(cleanCard(S.cards[c.id]))).catch(dbErr));
+  else persistLocal();
+  if (rules) saveAreas(rules);
+  if (XI.affAb) saveAffAb(XI.affAb.map);
+  const msg = `${changes.length} ${changes.length === 1 ? 'carta modificata' : 'carte modificate'}, ${created.length} ${created.length === 1 ? 'nuova' : 'nuove'}${rules ? ', regolamento aggiornato' : ''}`;
+  XI = null; renderAll(); toast(msg);
+}
+
+/* ---------- abilità delle affiliazioni ---------- */
+let AF = {name: '', edit: false};
+const affAb = a => (S.affAb || {})[a] || null;
+function saveAffAb(map) {
+  S.affAb = map;
+  if (S.mode === 'db') chain('meta/affAbilities', () => DB.doc('meta/affAbilities').set({map})).catch(dbErr); else persistLocal();
+}
+function renderAff() {
+  const a = AF.name, ab = affAb(a), n = allCards().filter(c => c.affiliazioni.includes(a)).length;
+  $('#af-title').textContent = a; $('#af-pen').hidden = AF.edit;
+  const logo = `<div class="af-logo">${affIcon(a, 'lg') || '<i class="aff-ph">' + esc(initials(a)) + '</i>'}</div>`;
+  if (AF.edit) {
+    $('#af-body').innerHTML = `<div class="af-top">${logo}<div class="form" style="flex:1;min-width:240px"><label class="fl"><span>Nome dell’abilità</span><input id="af-n" value="${esc(ab ? ab.nome : '')}" autocomplete="off" placeholder="Es. Riunione dei Vendicatori"></label><label class="fl"><span>Descrizione</span><textarea id="af-d" rows="7" placeholder="Cosa fa l’abilità di questa affiliazione">${esc(ab ? ab.desc : '')}</textarea></label><p class="muted" style="font-size:14px">“- ” per un elenco puntato, **testo** per il grassetto.</p></div></div>`;
+    $('#af-ft').innerHTML = `<div class="ru-ft">${ab ? btn('Togli abilità', 'afClear', {cls: 'alt sm'}) : ''}<span style="flex:1"></span>${btn('Annulla', 'afCancel', {cls: 'alt sm'})}${btn('Salva', 'afSave', {cls: 'sm'})}</div>`;
+    return;
+  }
+  $('#af-body').innerHTML = `<div class="af-top">${logo}<div class="af-info"><div class="lbl">Abilità dell’affiliazione</div>${ab && (ab.nome || ab.desc) ? `<h3 class="af-ab">${esc(ab.nome || 'Abilità')}</h3><div class="prose">${md(ab.desc || '')}</div>` : `<p class="muted">Nessuna abilità impostata. Tocca la matita in alto per scriverla.</p>`}</div></div>`;
+  $('#af-ft').innerHTML = `<div class="ru-ft"><span class="muted">${n} ${n === 1 ? 'carta' : 'carte'}</span><span style="flex:1"></span>${n ? `<button class="btn sm" data-act="goAff" data-v="${esc(a)}"><span>Vedi le carte</span></button>` : ''}</div>`;
+}
+
 /* ---------- azioni ---------- */
 const ACT = {
   menu() { renderMenu(); $('#menu').classList.add('open'); syncLock(); },
@@ -1694,7 +2060,7 @@ const ACT = {
   fClearAll() { S.filters = newFilters(); S.limit = PAGE; renderAll(); },
   rmFilter(t, v) {
     const f = S.filters;
-    if (v === 'q') f.q = ''; else if (v === 'estrazione' || v === 'completa' || v === 'preferite') f[v] = ''; else if (v.startsWith('range:')) f.range[v.slice(6)] = ['', ''];
+    if (v === 'q') f.q = ''; else if (v === 'estrazione' || v === 'completa' || v === 'preferite' || v === 'stampa') f[v] = ''; else if (v.startsWith('range:')) f.range[v.slice(6)] = ['', ''];
     else { const i = v.indexOf(':'), k = v.slice(0, i), val = v.slice(i + 1); f[k].delete(k === 'set' ? Number(val) : val); }
     S.limit = PAGE; renderAll();
   },
@@ -1705,6 +2071,18 @@ const ACT = {
   newCard() { openEdit(null); },
   editCard() { openEdit(detailId); },
   game: openGame,
+  afOpen(t, v) { AF = {name: v, edit: false}; renderAff(); openSheet('sh-aff'); },
+  afEdit() { AF.edit = true; renderAff(); setTimeout(() => { const el = $('#af-n'); if (el) el.focus(); }, 30); },
+  afCancel() { AF.edit = false; renderAff(); },
+  afSave() { const nome = $('#af-n').value.trim(), desc = $('#af-d').value.replace(/\s+$/, ''), map = Object.assign({}, S.affAb || {}); if (nome || desc) map[AF.name] = {nome, desc}; else delete map[AF.name]; AF.edit = false; saveAffAb(map); renderAll(); renderAff(); toast('Abilità salvata'); },
+  afClear() { const map = Object.assign({}, S.affAb || {}); delete map[AF.name]; AF.edit = false; saveAffAb(map); renderAll(); renderAff(); toast('Abilità tolta'); },
+  xiApply() { xiApply(); },
+  xiCancel() { XI = null; renderAll(); },
+  prPrint() { prPrint(); },
+  prAll() { const q = norm(PR.q.trim()), ids = new Set(prIds()); allCards().filter(c => !q || norm(c.code).includes(q) || norm(c.nome).includes(q) || norm(c.sottonome).includes(q)).forEach(c => ids.add(c.id)); prSave([...ids]); prRefresh(); },
+  prNone() { prSave([]); prRefresh(); },
+  prCopy() { const t = prNote(); const done = () => toast('Codici copiati'); if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, () => { $('#pr-note').select(); document.execCommand('copy'); done(); }); else { $('#pr-note').select(); document.execCommand('copy'); done(); } },
+  prClearFiles() { PR.files = {}; prRefresh(); },
   pdfPick() { $('#pdfFile').click(); },
   pdfDel() { deleteRulesPdf(); },
   pdfDownload() { downloadRulesPdf(); },
@@ -1759,6 +2137,8 @@ const ACT = {
   gameEdit(t, v) { S.gEdit = v; renderGame(); const inp = $('[data-gedit="' + v + '"]'); if (inp) { inp.focus(); inp.select(); } },
   gameAdd(t, v) { const p = G && G.players[Number(v)]; if (!p) return; const k = t.dataset.k === 'vita' ? 'vita' : 'gloria'; p[k] = Math.max(0, p[k] + Number(t.dataset.d)); saveGame(); renderGame(); },
   fav() { const c = S.cards[detailId]; if (!c) return; const n = Object.assign({}, c, {preferita: !c.preferita}); putCard(n); toast(n.preferita ? 'Aggiunta ai preferiti' : 'Tolta dai preferiti'); openDetail(detailId); },
+  prToggle() { const c = S.cards[detailId]; if (!c) return; const ids = new Set(prIds()), on = !ids.has(c.id); if (on) ids.add(c.id); else ids.delete(c.id); prSave([...ids]); renderAll(); toast(on ? 'Aggiunta alla lista stampa' : 'Tolta dalla lista stampa'); openDetail(detailId); },
+  navPrint() { closeMenu(); closeSheets(); resetFilters(f => { f.stampa = 'si'; }); setView('carte'); renderAll(); },
   navFav() { closeMenu(); closeSheets(); resetFilters(f => { f.preferite = 'si'; }); setView('carte'); renderAll(); },
   saveCard,
   affAdd() {
@@ -1819,6 +2199,7 @@ document.addEventListener('click', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'fq') { S.filters.q = t.value; updateCount(); }
+  else if (t.id === 'pr-q') { PR.q = t.value; $('#pr-list').innerHTML = prListHtml(); }
   else if (t.dataset && t.dataset.range) { S.filters.range[t.dataset.range][Number(t.dataset.i)] = t.value; updateCount(); }
   else if (t.id === 'pkq') { pickerQ = t.value; renderPickerList(); }
   else if (t.dataset && t.dataset.gname != null && G && G.players[Number(t.dataset.gname)]) { G.players[Number(t.dataset.gname)].nome = t.value; saveGame(); }
@@ -1850,6 +2231,16 @@ document.addEventListener('change', async e => {
   }
   else if (t.dataset && t.dataset.imp && S.imp) { S.imp.mode[t.dataset.imp] = t.value; renderAll(); }
   else if (t.dataset && t.dataset.iconcolor) { putIcon(t.dataset.kind, t.dataset.name, {color: t.value}); }
+  else if (t.dataset && t.dataset.pr) { const ids = new Set(prIds()); if (t.checked) ids.add(t.dataset.pr); else ids.delete(t.dataset.pr); prSave([...ids]); const n = ids.size; $('#pr-count').textContent = n + (n === 1 ? ' carta selezionata' : ' carte selezionate'); $('#pr-note').value = prNote(); clearTimeout(PR.t); PR.t = setTimeout(prRefresh, 600); }
+  else if ((t.id === 'pr-save' || t.id === 'pr-save-dir') && t.files && t.files.length) { const fs = [...t.files].filter(f => /^image\//.test(f.type) || /\.(webp|jpe?g|png|gif|avif)$/i.test(f.name)); t.value = ''; if (!fs.length) { toast('Nessuna immagine trovata'); return; } S.bulk = 'Carico ' + fs.length + ' immagini…'; prRefresh(); await bulkImages(fs); prRefresh(); }
+  else if ((t.id === 'pr-files' || t.id === 'pr-dir') && t.files && t.files.length) { const fs = [...t.files].filter(f => /^image\//.test(f.type) || f.type === 'application/pdf' || /\.(webp|jpe?g|png|gif|avif|pdf)$/i.test(f.name)); t.value = ''; fs.forEach(f => { PR.files[prKey(f.name)] = f; }); const codes = new Set(allCards().map(c => prKey(c.code))); const nm = fs.filter(f => !codes.has(prKey(f.name))); toast(fs.length - nm.length + ' file abbinati' + (nm.length ? ', ' + nm.length + ' senza carta corrispondente' : '')); prRefresh(); }
+  else if (t.id === 'pr-retro' && t.files && t.files[0]) { const f = t.files[0]; t.value = ''; if (PR.retroUrl) URL.revokeObjectURL(PR.retroUrl); PR.retro = f; PR.retroUrl = f.type === 'application/pdf' ? '' : URL.createObjectURL(f); prRefresh(); }
+  else if (t.id === 'xlsxFile' && t.files && t.files[0]) {
+    const f = t.files[0]; t.value = ''; XI = {busy: true, name: f.name}; t.blur(); renderAll();
+    try { const sheets = await readXlsx(f); XI = Object.assign(xiAnalyse(sheets), {name: f.name}); }
+    catch (err) { XI = null; toast(err && err.message === 'nodecomp' ? 'Il browser non riesce a leggere questo file: aggiornalo e riprova' : 'Il file Excel non è valido'); }
+    renderAll(); const el = $('.xi'); if (el) el.scrollIntoView({block: 'center'});
+  }
   else if (t.id === 'pdfFile' && t.files && t.files[0]) { const f = t.files[0]; t.value = ''; uploadRulesPdf(f); }
   else if (t.id === 'quickFile' && t.files && t.files[0]) {
     const f = t.files[0], id = detailId; t.value = '';
