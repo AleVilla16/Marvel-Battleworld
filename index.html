@@ -294,6 +294,77 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .acc-stats div{border:1px solid var(--line);background:var(--surface);padding:12px 18px;display:flex;flex-direction:column;gap:4px;min-width:120px}
 .acc-stats b{font:800 32px/1 var(--font-display)}
 .acc-stats span{font:600 13px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* partita in orizzontale sui telefoni */
+.mt-menu{display:none}
+body.mt-land.mt-rot .mt-wrap{inset:auto;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+body.mt-land .mt-menu{display:grid;margin-left:-6px}
+body.mt-land .mt-bar{grid-area:bar;position:static;padding:0 0 4px;gap:4px 12px;flex-wrap:wrap}
+body.mt-land .mt-bar .btn{padding:7px 10px;font-size:12px;margin:0 3px}
+body.mt-land .mt-turn b,body.mt-land .mt-ctr b{font-size:22px}
+body.mt-land .mt-ctr .pm{width:28px;height:28px}
+body.mt-land .mt-acts{flex-wrap:wrap;justify-content:flex-end}
+body.mt-land .mt-alert{grid-area:alert;margin:0;padding:4px 10px;font-size:13px}
+body.mt-land .mz{margin:0;padding:6px 8px;min-height:0;display:flex;flex-direction:column}
+body.mt-land .mz-hd{margin-bottom:4px;gap:6px}
+body.mt-land .mz-hd h2{font-size:14px}
+body.mt-land .mz-n{min-width:20px;height:20px;font-size:12px}
+body.mt-land .mz-pw,body.mt-land .mz-long{display:none}
+body.mt-land .mz-empty{font-size:12px;padding:2px 0}
+body.mt-land .mt-log,body.mt-land .mt-wrap>.btns{display:none}
+body.mt-land .mt-dmg{min-width:20px;height:20px;font-size:12px;top:-4px;right:-4px}
+body.mt-land .mt-ex{font-size:8px;padding:2px 0}
+body.mt-land.mt-rot #mc{inset:auto;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+body.mt-land .mc-box{max-height:100%;padding:12px}
+body.mt-land .mc-art{width:min(150px,30vw)}
+body.mt-rot .mc-art{width:150px}
+body.mt-land .mc-side h3{font-size:20px}
+.pile-up{position:relative;width:84px;flex:none;border:0;padding:0;background:none;cursor:pointer;border-radius:6px}
+.pile-up .art{width:100%}
+.pile-up.many{box-shadow:3px 3px 0 #2c2c2c,6px 6px 0 #1d1d1d}
+.pile-up.many .art{box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+.pile-empty{width:84px;aspect-ratio:5/7;border:2px dashed var(--line);border-radius:6px;display:grid;place-items:center;font:700 12px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mc-list{flex-wrap:wrap;overflow:visible;margin-top:12px}
+.mc-list .mt{width:96px}
+body.mt-land .mc-list{flex:none}
+body.mt-land .mc-list .mt{height:auto;width:72px;max-height:none}
+body.mt-land .mc-list .mt .art{width:100%;height:auto}
+/* tavolo di gioco: in basso mano (sinistra), potere (centro), mazzo e scarti (destra) */
+.mt-wrap{display:flex;flex-direction:column;min-height:calc(100dvh - 56px)}
+.mt-wrap>.mz-campo{flex:1;display:flex;flex-direction:column;min-height:220px}
+.tb{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:end;gap:14px;margin-top:14px;padding-top:10px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--bg);z-index:4}
+.tb-hand{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--fg);cursor:pointer;padding:4px 6px 8px;position:relative}
+.tb-hand svg{width:84px;height:62px;transition:transform .15s}
+.tb-hand:hover svg{transform:translateY(-3px) scale(1.04)}
+.tb-hand b{position:absolute;top:0;right:0;min-width:30px;height:30px;padding:0 7px;border-radius:15px;background:var(--red);color:#fff;display:grid;place-items:center;font:800 17px/1 var(--font-display);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.tb-hand span{font:700 12px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tb-pw{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;align-self:end}
+.tb-pw-l{font:700 12px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tb-pw-l b{color:var(--fg)}
+.tb-pw-row{display:flex;justify-content:center;gap:6px;height:44px;overflow:hidden;align-items:flex-start;max-width:100%;padding:0 4px}
+.tb-pw-e{font-size:13px;color:var(--muted);align-self:center}
+.pw-c{flex:none;width:72px;aspect-ratio:5/7;border:0;cursor:pointer;border-radius:6px;background:repeating-linear-gradient(135deg,#a11d18 0 6px,#c3241d 6px 12px);box-shadow:0 0 0 2px #151515,0 -2px 8px rgba(0,0,0,.4);transition:transform .15s,filter .15s}
+.pw-c:hover{transform:translateY(-6px)}
+.pw-c.ex{filter:brightness(.38) grayscale(.5)}
+.tb-pw-row:has(.pw-c:nth-child(7)) .pw-c{margin-right:-30px}
+.tb-piles{display:flex;gap:12px;align-items:flex-end}
+.tb-pile{display:flex;flex-direction:column;align-items:center;gap:6px}
+.tb-lbl{border:0;background:none;color:var(--muted);cursor:pointer;font:700 12px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:2px 4px}
+.tb-lbl b{color:var(--fg)}
+.tb-lbl:disabled{cursor:default}
+.tb .pile-c,.tb .pile-up,.tb .pile-empty{width:72px}
+body.mt-land .mt-wrap{position:fixed;inset:0;z-index:40;background:var(--bg);margin:0;max-width:none;min-height:0;padding:6px 10px calc(4px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:4px;overflow:hidden}
+body.mt-land .mz-campo{flex:1;min-height:0;margin:0}
+body.mt-land .mz-campo .mz-row{flex:1;min-height:0;padding:2px 2px 4px;align-items:flex-start}
+body.mt-land .mz-campo .mz-row .mt{width:auto;height:100%;aspect-ratio:5/7;max-height:100%}
+body.mt-land .mz-campo .mz-row .mt .art{width:auto;height:100%}
+body.mt-land .tb{margin-top:2px;padding-top:4px;gap:10px;position:static}
+body.mt-land .tb-hand svg{width:56px;height:42px}
+body.mt-land .tb-hand b{min-width:22px;height:22px;font-size:13px}
+body.mt-land .tb-hand span,body.mt-land .tb-pw-l,body.mt-land .tb-lbl{font-size:10px}
+body.mt-land .tb .pile-c,body.mt-land .tb .pile-up,body.mt-land .tb .pile-empty{width:44px;font-size:9px}
+body.mt-land .pw-c{width:46px}
+body.mt-land .tb-pw-row{height:28px}
+body.mt-land .tb-pw-row:has(.pw-c:nth-child(6)) .pw-c{margin-right:-20px}
 .pdf-card{margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--line);background:var(--surface);padding:18px 20px;max-width:640px}
 .pdf-ic{width:54px;height:66px;flex:none;background:#e0352e;color:#fff;display:grid;place-items:center;font:800 15px/1 var(--font-display);letter-spacing:.08em;clip-path:polygon(0 0,72% 0,100% 22%,100% 100%,0 100%)}
 .pdf-meta{flex:1;min-width:160px}
@@ -827,6 +898,14 @@ function maybeMigrate() {
   if (own) Object.values(MIG.shDecks).forEach(d => { const b = Object.assign({}, d); delete b.id; deckColl().doc(d.id).set(b).catch(() => {}); });
   savePersonal(); renderAll();
 }
+/* partita su telefono: sempre in orizzontale (se il telefono è in verticale, la schermata viene ruotata) */
+function mtOrient() {
+  const on = S.view === 'partita' && !!M && Math.min(window.innerWidth, window.innerHeight) < 600;
+  document.body.classList.toggle('mt-land', on);
+  document.body.classList.toggle('mt-rot', on && window.innerHeight > window.innerWidth);
+}
+window.addEventListener('resize', () => mtOrient());
+window.addEventListener('orientationchange', () => setTimeout(mtOrient, 200));
 function vAccount() {
   const nDecks = Object.keys(S.decks).length, nFav = S.favs.size, nPr = prIds().length;
   const stats = `<div class="acc-stats"><div><b>${nFav}</b><span>preferite</span></div><div><b>${nPr}</b><span>in lista stampa</span></div><div><b>${nDecks}</b><span>${nDecks === 1 ? 'mazzo' : 'mazzi'}</span></div></div>`;
@@ -1199,6 +1278,7 @@ function renderView() {
   S.dirty = false;
   v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, stampa: vStampa, partita: vMatch, account: vAccount, impostazioni: vSet}[S.view] || vHome)();
   { const an = $('#acc-name'); if (an) an.textContent = (MEINFO && MEINFO.name) || 'Il tuo account'; }
+  mtOrient();
 }
 function renderMenu() {
   const row = (id, label, sub) => `<button class="nav-row${S.view === id ? ' on' : ''}" data-act="${sub ? 'sub' : 'nav'}" data-v="${id}"${sub ? ` aria-expanded="${!!S.menuSub[id]}"` : ''}>${label}${sub ? ICON_CHEV : ''}</button>`;
@@ -2236,7 +2316,7 @@ function diceThrow(n) {
 
 /* ---------- partita reale: la mia area (mazzo, mano, campo, potere, scarti) ---------- */
 const MZ = {mazzo: 'Mazzo', mano: 'Mano', campo: 'In campo', potere: 'Serbatoio del potere', scarti: 'Scarti'};
-let M = lsGet('bw:match', null), MH = [], MSEL = null;
+let M = lsGet('bw:match', null), MH = [], MSEL = null, MLIST = '';
 const mSave = () => lsSet('bw:match', M);
 const mPush = () => { MH.push(JSON.stringify(M)); if (MH.length > 40) MH.shift(); };
 const mLog = t => { M.log.unshift('T' + M.turn + ' · ' + t); M.log = M.log.slice(0, 30); };
@@ -2253,7 +2333,7 @@ function mStart(deckId, hand, players) {
   const [vita, target] = GAME_RULES[players] || GAME_RULES[2];
   const inst = {}, pile = []; let k = 0;
   Object.entries(d.cards).forEach(([id, q]) => { for (let i = 0; i < (Number(q) || 0); i++) { const iid = 'i' + (k++); const c = S.cards[id]; inst[iid] = {id, code: c ? c.code : id, nome: c ? c.nome : '', ex: false, dmg: 0}; pile.push(iid); } });
-  M = {deckId, deckName: d.nome, turn: 1, vita, gloria: 0, target, players, inst, zones: {mazzo: mShuffle(pile), mano: [], campo: [], potere: [], scarti: []}, log: [], powerTurn: 0};
+  M = {deckId, deckName: d.nome, hand, turn: 1, vita, gloria: 0, target, players, inst, zones: {mazzo: mShuffle(pile), mano: [], campo: [], potere: [], scarti: []}, log: [], powerTurn: 0};
   for (let i = 0; i < hand && M.zones.mazzo.length; i++) M.zones.mano.push(M.zones.mazzo.shift());
   MH = []; mLog('Partita iniziata con “' + d.nome + '”: pescate ' + M.zones.mano.length + ' carte'); mSave();
 }
@@ -2272,25 +2352,39 @@ function vMatch() {
     </div>`;
   }
   const z = M.zones, pw = z.potere.length, pwFree = z.potere.filter(i => !M.inst[i].ex).length;
-  const zone = (k, inner, extra) => `<section class="mz mz-${k}"><div class="mz-hd"><h2>${MZ[k]}</h2><span class="mz-n">${z[k].length}</span>${extra || ''}</div>${inner}</section>`;
+  const zone = (k, inner, extra) => `<section class="mz mz-${k}"><div class="mz-hd"><h2>${k === 'potere' ? '<span class="mz-long">Serbatoio del </span>potere' : MZ[k]}</h2><span class="mz-n">${z[k].length}</span>${extra || ''}</div>${inner}</section>`;
   return `<div class="gut mt-wrap">
     <div class="mt-bar">
+      <button class="ib mt-menu" data-act="menu" aria-label="Apri il menù"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="mt-turn"><span>Turno</span><b>${M.turn}</b></div>
       <div class="mt-ctr vita"><span>Vita</span><button class="pm" data-act="mAdj" data-k="vita" data-d="-1" aria-label="Vita meno 1">−</button><b>${M.vita}</b><button class="pm" data-act="mAdj" data-k="vita" data-d="1" aria-label="Vita più 1">+</button></div>
       <div class="mt-ctr glo"><span>Gloria</span><button class="pm" data-act="mAdj" data-k="gloria" data-d="-1" aria-label="Gloria meno 1">−</button><b>${M.gloria}<small>/${M.target}</small></b><button class="pm" data-act="mAdj" data-k="gloria" data-d="1" aria-label="Gloria più 1">+</button></div>
-      <div class="mt-acts">${btn('Fine turno', 'mEndTurn', {cls: 'sm'})}${btn('Riattiva tutte', 'mReady', {cls: 'alt sm'})}${btn('Annulla', 'mUndo', {cls: 'alt sm'})}</div>
+      <div class="mt-acts">${btn('Fine turno', 'mEndTurn', {cls: 'sm'})}${btn('Riattiva tutte', 'mReady', {cls: 'alt sm'})}${btn('Annulla', 'mUndo', {cls: 'alt sm'})}${S.confirm === 'mrestart' ? btn('Sì, ricomincia', 'mRestart', {cls: 'danger sm'}) + btn('No', 'confirmNo', {cls: 'alt sm'}) : btn('Ricomincia', 'confirm', {cls: 'alt sm', v: 'mrestart'})}</div>
     </div>
     ${M.vita <= 0 ? '<p class="mt-alert">Hai finito i punti vita: hai perso.</p>' : M.gloria >= M.target ? '<p class="mt-alert win">Hai raggiunto i punti gloria: hai vinto!</p>' : !z.mazzo.length ? '<p class="mt-alert">Il mazzo è vuoto: se devi pescare, hai perso.</p>' : ''}
-    ${zone('campo', z.campo.length ? `<div class="mz-row big">${z.campo.map(i => mThumb(i, 'campo')).join('')}</div>` : '<p class="mz-empty">Nessuna carta in campo. Gioca una carta dalla mano.</p>')}
-    <div class="mt-mid">
-      ${zone('mazzo', `<div class="pile"><button class="pile-c" data-act="mDraw" aria-label="Pesca una carta"${z.mazzo.length ? '' : ' disabled'}><span>${z.mazzo.length ? 'Pesca' : 'Vuoto'}</span></button><div class="pile-b">${btn('Pesca 1', 'mDraw', {cls: 'sm'})}${btn('Potere dal mazzo', 'mPowerTop', {cls: 'alt sm'})}${btn('Mescola', 'mShuffle', {cls: 'alt sm'})}</div></div>`)}
-      ${zone('potere', pw ? `<div class="mz-row">${z.potere.map(i => mThumb(i, 'potere')).join('')}</div>` : '<p class="mz-empty">Vuoto.</p>', `<span class="mz-pw">${pwFree} disponibili</span>`)}
-      ${zone('scarti', z.scarti.length ? `<div class="mz-row">${z.scarti.slice().reverse().map(i => mThumb(i, 'scarti')).join('')}</div>` : '<p class="mz-empty">Vuoto.</p>')}
+    ${zone('campo', z.campo.length ? `<div class="mz-row big">${z.campo.map(i => mThumb(i, 'campo')).join('')}</div>` : '<p class="mz-empty">Nessuna carta in campo. Apri la mano e gioca una carta.</p>')}
+    <div class="tb">
+      <button class="tb-hand" data-act="mHand" aria-label="Carte in mano: ${z.mano.length}. Apri la mano"><svg viewBox="0 0 64 48" aria-hidden="true"><g stroke="#151515" stroke-width="1.5"><rect x="14" y="8" width="20" height="30" rx="3" fill="#7c4fe0" transform="rotate(-24 24 44)"/><rect x="22" y="5" width="20" height="30" rx="3" fill="#27aad6" transform="rotate(0 32 44)"/><rect x="30" y="8" width="20" height="30" rx="3" fill="#e0352e" transform="rotate(24 40 44)"/></g></svg><b>${z.mano.length}</b><span>In mano</span></button>
+      <div class="tb-pw" aria-label="Serbatoio del potere: ${pwFree} disponibili su ${pw}"><div class="tb-pw-l">Potere <b>${pwFree}/${pw}</b></div><div class="tb-pw-row">${z.potere.map(i => `<button class="pw-c${M.inst[i].ex ? ' ex' : ''}" data-act="mcOpen" data-v="${i}" aria-label="Carta potere${M.inst[i].ex ? ', esaurita' : ''}"></button>`).join('') || '<span class="tb-pw-e">Vuoto</span>'}</div></div>
+      <div class="tb-piles">
+        <div class="tb-pile"><button class="pile-c" data-act="mDraw" aria-label="Pesca una carta"${z.mazzo.length ? '' : ' disabled'}><span>${z.mazzo.length ? 'Pesca' : 'Vuoto'}</span></button><button class="tb-lbl" data-act="mDeckMenu">Mazzo <b>${z.mazzo.length}</b> ⋯</button></div>
+        <div class="tb-pile">${z.scarti.length ? `<button class="pile-up${z.scarti.length > 1 ? ' many' : ''}" data-act="mcOpen" data-v="${z.scarti[z.scarti.length - 1]}" aria-label="Carta in cima agli scarti: ${esc(mName(z.scarti[z.scarti.length - 1]))}">${art(mCard(z.scarti[z.scarti.length - 1]), true)}</button>` : '<div class="pile-empty">Vuoto</div>'}<button class="tb-lbl" data-act="mDiscards"${z.scarti.length ? '' : ' disabled'}>Scarti <b>${z.scarti.length}</b></button></div>
+      </div>
     </div>
-    ${zone('mano', z.mano.length ? `<div class="mz-row hand">${z.mano.map(i => mThumb(i, 'mano')).join('')}</div>` : '<p class="mz-empty">Nessuna carta in mano.</p>')}
     <details class="mt-log"><summary>Registro azioni</summary><ol>${M.log.map(l => `<li>${esc(l)}</li>`).join('')}</ol></details>
     <div class="btns" style="margin-top:18px">${S.confirm === 'match' ? btn('Conferma: termina partita', 'mQuit', {cls: 'danger'}) + btn('Annulla', 'confirmNo', {cls: 'alt'}) : btn('Termina partita', 'confirm', {cls: 'alt', v: 'match'})}</div>
   </div>`;
+}
+function mcHand() {
+  const l = M.zones.mano;
+  $('#mc-body').innerHTML = `<div class="mc-side"><div class="lbl">Mano</div><h3>${l.length} ${l.length === 1 ? 'carta' : 'carte'}</h3><p class="muted">Tocca una carta per giocarla o per le altre azioni.</p></div><div class="mz-row mc-list">${l.map(i => mThumb(i, 'mano')).join('') || '<p class="mz-empty">Nessuna carta in mano.</p>'}</div>`;
+}
+function mcDeck() {
+  $('#mc-body').innerHTML = `<div class="mc-side"><div class="lbl">Mazzo di pesca</div><h3>${M.zones.mazzo.length} carte</h3><div class="mc-acts">${btn('Pesca 1', 'mDraw', {cls: 'sm'})}${btn('Potere dal mazzo', 'mPowerTop', {cls: 'alt sm'})}${btn('Mescola', 'mShuffle', {cls: 'alt sm'})}</div></div>`;
+}
+function mcDiscards() {
+  const l = M.zones.scarti.slice().reverse();
+  $('#mc-body').innerHTML = `<div class="mc-side"><div class="lbl">Scarti</div><h3>${l.length} ${l.length === 1 ? 'carta' : 'carte'}</h3><p class="muted">Dalla più recente. Tocca una carta per le azioni.</p></div><div class="mz-row mc-list">${l.map(i => mThumb(i, 'scarti')).join('') || '<p class="mz-empty">Vuoto.</p>'}</div>`;
 }
 function mcRender() {
   const iid = MSEL; if (!iid || !M || !M.inst[iid]) { ACT.mcClose(); return; }
@@ -2304,7 +2398,7 @@ function mcRender() {
   }[zn] || [];
   $('#mc-body').innerHTML = `<div class="mc-in"><div class="mc-art${st.ex ? ' ex' : ''}">${art(c)}</div><div class="mc-side"><div class="lbl">${esc(MZ[zn] || '')}</div><h3>${esc(c.nome || c.code)}</h3>${c.sottonome ? `<p class="muted">${esc(c.sottonome)}</p>` : ''}${st.dmg ? `<p class="mc-dmg">Danni: <b>${st.dmg}</b></p>` : ''}${st.ex ? '<p class="mc-dmg">Esaurita</p>' : ''}<div class="mc-acts">${acts.join('')}</div><button class="btn alt sm" data-act="mcInfo" data-v="${esc(c.id)}"><span>Scheda della carta</span></button></div></div>`;
 }
-function mDo(fn, text) { if (!M) return; mPush(); fn(); if (text) mLog(text); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) mcRender(); }
+function mDo(fn, text) { if (!M) return; mPush(); fn(); if (text) mLog(text); mSave(); renderAll(); if ($('#mc').hidden) return; if (MSEL) mcRender(); else if (MLIST === 'mazzo') mcDeck(); else if (MLIST === 'mano') mcHand(); else if (MLIST === 'scarti') mcDiscards(); }
 const mName = iid => { const c = mCard(iid); return c.nome || c.code; };
 
 /* ---------- draft tra giocatori: 2 buste da 10 carte per ogni classe, ci si passano le buste ---------- */
@@ -2452,6 +2546,15 @@ const ACT = {
   },
   drLeave() { drUnsub(); DR.code = ''; DR.session = null; DR.players = []; DR.packs = []; DR.picks = []; DR.sel = ''; drSave(); S.mMode = ''; renderAll(); },
   mStart() { const n = Number($('#m-hand').value); mStart($('#m-deck').value, Number.isFinite(n) ? Math.max(0, Math.min(20, n)) : 5, Number($('#m-pl').value) || 2); renderAll(); window.scrollTo(0, 0); },
+  mRestart() {
+    if (!M) return; S.confirm = '';
+    const [vita, target] = GAME_RULES[M.players] || [M.vita, M.target], hand = M.hand != null ? M.hand : 5, all = Object.keys(M.inst);
+    all.forEach(i => { M.inst[i].ex = false; M.inst[i].dmg = 0; });
+    M.zones = {mazzo: mShuffle(all.slice()), mano: [], campo: [], potere: [], scarti: []};
+    for (let i = 0; i < hand && M.zones.mazzo.length; i++) M.zones.mano.push(M.zones.mazzo.shift());
+    Object.assign(M, {turn: 1, vita, gloria: 0, target, powerTurn: 0, log: []}); MH = [];
+    mLog('Partita ricominciata: mazzo rimescolato, pescate ' + M.zones.mano.length + ' carte'); mSave(); ACT.mcClose(); renderAll(); toast('Partita ricominciata');
+  },
   mQuit() { M = null; MH = []; S.confirm = ''; S.mMode = ''; mSave(); renderAll(); toast('Partita terminata'); },
   mDraw() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } mDo(() => { M.zones.mano.push(M.zones.mazzo.shift()); }, 'Pescata 1 carta'); },
   mShuffle() { mDo(() => { mShuffle(M.zones.mazzo); }, 'Mazzo mescolato'); toast('Mazzo mescolato'); },
@@ -2460,8 +2563,11 @@ const ACT = {
   mEndTurn() { mDo(() => { M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno'); toast('Turno ' + M.turn); },
   mReady() { mDo(() => { [...M.zones.campo, ...M.zones.potere].forEach(i => { M.inst[i].ex = false; }); }, 'Riattivate tutte le carte'); },
   mUndo() { if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
-  mcOpen(t, v) { MSEL = v; mcRender(); $('#mc').hidden = false; },
-  mcClose() { MSEL = null; $('#mc').hidden = true; },
+  mcOpen(t, v) { MSEL = v; MLIST = ''; mcRender(); $('#mc').hidden = false; },
+  mDiscards() { MSEL = null; MLIST = 'scarti'; mcDiscards(); $('#mc').hidden = false; },
+  mHand() { MSEL = null; MLIST = 'mano'; mcHand(); $('#mc').hidden = false; },
+  mDeckMenu() { MSEL = null; MLIST = 'mazzo'; mcDeck(); $('#mc').hidden = false; },
+  mcClose() { MSEL = null; MLIST = ''; $('#mc').hidden = true; },
   mcInfo(t, v) { ACT.mcClose(); openDetail(v); },
   mToCampo(t, v) { const pw = mZoneOf(v) === 'mano'; mDo(() => mMove(v, 'campo'), (pw ? 'Giocata in campo: ' : 'Messa in campo: ') + mName(v)); ACT.mcClose(); },
   mToPotere(t, v) { const twice = M.powerTurn === M.turn; mDo(() => { mMove(v, 'potere'); M.powerTurn = M.turn; }, 'Messa nel potere: ' + mName(v)); ACT.mcClose(); if (twice) toast('Attenzione: hai già estratto potere in questo turno'); },
