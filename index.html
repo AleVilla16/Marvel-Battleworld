@@ -286,21 +286,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .dr-c.on{border-color:var(--red);background:rgba(224,53,46,.12)}
 .dr-c span{font:700 14px/1.1 var(--font-display);letter-spacing:.03em;text-align:center}
 .dr-cls{margin-top:6px;font:700 14px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase}
-.mt-share{border:1px solid var(--line);border-left:4px solid var(--red);background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:10px;margin:6px 0}
-.mt-share.on{border-left-color:#1fa463}
-.mt-share.on>b{color:#1fa463}
-.mt-share>b{font:800 20px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase}
-.gs{margin-top:14px;border:1px solid var(--line);background:var(--surface);padding:10px 12px}
-.gs-hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font:700 14px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.gs-hd b{color:var(--red-text);letter-spacing:.16em}
-.gs-turn{color:var(--fg)}
-.gs-turn.me{color:#1fa463}
-.gs-row{display:flex;gap:8px;overflow-x:auto;margin-top:10px}
-.gs-p{flex:none;min-width:190px;border:1px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:3px;background:var(--bg)}
-.gs-p.on{border-color:#1fa463;box-shadow:0 0 0 1px #1fa463 inset}
-.gs-p b{font:700 16px/1.1 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
-.gs-p .v{color:#1fa463;font-weight:700}.gs-p .g{color:var(--red-text);font-weight:700}
-.gs-p .c{font-size:13px;color:var(--muted)}
+.acc{display:flex;align-items:center;gap:18px;margin-top:20px;flex-wrap:wrap}
+.acc-av{width:84px;height:84px;border-radius:50%;object-fit:cover;flex:none;background:var(--raise)}
+.acc-av.ph{display:grid;place-items:center;font:800 36px/1 var(--font-display);color:var(--muted)}
+.acc-n{font:800 32px/1.05 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
+.acc-stats{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 6px}
+.acc-stats div{border:1px solid var(--line);background:var(--surface);padding:12px 18px;display:flex;flex-direction:column;gap:4px;min-width:120px}
+.acc-stats b{font:800 32px/1 var(--font-display)}
+.acc-stats span{font:600 13px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .pdf-card{margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--line);background:var(--surface);padding:18px 20px;max-width:640px}
 .pdf-ic{width:54px;height:66px;flex:none;background:#e0352e;color:#fff;display:grid;place-items:center;font:800 15px/1 var(--font-display);letter-spacing:.08em;clip-path:polygon(0 0,72% 0,100% 22%,100% 100%,0 100%)}
 .pdf-meta{flex:1;min-width:160px}
@@ -751,7 +744,7 @@ const CARATT = ['Eroe','Antieroe','Cattivo','Alieno','Alleanza','Alleato','Andro
 const ABIL = ['Protettore','Temerario','Aggressivo','Resistente','Evasivo','Aiutante','Agile','Protetto','Evoluzione','Soccorritore'];
 const STATS = [['costo','Costo'],['forza','Forza'],['resistenza','Resistenza'],['gloria','Gloria'],['spostamento','Costo di spostamento']];
 const SORTS = [['set','Set e codice'],['numero','Set e N°'],['code','Codice carta'],['nome','Nome'],['tipo','Tipo carta'],['classe','Classe'],['costo','Costo'],['forza','Forza'],['resistenza','Resistenza'],['gloria','Gloria'],['spostamento','Costo di spostamento'],['rarita','Rarità'],['added','Ultime aggiunte']];
-const VIEWS = ['home','mazzi','carte','classi','affiliazioni','regolamento','stampa','impostazioni','partita'];
+const VIEWS = ['home','mazzi','carte','classi','affiliazioni','regolamento','stampa','impostazioni','partita','account'];
 const PAGE = 60;
 const SETS = {1:'Secret War',2:'Contest of Champions',3:'Marvels',4:'Secret Warrior',5:'Marvel Cinematic Universe'};
 const setName = n => n == null ? 'Senza set' : 'Set ' + n + (SETS[n] ? ' · ' + SETS[n] : '');
@@ -794,9 +787,9 @@ const queue = {};
 
 /* ---------- salvataggio ---------- */
 const chain = (key, fn) => { const p = (queue[key] || Promise.resolve()).catch(() => {}).then(fn); queue[key] = p; return p; };
-const persistLocal = () => lsSet('bw:data', {cards: S.cards, decks: S.decks, rules: S.rules, icons: ICONS, rulesPdf: S.rulesPdf || null, rulesAreas: S.rulesAreas || null, print: S.print || null, affAb: S.affAb || {}});
+const persistLocal = () => lsSet('bw:data', {cards: S.cards, decks: S.decks, rules: S.rules, icons: ICONS, rulesPdf: S.rulesPdf || null, rulesAreas: S.rulesAreas || null, print: S.print || null, favs: [...(S.favs || [])], affAb: S.affAb || {}});
 const dbErr = e => toast('Salvataggio non riuscito' + (e && e.code ? ' (' + e.code + ')' : ''));
-const cleanCard = c => { const o = Object.assign({}, c); delete o.id; return o; };
+const cleanCard = c => { const o = Object.assign({}, c); delete o.id; delete o.preferita; return o; };
 
 function putCard(c) {
   S.cards[c.id] = c; renderAll();
@@ -810,16 +803,53 @@ function delCard(id) {
   if (!DB) { persistLocal(); return Promise.resolve(); }
   return chain('c/' + id, () => DB.collection('cards').doc(id).delete()).catch(dbErr);
 }
+/* ---------- account: dati personali di ogni utente (preferiti, lista stampa, mazzi) ---------- */
+let USER = null, UID = null, MEINFO = null;
+S.favs = new Set();
+const persPath = () => 'data/users/' + UID + '/personal';
+const deckColl = () => UID ? DB.collection('data/users/' + UID + '/decks') : DB.collection('decks');
+function applyFavs() { Object.values(S.cards).forEach(c => { c.preferita = S.favs.has(c.id); }); }
+function savePersonal() {
+  const body = {favs: [...S.favs], print: (S.print && S.print.ids) || [], migrated: true};
+  if (S.mode !== 'db') { persistLocal(); return; }
+  if (UID) chain('personal', () => DB.doc(persPath()).set(body)).catch(dbErr);
+  else lsSet('bw:personal', body);
+}
+/* la prima volta che il proprietario entra, i dati che prima erano in comune diventano suoi */
+const MIG = {pers: undefined, shDecks: null, shPrint: null, shFavs: null, done: false};
+function maybeMigrate() {
+  if (MIG.done || MIG.pers === undefined || MIG.shDecks === null || MIG.shPrint === null || MIG.shFavs === null) return;
+  MIG.done = true;
+  if (MIG.pers) return;
+  const own = MEINFO && MEINFO.isOwner;
+  const favs = own ? MIG.shFavs : [], print = own ? MIG.shPrint : [];
+  S.favs = new Set(favs); S.print = {ids: print}; applyFavs();
+  if (own) Object.values(MIG.shDecks).forEach(d => { const b = Object.assign({}, d); delete b.id; deckColl().doc(d.id).set(b).catch(() => {}); });
+  savePersonal(); renderAll();
+}
+function vAccount() {
+  const nDecks = Object.keys(S.decks).length, nFav = S.favs.size, nPr = prIds().length;
+  const stats = `<div class="acc-stats"><div><b>${nFav}</b><span>preferite</span></div><div><b>${nPr}</b><span>in lista stampa</span></div><div><b>${nDecks}</b><span>${nDecks === 1 ? 'mazzo' : 'mazzi'}</span></div></div>`;
+  if (S.mode === 'db' && UID) return `<div class="gut"><div class="page-hd"><h1>Il mio account</h1></div>
+    <div class="acc"><img class="acc-av" src="${esc(MEINFO.avatarUrl || '')}" alt=""><div><div class="acc-n" id="acc-name"></div><p class="muted">Hai effettuato l’accesso con il tuo account Claude${MEINFO.isOwner ? ' · questa pagina è tua' : ''}.</p></div></div>
+    ${stats}
+    <section class="set"><h2>I tuoi dati personali</h2><p>Preferiti, lista stampa e mazzi sono solo tuoi: li vedi da qualsiasi dispositivo entrando con questo account, e gli altri giocatori non li vedono. Carte, regolamento, affiliazioni e immagini restano in comune per tutti.</p>
+    <p class="muted" style="margin-top:10px">Per entrare con un altro account, esci da Claude e accedi con l’altro account, poi riapri questa pagina.</p></section></div>`;
+  return `<div class="gut"><div class="page-hd"><h1>Il mio account</h1></div>
+    <div class="acc"><div class="acc-av ph">?</div><div><div class="acc-n">Non hai effettuato l’accesso</div><p class="muted">${S.mode === 'db' ? 'Questa pagina non riesce a riconoscere il tuo account.' : 'Questa copia della pagina non è collegata a un account.'} Preferiti, lista stampa e mazzi restano salvati solo su questo dispositivo.</p></div></div>
+    ${stats}
+    <section class="set"><h2>Come accedere</h2><p>Apri la pagina pubblicata di Marvel Battleworld da claude.ai ed entra con il tuo account Claude (o creane uno su claude.ai). La pagina ti riconosce da sola: non serve un’altra password.</p></section></div>`;
+}
 function putDeck(d, quiet) {
   d.updated = Date.now(); S.decks[d.id] = d; if (!quiet) renderAll();
   if (!DB) { persistLocal(); return Promise.resolve(); }
   const body = Object.assign({}, d); delete body.id;
-  return chain('d/' + d.id, () => DB.collection('decks').doc(d.id).set(body)).catch(dbErr);
+  return chain('d/' + d.id, () => deckColl().doc(d.id).set(body)).catch(dbErr);
 }
 function delDeck(id) {
   delete S.decks[id]; renderAll();
   if (!DB) { persistLocal(); return Promise.resolve(); }
-  return chain('d/' + id, () => DB.collection('decks').doc(id).delete()).catch(dbErr);
+  return chain('d/' + id, () => deckColl().doc(id).delete()).catch(dbErr);
 }
 function putRules(text) {
   S.rules = text; renderAll();
@@ -882,22 +912,38 @@ async function initData() {
     const l = lsGet('bw:data', {cards: {}, decks: {}, rules: ''});
     Object.entries(l.cards || {}).forEach(([id, d]) => S.cards[id] = normCard(id, d));
     Object.entries(l.decks || {}).forEach(([id, d]) => S.decks[id] = normDeck(id, d));
-    S.rules = l.rules || ''; ICONS = l.icons || {}; S.mode = 'local'; S.rulesPdf = l.rulesPdf || null; S.rulesAreas = l.rulesAreas || null; S.print = l.print || null; S.affAb = l.affAb || {}; S.loaded = true; renderAll(); fillNumeri(); cardsOk = iconsOk = true; maybeAffReset(); return;
+    S.rules = l.rules || ''; ICONS = l.icons || {}; S.mode = 'local'; S.rulesPdf = l.rulesPdf || null; S.rulesAreas = l.rulesAreas || null; S.print = l.print || null; S.affAb = l.affAb || {}; S.favs = new Set(Array.isArray(l.favs) ? l.favs : Object.values(S.cards).filter(c => c.preferita).map(c => c.id)); applyFavs(); S.loaded = true; renderAll(); fillNumeri(); cardsOk = iconsOk = true; maybeAffReset(); return;
   }
   S.mode = 'db';
+  USER = await use('user');
+  if (USER) { try { MEINFO = await USER.me(); UID = MEINFO && MEINFO.id; } catch (e) { UID = null; } }
   const timer = setTimeout(() => { S.slow = true; renderAll(); }, 10000);
   const fail = e => { clearTimeout(timer); S.error = (e && e.code) || 'errore'; S.loaded = true; renderAll(); };
   DB.collection('cards').onSnapshot(snap => {
     const m = {}; snap.docs.forEach(d => { m[d.id] = normCard(d.id, d.data()); });
-    S.cards = m;
+    if (MIG.shFavs === null && !snap.metadata.fromCache) { MIG.shFavs = Object.values(m).filter(c => c.preferita).map(c => c.id); }
+    S.cards = m; applyFavs();
     if (!snap.metadata.fromCache) { S.loaded = true; S.slow = false; clearTimeout(timer); }
     renderAll();
     if (!snap.metadata.fromCache) { fillNumeri(); cardsOk = true; maybeAffReset(); }
   }, fail);
-  DB.collection('decks').onSnapshot(snap => {
+  deckColl().onSnapshot(snap => {
     const m = {}; snap.docs.forEach(d => { m[d.id] = normDeck(d.id, d.data()); });
     S.decks = m; renderAll();
   }, fail);
+  if (UID) {
+    let shD = null; const unD = DB.collection('decks').onSnapshot(snap => { if (shD !== null || (snap.metadata && snap.metadata.fromCache)) return; shD = {}; snap.docs.forEach(d => { shD[d.id] = normDeck(d.id, d.data()); }); MIG.shDecks = shD; maybeMigrate(); if (typeof unD === 'function') setTimeout(unD, 0); }, () => { MIG.shDecks = {}; maybeMigrate(); });
+    const unP = DB.doc('meta/print').onSnapshot(snap => { if (MIG.shPrint !== null || (snap.metadata && snap.metadata.fromCache)) return; const d = snap.exists ? (snap.data() || {}) : {}; MIG.shPrint = Array.isArray(d.ids) ? d.ids : []; maybeMigrate(); if (typeof unP === 'function') setTimeout(unP, 0); }, () => { MIG.shPrint = []; maybeMigrate(); });
+    DB.doc(persPath()).onSnapshot(snap => {
+      if (snap.metadata && snap.metadata.fromCache) return;
+      const d = snap.exists ? (snap.data() || {}) : null;
+      if (MIG.pers === undefined) { MIG.pers = !!d; maybeMigrate(); }
+      if (d) { S.favs = new Set(d.favs || []); S.print = {ids: d.print || []}; applyFavs(); if (!(S.view === 'stampa' && PR.busy)) renderAll(); }
+    }, () => {});
+  } else {
+    const lp = lsGet('bw:personal', null);
+    if (lp) { S.favs = new Set(lp.favs || []); S.print = {ids: lp.print || []}; }
+  }
   DB.collection('icons').onSnapshot(snap => {
     const m = {}; snap.docs.forEach(d => { const x = d.data(); if (x && x.kind && x.name) m[icoKey(x.kind, x.name)] = Object.assign({data: '', color: '', custom: false}, x, {id: d.id}); });
     ICONS = m; renderAll();
@@ -905,7 +951,6 @@ async function initData() {
   }, fail);
   DB.doc('meta/rules').onSnapshot(snap => { S.rules = snap.exists ? (snap.data().text || '') : ''; renderAll(); }, fail);
   DB.doc('meta/affAbilities').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : {}; S.affAb = d.map && typeof d.map === 'object' ? d.map : {}; if (!AF.edit) { renderAll(); if ($('#sh-aff').classList.contains('open')) renderAff(); } }, () => {});
-  DB.doc('meta/print').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : null; S.print = d && Array.isArray(d.ids) ? {ids: d.ids} : null; if (S.view === 'stampa' && !PR.busy) renderAll(); }, () => {});
   DB.doc('meta/rulesAreas').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : null; S.rulesAreas = d && Array.isArray(d.sections) ? {sections: d.sections, faq: Array.isArray(d.faq) ? d.faq : []} : null; if (!S.rsEdit) renderAll(); }, () => {});
   DB.doc('meta/rulesPdf').onSnapshot(snap => { const d = snap.exists ? (snap.data() || {}) : {}; S.rulesPdf = (d.parts && d.parts.length) || d.id ? d : null; renderAll(); }, () => {});
 }
@@ -1152,7 +1197,8 @@ function renderView() {
   const v = $('#view'), a = document.activeElement;
   if (a && v.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { S.dirty = true; return; }
   S.dirty = false;
-  v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, stampa: vStampa, partita: vMatch, impostazioni: vSet}[S.view] || vHome)();
+  v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, stampa: vStampa, partita: vMatch, account: vAccount, impostazioni: vSet}[S.view] || vHome)();
+  { const an = $('#acc-name'); if (an) an.textContent = (MEINFO && MEINFO.name) || 'Il tuo account'; }
 }
 function renderMenu() {
   const row = (id, label, sub) => `<button class="nav-row${S.view === id ? ' on' : ''}" data-act="${sub ? 'sub' : 'nav'}" data-v="${id}"${sub ? ` aria-expanded="${!!S.menuSub[id]}"` : ''}>${label}${sub ? ICON_CHEV : ''}</button>`;
@@ -1162,7 +1208,7 @@ function renderMenu() {
     row('mazzi', 'I tuoi mazzi', 1) + `<div class="sub${S.menuSub.mazzi ? ' open' : ''}"><button data-act="nav" data-v="mazzi">Tutti i mazzi</button>${dec.map(d => `<button data-act="deckOpen" data-v="${esc(d.id)}">${esc(d.nome)}</button>`).join('')}<button data-act="newDeckGo" style="color:var(--red-text)">+ Nuovo mazzo</button></div>` +
     row('carte', 'Carte', 1) + `<div class="sub${S.menuSub.carte ? ' open' : ''}"><button data-act="navCarte" data-v="">Tutte le carte</button><button data-act="navFav">★ Preferite</button><button data-act="navPrint">Lista stampa</button>${Object.keys(SETS).map(n => `<button data-act="goSet" data-v="${n}">Set ${n} · ${esc(SETS[n])}</button>`).join('')}${TIPI.map(t => `<button data-act="navCarte" data-v="${t}">${TIPI_PL[t]}</button>`).join('')}</div>` +
     row('classi', 'Classi', 1) + `<div class="sub${S.menuSub.classi ? ' open' : ''}"><button data-act="nav" data-v="classi">Panoramica</button>${classi().map(k => `<button data-act="goClass" data-v="${k}">${classIcon(k)}${k}</button>`).join('')}</div>` +
-    `<button class="nav-row" data-act="game">Gioca</button>` + row('partita', 'Partita') + row('affiliazioni', 'Affiliazioni') + row('regolamento', 'Regolamento') + row('stampa', 'Stampa') + row('impostazioni', 'Impostazioni');
+    `<button class="nav-row" data-act="game">Gioca</button>` + row('partita', 'Partita') + row('affiliazioni', 'Affiliazioni') + row('regolamento', 'Regolamento') + row('stampa', 'Stampa') + row('impostazioni', 'Impostazioni') + row('account', 'Il mio account');
   $('#menuFt').textContent = 'Marvel Battleworld · ' + allCards().length + ' carte · ' + Object.keys(S.decks).length + ' mazzi';
 }
 function applyTheme() { if (S.prefs.theme === 'light') document.documentElement.dataset.theme = 'light'; else document.documentElement.removeAttribute('data-theme'); }
@@ -1876,7 +1922,7 @@ const prIds = () => { const ids = (S.print && S.print.ids) || []; return ids.fil
 const prOrdered = () => prIds().map(id => S.cards[id]).sort((a, b) => nat(a.code, b.code));
 function prSave(ids) {
   S.print = {ids};
-  if (S.mode === 'db') chain('meta/print', () => DB.doc('meta/print').set({ids})).catch(dbErr); else persistLocal();
+  savePersonal();
 }
 const prNote = () => prOrdered().map(c => c.code).join('\n');
 function prFileFor(c) { return PR.files[prKey(c.code)] || null; }
@@ -2128,7 +2174,8 @@ function xiPanel() {
 async function xiApply() {
   if (!XI || XI.busy) return;
   const {changes, created, rules} = XI, all = [...changes.map(x => x.card), ...created];
-  all.forEach(c => { const n = normCard(c.id, c); S.cards[n.id] = n; });
+  all.forEach(c => { const n = normCard(c.id, c); S.cards[n.id] = n; if (n.preferita) S.favs.add(n.id); else S.favs.delete(n.id); });
+  savePersonal(); applyFavs();
   if (S.mode === 'db') all.forEach(c => chain('c/' + c.id, () => DB.collection('cards').doc(c.id).set(cleanCard(S.cards[c.id]))).catch(dbErr));
   else persistLocal();
   if (rules) saveAreas(rules);
@@ -2190,36 +2237,7 @@ function diceThrow(n) {
 /* ---------- partita reale: la mia area (mazzo, mano, campo, potere, scarti) ---------- */
 const MZ = {mazzo: 'Mazzo', mano: 'Mano', campo: 'In campo', potere: 'Serbatoio del potere', scarti: 'Scarti'};
 let M = lsGet('bw:match', null), MH = [], MSEL = null;
-const mSave = () => { lsSet('bw:match', M); if (M && M.code) gPublish(); };
-/* partita condivisa: ognuno tiene la sua area in locale e pubblica solo un riepilogo */
-let GM = {session: null, players: [], subs: [], t: 0, missing: false};
-const gPath = s => 'game/' + M.code + (s ? '/' + s : '');
-function gUnsub() { GM.subs.forEach(u => { try { if (typeof u === 'function') u(); } catch (e) {} }); GM.subs = []; }
-function gWatch() {
-  gUnsub(); if (!DB || !M || !M.code) return;
-  const r = () => { if (S.view === 'partita' && $('#mc').hidden) renderAll(); };
-  GM.subs.push(DB.doc(gPath()).onSnapshot(s => { GM.session = s.exists ? s.data() : null; GM.missing = !s.exists && !(s.metadata && s.metadata.fromCache); r(); }, () => {}));
-  GM.subs.push(DB.collection(gPath('players')).onSnapshot(s => { GM.players = s.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (a.at || 0) - (b.at || 0)); r(); }, () => {}));
-}
-function gPublish(now) {
-  if (!DB || !M || !M.code) return;
-  clearTimeout(GM.t);
-  const go = () => { const z = M.zones; DB.collection(gPath('players')).doc(M.pid).set({name: M.name || 'Giocatore', at: M.joinedAt || Date.now(), vita: M.vita, gloria: M.gloria, target: M.target, mano: z.mano.length, mazzo: z.mazzo.length, campo: z.campo.length, potere: z.potere.length, scarti: z.scarti.length, deck: M.deckName || ''}).catch(() => {}); };
-  if (now) go(); else GM.t = setTimeout(go, 350);
-}
-const gOrder = () => GM.players.map(p => p.id);
-const gMyTurn = () => !M || !M.code || !GM.session || GM.session.turnOf === M.pid;
-function gStrip() {
-  if (!M || !M.code) return '';
-  const s = GM.session, others = GM.players.filter(p => p.id !== M.pid), turnOf = s && s.turnOf, who = GM.players.find(p => p.id === turnOf);
-  return `<div class="gs"><div class="gs-hd"><span>Partita condivisa <b>${esc(M.code)}</b></span><span class="gs-turn${turnOf === M.pid ? ' me' : ''}">${GM.missing ? 'Codice non trovato' : !s ? 'Collegamento…' : turnOf === M.pid ? 'Tocca a te' : 'Turno di ' + esc(who ? who.name : '…')}</span></div>
-    <div class="gs-row">${others.length ? others.map(p => `<div class="gs-p${p.id === turnOf ? ' on' : ''}"><b>${esc(p.name || 'Giocatore')}</b><span class="v">♥ ${p.vita ?? '–'}</span><span class="g">★ ${p.gloria ?? 0}/${p.target ?? '–'}</span><span class="c">Mano ${p.mano ?? 0} · Mazzo ${p.mazzo ?? 0} · Campo ${p.campo ?? 0} · Potere ${p.potere ?? 0}</span></div>`).join('') : '<p class="muted">In attesa degli altri giocatori: condividi il codice.</p>'}</div></div>`;
-}
-async function gJoin(code, host) {
-  M.code = code; M.pid = DR.pid; M.name = DR.name || 'Giocatore'; M.joinedAt = Date.now(); lsSet('bw:match', M);
-  gWatch(); gPublish(true);
-  if (host) await DB.doc(gPath()).set({host: M.pid, turnOf: M.pid, round: 1, createdAt: Date.now()});
-}
+const mSave = () => lsSet('bw:match', M);
 const mPush = () => { MH.push(JSON.stringify(M)); if (MH.length > 40) MH.shift(); };
 const mLog = t => { M.log.unshift('T' + M.turn + ' · ' + t); M.log = M.log.slice(0, 30); };
 const mCard = iid => S.cards[M.inst[iid].id] || normCard(M.inst[iid].id, {code: M.inst[iid].code || '?', nome: M.inst[iid].nome || 'Carta non trovata'});
@@ -2243,31 +2261,24 @@ const mThumb = (iid, zone) => { const c = mCard(iid), st = M.inst[iid]; return `
 function vMatch() {
   if (!S.loaded) return loadingBlock();
   if (!M && S.mMode === 'draft') return vDraft();
-  if (!M && !S.mMode) return `<div class="gut"><div class="page-hd"><h1>Partita</h1></div>
-    ${S.mPend ? `<div class="mt-share on"><b>Partita condivisa ${esc(S.mPend.code)}</b><p>${S.mPend.host ? 'Condividi questo codice con gli altri giocatori.' : 'Sei nella partita.'} Ora scegli come preparare il tuo mazzo.</p><div class="btns">${btn('Annulla', 'mPendClear', {cls: 'alt sm'})}</div></div>`
-    : `<div class="mt-share"><b>Gioca insieme</b><p class="muted">Crea una partita condivisa e dai il codice agli altri, oppure entra con il codice che ti hanno dato. Ognuno vede la propria area.</p>
-      <div class="row2"><label class="fl"><span>Il tuo nome</span><input id="m-name" value="${esc(DR.name || '')}" autocomplete="off" maxlength="30" placeholder="Es. Greta"></label><label class="fl"><span>Codice partita</span><input id="m-code" autocomplete="off" maxlength="6" placeholder="Es. K7QX" style="text-transform:uppercase"></label></div>
-      <div class="btns">${btn('Crea partita condivisa', 'mHost')}${btn('Entra con il codice', 'mJoin', {cls: 'alt'})}</div></div>`}
-    <h2 class="dr-h">${S.mPend ? 'Prepara il tuo mazzo' : 'Oppure gioca da solo'}</h2>
+  if (!M && !S.mMode) return `<div class="gut"><div class="page-hd"><h1>Partita</h1><div class="count">Come vuoi preparare il tuo mazzo?</div></div>
     <div class="mm-pick"><button class="mm-opt" data-act="mMode" data-v="deck"><b>Seleziona un mazzo</b><span>Gioca con uno dei mazzi che hai già creato.</span></button><button class="mm-opt" data-act="mMode" data-v="draft"><b>Draft</b><span>Tu e gli altri giocatori vi passate le buste e scegliete una carta alla volta: 2 buste da 10 carte per ogni classe.</span></button></div></div>`;
   if (!M) {
     const decks = Object.values(S.decks).map(d => ({d, n: Object.values(d.cards).reduce((a, b) => a + (Number(b) || 0), 0)})).filter(x => x.n > 0).sort((a, b) => a.d.nome.localeCompare(b.d.nome, 'it'));
     return `<div class="gut"><div class="page-hd"><h1>Partita</h1><div class="count">Gestisci la tua area di gioco: mazzo, mano, campo, serbatoio del potere e scarti. Gli avversari non la vedono.</div><div class="btns">${btn('Indietro', 'mMode', {cls: 'alt sm', v: ''})}</div></div>
       ${decks.length ? `<div class="form mt-setup"><label class="fl"><span>Mazzo</span><select id="m-deck">${decks.map(x => `<option value="${esc(x.d.id)}"${S.mDeck === x.d.id ? ' selected' : ''}>${esc(x.d.nome)} · ${x.n} carte</option>`).join('')}</select></label>
         <div class="row2"><label class="fl"><span>Giocatori</span><select id="m-pl">${Object.entries(GAME_RULES).map(([n, [v, g]]) => `<option value="${n}">${n} giocatori · ${v} vita · ${g} gloria</option>`).join('')}</select></label><label class="fl"><span>Carte in mano all’inizio</span><input id="m-hand" type="number" inputmode="numeric" min="0" max="20" value="5"></label></div>
-        <div class="btns">${S.mPend ? btn('Inizia la partita ' + esc(S.mPend.code), 'mGo') : btn('Inizia partita', 'mStart')}</div></div>` : `<div class="empty"><h2>Nessun mazzo pronto</h2><p>Crea un mazzo con delle carte per iniziare una partita.</p><div class="btns">${btn('Vai ai mazzi', 'nav', {v: 'mazzi'})}</div></div>`}
+        <div class="btns">${btn('Inizia partita', 'mStart')}</div></div>` : `<div class="empty"><h2>Nessun mazzo pronto</h2><p>Crea un mazzo con delle carte per iniziare una partita.</p><div class="btns">${btn('Vai ai mazzi', 'nav', {v: 'mazzi'})}</div></div>`}
     </div>`;
   }
-  if (M.code && DB && !GM.subs.length) setTimeout(gWatch, 0);
   const z = M.zones, pw = z.potere.length, pwFree = z.potere.filter(i => !M.inst[i].ex).length;
   const zone = (k, inner, extra) => `<section class="mz mz-${k}"><div class="mz-hd"><h2>${MZ[k]}</h2><span class="mz-n">${z[k].length}</span>${extra || ''}</div>${inner}</section>`;
   return `<div class="gut mt-wrap">
-    ${gStrip()}
     <div class="mt-bar">
-      <div class="mt-turn"><span>Turno</span><b>${M.code && GM.session ? GM.session.round || 1 : M.turn}</b></div>
+      <div class="mt-turn"><span>Turno</span><b>${M.turn}</b></div>
       <div class="mt-ctr vita"><span>Vita</span><button class="pm" data-act="mAdj" data-k="vita" data-d="-1" aria-label="Vita meno 1">−</button><b>${M.vita}</b><button class="pm" data-act="mAdj" data-k="vita" data-d="1" aria-label="Vita più 1">+</button></div>
       <div class="mt-ctr glo"><span>Gloria</span><button class="pm" data-act="mAdj" data-k="gloria" data-d="-1" aria-label="Gloria meno 1">−</button><b>${M.gloria}<small>/${M.target}</small></b><button class="pm" data-act="mAdj" data-k="gloria" data-d="1" aria-label="Gloria più 1">+</button></div>
-      <div class="mt-acts">${btn(M.code ? (gMyTurn() ? 'Fine turno' : 'Non è il tuo turno') : 'Fine turno', 'mEndTurn', {cls: M.code && !gMyTurn() ? 'alt sm' : 'sm'})}${btn('Riattiva tutte', 'mReady', {cls: 'alt sm'})}${btn('Annulla', 'mUndo', {cls: 'alt sm'})}</div>
+      <div class="mt-acts">${btn('Fine turno', 'mEndTurn', {cls: 'sm'})}${btn('Riattiva tutte', 'mReady', {cls: 'alt sm'})}${btn('Annulla', 'mUndo', {cls: 'alt sm'})}</div>
     </div>
     ${M.vita <= 0 ? '<p class="mt-alert">Hai finito i punti vita: hai perso.</p>' : M.gloria >= M.target ? '<p class="mt-alert win">Hai raggiunto i punti gloria: hai vinto!</p>' : !z.mazzo.length ? '<p class="mt-alert">Il mazzo è vuoto: se devi pescare, hai perso.</p>' : ''}
     ${zone('campo', z.campo.length ? `<div class="mz-row big">${z.campo.map(i => mThumb(i, 'campo')).join('')}</div>` : '<p class="mz-empty">Nessuna carta in campo. Gioca una carta dalla mano.</p>')}
@@ -2437,34 +2448,16 @@ const ACT = {
   drDeck() {
     const cards = {}; DR.picks.forEach(id => { cards[id] = (cards[id] || 0) + 1; });
     const id = 'draft-' + DR.code.toLowerCase() + '-' + Date.now().toString(36), d = {id, nome: 'Draft ' + DR.code + (DR.name ? ' · ' + DR.name : ''), cards, created: Date.now(), updated: Date.now()};
-    putDeck(d, true); S.mDeck = id; if (!S.mPend) { const host = DR.session && DR.session.host === DR.pid; S.mPend = {code: DR.code, host}; if (host && DB) DB.doc('game/' + DR.code).set({host: DR.pid, turnOf: DR.pid, round: 1, createdAt: Date.now()}).catch(() => {}); } S.mMode = 'deck'; renderAll(); toast('Mazzo creato: ' + d.nome);
+    putDeck(d, true); S.mDeck = id; S.mMode = 'deck'; renderAll(); toast('Mazzo creato: ' + d.nome);
   },
   drLeave() { drUnsub(); DR.code = ''; DR.session = null; DR.players = []; DR.packs = []; DR.picks = []; DR.sel = ''; drSave(); S.mMode = ''; renderAll(); },
-  async mHost() {
-    if (!DB) { toast('La partita condivisa funziona solo sulla pagina pubblicata'); return; }
-    const name = ($('#m-name').value || '').trim(); if (!name) { toast('Scrivi il tuo nome'); $('#m-name').focus(); return; }
-    DR.name = name; drSave(); const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let code = ''; for (let i = 0; i < 4; i++) code += A[rollD(A.length) - 1];
-    try { await DB.doc('game/' + code).set({host: DR.pid, turnOf: DR.pid, round: 1, createdAt: Date.now()}); } catch (e) { toast('Non riesco a creare la partita'); return; }
-    S.mPend = {code, host: true}; renderAll(); toast('Partita creata: codice ' + code);
-  },
-  mJoin() {
-    if (!DB) { toast('La partita condivisa funziona solo sulla pagina pubblicata'); return; }
-    const name = ($('#m-name').value || '').trim(), code = ($('#m-code').value || '').trim().toUpperCase();
-    if (!name) { toast('Scrivi il tuo nome'); $('#m-name').focus(); return; }
-    if (!/^[A-Z0-9]{4,6}$/.test(code)) { toast('Scrivi il codice della partita'); $('#m-code').focus(); return; }
-    DR.name = name; drSave(); S.mPend = {code, host: false}; renderAll();
-  },
-  mPendClear() { S.mPend = null; renderAll(); },
-  async mGo() { const pend = S.mPend; if (!pend) return; ACT.mStart(); if (!M) return; S.mPend = null; try { await gJoin(pend.code, false); } catch (e) { toast('Non riesco a entrare nella partita'); } renderAll(); },
   mStart() { const n = Number($('#m-hand').value); mStart($('#m-deck').value, Number.isFinite(n) ? Math.max(0, Math.min(20, n)) : 5, Number($('#m-pl').value) || 2); renderAll(); window.scrollTo(0, 0); },
-  mQuit() { if (M && M.code && DB) { const pid = M.pid, path = gPath('players'); const s = GM.session; if (s && s.turnOf === pid) { const o = gOrder().filter(x => x !== pid); if (o.length) DB.doc(gPath()).set(Object.assign({}, s, {turnOf: o[0]})).catch(() => {}); } DB.collection(path).doc(pid).delete().catch(() => {}); } gUnsub(); GM = {session: null, players: [], subs: [], t: 0, missing: false}; M = null; MH = []; S.confirm = ''; S.mMode = ''; mSave(); renderAll(); toast('Partita terminata'); },
+  mQuit() { M = null; MH = []; S.confirm = ''; S.mMode = ''; mSave(); renderAll(); toast('Partita terminata'); },
   mDraw() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } mDo(() => { M.zones.mano.push(M.zones.mazzo.shift()); }, 'Pescata 1 carta'); },
   mShuffle() { mDo(() => { mShuffle(M.zones.mazzo); }, 'Mazzo mescolato'); toast('Mazzo mescolato'); },
   mPowerTop() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } const twice = M.powerTurn === M.turn; mDo(() => { const iid = M.zones.mazzo.shift(); M.zones.potere.push(iid); M.powerTurn = M.turn; }, 'Estratto potere dal mazzo'); if (twice) toast('Attenzione: hai già estratto potere in questo turno'); },
   mAdj(t) { const k = t.dataset.k === 'gloria' ? 'gloria' : 'vita'; mDo(() => { M[k] = Math.max(0, M[k] + Number(t.dataset.d)); }); },
-  mEndTurn() {
-    if (M && M.code) { if (!gMyTurn()) { toast('Non è il tuo turno'); return; } const o = gOrder(), i = o.indexOf(M.pid), nx = o[(i + 1) % o.length] || M.pid, s = GM.session || {}; DB.doc(gPath()).set(Object.assign({}, s, {turnOf: nx, round: (s.round || 1) + (i + 1 >= o.length ? 1 : 0)})).catch(() => {}); }
-    mDo(() => { M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno'); toast('Turno ' + M.turn); },
+  mEndTurn() { mDo(() => { M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno'); toast('Turno ' + M.turn); },
   mReady() { mDo(() => { [...M.zones.campo, ...M.zones.potere].forEach(i => { M.inst[i].ex = false; }); }, 'Riattivate tutte le carte'); },
   mUndo() { if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
   mcOpen(t, v) { MSEL = v; mcRender(); $('#mc').hidden = false; },
@@ -2548,7 +2541,7 @@ const ACT = {
   gameReset() { S.confirm = ''; G.players.forEach(p => { p.vita = G.vita; p.gloria = 0; }); saveGame(); renderGame(); toast('Punti azzerati'); },
   gameEdit(t, v) { S.gEdit = v; renderGame(); const inp = $('[data-gedit="' + v + '"]'); if (inp) { inp.focus(); inp.select(); } },
   gameAdd(t, v) { const p = G && G.players[Number(v)]; if (!p) return; const k = t.dataset.k === 'vita' ? 'vita' : 'gloria'; p[k] = Math.max(0, p[k] + Number(t.dataset.d)); saveGame(); renderGame(); },
-  fav() { const c = S.cards[detailId]; if (!c) return; const n = Object.assign({}, c, {preferita: !c.preferita}); putCard(n); toast(n.preferita ? 'Aggiunta ai preferiti' : 'Tolta dai preferiti'); openDetail(detailId); },
+  fav() { const c = S.cards[detailId]; if (!c) return; const on = !S.favs.has(c.id); if (on) S.favs.add(c.id); else S.favs.delete(c.id); applyFavs(); savePersonal(); renderAll(); toast(on ? 'Aggiunta ai preferiti' : 'Tolta dai preferiti'); openDetail(detailId); },
   prToggle() { const c = S.cards[detailId]; if (!c) return; const ids = new Set(prIds()), on = !ids.has(c.id); if (on) ids.add(c.id); else ids.delete(c.id); prSave([...ids]); renderAll(); toast(on ? 'Aggiunta alla lista stampa' : 'Tolta dalla lista stampa'); openDetail(detailId); },
   navPrint() { closeMenu(); closeSheets(); resetFilters(f => { f.stampa = 'si'; }); setView('carte'); renderAll(); },
   navFav() { closeMenu(); closeSheets(); resetFilters(f => { f.preferite = 'si'; }); setView('carte'); renderAll(); },
