@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="theme-color" content="#8b1a1a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Battleworld"><script src="storage.js"></script><script>if(window.__BW_LOCAL&&"serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Marvel Battleworld</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;1,400&display=swap">
@@ -917,6 +917,10 @@ function vAccount() {
     ${stats}
     <section class="set"><h2>I tuoi dati personali</h2><p>Preferiti, lista stampa e mazzi sono solo tuoi: li vedi da qualsiasi dispositivo entrando con questo account, e gli altri giocatori non li vedono. Carte, regolamento, affiliazioni e immagini restano in comune per tutti.</p>
     <p class="muted" style="margin-top:10px">Per entrare con un altro account, esci da Claude e accedi con l’altro account, poi riapri questa pagina.</p></section></div>`;
+  if (window.__BW_LOCAL) return `<div class="gut"><div class="page-hd"><h1>Il mio account</h1></div>
+    <div class="acc"><div class="acc-av ph">★</div><div><div class="acc-n">Questo dispositivo</div><p class="muted">Nell’app installata dal sito non serve accedere: preferiti, lista stampa, mazzi e carte sono salvati su questo dispositivo.</p></div></div>
+    ${stats}
+    <section class="set"><h2>Portare i dati su un altro dispositivo</h2><p>Vai in Impostazioni, usa “Esporta tutto” e apri il file sull’altro dispositivo con “Importa da file”.</p></section></div>`;
   return `<div class="gut"><div class="page-hd"><h1>Il mio account</h1></div>
     <div class="acc"><div class="acc-av ph">?</div><div><div class="acc-n">Non hai effettuato l’accesso</div><p class="muted">${S.mode === 'db' ? 'Questa pagina non riesce a riconoscere il tuo account.' : 'Questa copia della pagina non è collegata a un account.'} Preferiti, lista stampa e mazzi restano salvati solo su questo dispositivo.</p></div></div>
     ${stats}
@@ -987,6 +991,25 @@ function fillNumeri() {
   if (!DB) { persistLocal(); return; }
   todo.forEach(c => chain('c/' + c.id, () => DB.collection('cards').doc(c.id).update({numero: c.numero})).catch(dbErr));
 }
+/* app installata dal sito: al primo avvio carica i dati pubblicati insieme all'app (dati.zip o dati.json) */
+let SEEDED = false;
+async function seedFromSite(auto) {
+  let data = null, pdf = null, name = '';
+  for (const f of ['dati.zip', 'dati.json']) {
+    try {
+      const r = await fetch(f, {cache: 'no-store'}); if (!r.ok) continue;
+      if (/\.zip$/.test(f)) {
+        const z = unzipStore(await r.arrayBuffer()), jn = Object.keys(z).find(k => /\.json$/i.test(k)), pn = Object.keys(z).find(k => /\.pdf$/i.test(k));
+        if (!jn) continue; data = JSON.parse(new TextDecoder().decode(z[jn]));
+        if (pn) pdf = new File([z[pn]], data.rulesPdfName || 'regolamento.pdf', {type: 'application/pdf'});
+      } else data = await r.json();
+      name = f; break;
+    } catch (e) { data = null; pdf = null; }
+  }
+  if (!data || typeof data !== 'object' || !(data.cards || data.decks || data.rules || data.rulesAreas)) { if (!auto) toast('Sul sito non c’è un file dei dati'); return; }
+  S.imp = {data, pdf, name, mode: {cards: 'add', decks: 'add', icons: 'add', rules: 'add', pdf: pdf ? 'add' : 'skip', prefs: 'skip'}};
+  if (auto) { toast('Carico le carte…'); await importRun(); } else renderAll();
+}
 async function initData() {
   const use = n => (window.claude && claude.use) ? claude.use(n).catch(() => null) : Promise.resolve(null);
   DB = await use('db'); ASSETS = await use('assets'); DL = await use('downloads');
@@ -1007,7 +1030,7 @@ async function initData() {
     S.cards = m; applyFavs();
     if (!snap.metadata.fromCache) { S.loaded = true; S.slow = false; clearTimeout(timer); }
     renderAll();
-    if (!snap.metadata.fromCache) { fillNumeri(); cardsOk = true; maybeAffReset(); }
+    if (!snap.metadata.fromCache) { fillNumeri(); cardsOk = true; maybeAffReset(); if (window.__BW_LOCAL && !SEEDED) { SEEDED = true; if (!Object.keys(m).length) seedFromSite(true); } }
   }, fail);
   deckColl().onSnapshot(snap => {
     const m = {}; snap.docs.forEach(d => { m[d.id] = normDeck(d.id, d.data()); });
@@ -1088,7 +1111,8 @@ const ICON_CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="cur
 const btn = (label, act, o = {}) => `<button class="btn ${o.cls || ''}" data-act="${act}"${o.v != null ? ` data-v="${esc(o.v)}"` : ''}${o.k ? ` data-k="${esc(o.k)}"` : ''}${o.id ? ` id="${o.id}"` : ''}><span>${label}</span></button>`;
 const ccVar = c => `--cc:${clsColor(c)}`;
 const linkUrl = s => { s = String(s || '').trim(); if (!s) return ''; if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s; return /^(https?|mailto):/i.test(s) ? s : ''; };
-const imgSrc = c => c.imgData || (c.img ? '/_blob/' + c.img : '');
+const assetUrl = id => (window.__bwAsset && window.__bwAsset(id)) || '/_blob/' + id;
+const imgSrc = c => c.imgData || (c.img ? assetUrl(c.img) : '');
 
 function art(c, mini) {
   const src = imgSrc(c);
@@ -1261,7 +1285,7 @@ function setApp() {
     ${INSTALL_EV ? `<div class="btns">${btn('Installa l’app', 'appInstall')}</div>` : ''}
     <div class="seg" role="group" aria-label="Dispositivo" style="margin-top:12px"><button data-act="appHelp" data-v="ios" aria-pressed="${k === 'ios'}">iPhone / iPad</button><button data-act="appHelp" data-v="android" aria-pressed="${k === 'android'}">Android</button><button data-act="appHelp" data-v="desktop" aria-pressed="${k === 'desktop'}">Computer</button></div>
     <ol class="app-steps">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
-    <p class="muted" style="font-size:14px">L’app apre sempre la pagina online, quindi carte, regolamento e i tuoi dati restano aggiornati. Serve la connessione a internet.</p>`}</section>`;
+    <p class="muted" style="font-size:14px">${window.__BW_LOCAL ? 'Installata, l’app ha la sua icona, si apre a schermo intero e funziona anche senza connessione. I dati restano su questo dispositivo.' : 'L’app apre sempre la pagina online, quindi carte, regolamento e i tuoi dati restano aggiornati. Serve la connessione a internet.'}</p>`}</section>`;
 }
 function setPdf() {
   const canUp = S.mode !== 'db' || !!ASSETS, r = S.rulesPdf, has = pdfParts(r).length > 0;
@@ -1278,7 +1302,8 @@ function vSet() {
   return `<div class="gut"><div class="page-hd"><h1>Impostazioni</h1></div>
   <section class="set"><h2>Tema</h2><p>Scegli l’aspetto dell’app su questo dispositivo.</p><div class="seg" role="group" aria-label="Tema"><button data-act="theme" data-v="dark" aria-pressed="${S.prefs.theme !== 'light'}">Scuro</button><button data-act="theme" data-v="light" aria-pressed="${S.prefs.theme === 'light'}">Chiaro</button></div></section>
   ${setApp()}
-  <section class="set"><h2>Salvataggio</h2><p>${S.mode === 'db' ? 'Carte, mazzi e regolamento sono salvati con questa pagina e li ritrovi da qualsiasi dispositivo.' : 'Questa visualizzazione non può salvare con la pagina: i dati restano solo in questo browser.'}${S.mode === 'db' && !ASSETS ? ' Le immagini caricate qui vengono ridotte e salvate dentro la carta.' : ''}</p></section>
+  <section class="set"><h2>Salvataggio</h2><p>${window.__BW_LOCAL ? 'Carte, mazzi, regolamento, immagini e PDF sono salvati su questo dispositivo e funzionano anche senza connessione. Ogni dispositivo ha i suoi dati: per portarli su un altro usa “Esporta tutto” e poi “Importa da file”.' : S.mode === 'db' ? 'Carte, mazzi e regolamento sono salvati con questa pagina e li ritrovi da qualsiasi dispositivo.' : 'Questa visualizzazione non può salvare con la pagina: i dati restano solo in questo browser.'}${S.mode === 'db' && !ASSETS && !window.__BW_LOCAL ? ' Le immagini caricate qui vengono ridotte e salvate dentro la carta.' : ''}</p></section>
+  ${window.__BW_LOCAL ? `<section class="set"><h2>Dati dal sito</h2><p>Se sul sito è pubblicato il file dei dati (<b>dati.json</b> o <b>dati.zip</b>, creato con “Esporta tutto”), puoi caricarlo qui per aggiornare carte, mazzi e regolamento. Prima di applicare scegli cosa aggiungere o sostituire.</p><div class="btns">${btn('Carica i dati dal sito', 'seedSite', {cls: 'alt'})}</div></section>` : ''}
   <section class="set"><h2>Schede nell’elenco</h2><div class="seg" role="group" aria-label="Dimensione schede"><button data-act="grid" data-v="big" aria-pressed="${S.prefs.grid === 'big'}">Grandi</button><button data-act="grid" data-v="small" aria-pressed="${S.prefs.grid === 'small'}">Compatte</button></div></section>
   ${setPdf()}
   ${vIcons()}
@@ -1605,7 +1630,7 @@ async function exportAll() {
   const cards = allCards(), withImg = cards.filter(c => c.img), files = {};
   for (let i = 0; i < withImg.length; i += 8) {
     toast('Preparo le immagini… ' + Math.min(i + 8, withImg.length) + ' / ' + withImg.length);
-    await Promise.all(withImg.slice(i, i + 8).map(async c => { try { const r = await fetch('/_blob/' + c.img); if (r.ok) files[c.id] = await blobToUrl(await r.blob()); } catch (e) {} }));
+    await Promise.all(withImg.slice(i, i + 8).map(async c => { try { const r = await fetch(assetUrl(c.img)); if (r.ok) files[c.id] = await blobToUrl(await r.blob()); } catch (e) {} }));
   }
   const rp = S.rulesPdf, hasPdf = pdfParts(rp).length > 0;
   const head = {app: 'marvel-battleworld', version: 4, exportedAt: new Date().toISOString(), decks: Object.values(S.decks), rules: S.rules, rulesAreas: rulesAreas(), affAb: S.affAb || {}, rulesPdfName: hasPdf ? (rp.name || 'regolamento.pdf') : '', icons: Object.values(ICONS), prefs: S.prefs};
@@ -1888,7 +1913,7 @@ let MEM_PDF = null;
 const PART_MAX = 19 * 1024 * 1024, PDF_MAX = 200 * 1024 * 1024;
 const pdfParts = r => !r ? [] : r.parts && r.parts.length ? r.parts : (r.id ? [{id: r.id, pages: 0}] : (r.local ? [{local: true, pages: 0}] : []));
 async function partBytes(part) {
-  if (part.id) { const res = await fetch('/_blob/' + part.id); if (!res.ok) throw new Error('fetch'); return new Uint8Array(await res.arrayBuffer()); }
+  if (part.id) { const res = await fetch(assetUrl(part.id)); if (!res.ok) throw new Error('fetch'); return new Uint8Array(await res.arrayBuffer()); }
   let b = MEM_PDF; if (!b) { try { b = await idb.get('rulesPdf'); } catch (e) { b = null; } }
   if (!b) throw new Error('nodata');
   return new Uint8Array(await b.arrayBuffer());
@@ -2364,7 +2389,7 @@ function vMatch() {
   if (!S.loaded) return loadingBlock();
   if (!M && S.mMode === 'draft') return vDraft();
   if (!M && !S.mMode) return `<div class="gut"><div class="page-hd"><h1>Partita</h1><div class="count">Come vuoi preparare il tuo mazzo?</div></div>
-    <div class="mm-pick"><button class="mm-opt" data-act="mMode" data-v="deck"><b>Seleziona un mazzo</b><span>Gioca con uno dei mazzi che hai già creato.</span></button><button class="mm-opt" data-act="mMode" data-v="draft"><b>Draft</b><span>Tu e gli altri giocatori vi passate le buste e scegliete una carta alla volta: 2 buste da 10 carte per ogni classe.</span></button></div></div>`;
+    <div class="mm-pick"><button class="mm-opt" data-act="mMode" data-v="deck"><b>Seleziona un mazzo</b><span>Gioca con uno dei mazzi che hai già creato.</span></button>${window.__BW_LOCAL ? '<button class="mm-opt" disabled style="opacity:.55;cursor:default"><b>Draft</b><span>Il draft tra giocatori collega più dispositivi: è disponibile solo nella pagina su claude.ai.</span></button>' : '<button class="mm-opt" data-act="mMode" data-v="draft"><b>Draft</b><span>Tu e gli altri giocatori vi passate le buste e scegliete una carta alla volta: 2 buste da 10 carte per ogni classe.</span></button>'}</div></div>`;
   if (!M) {
     const decks = Object.values(S.decks).map(d => ({d, n: Object.values(d.cards).reduce((a, b) => a + (Number(b) || 0), 0)})).filter(x => x.n > 0).sort((a, b) => a.d.nome.localeCompare(b.d.nome, 'it'));
     return `<div class="gut"><div class="page-hd"><h1>Partita</h1><div class="count">Gestisci la tua area di gioco: mazzo, mano, campo, serbatoio del potere e scarti. Gli avversari non la vedono.</div><div class="btns">${btn('Indietro', 'mMode', {cls: 'alt sm', v: ''})}</div></div>
@@ -2707,7 +2732,7 @@ const ACT = {
   rulesSave() { const v = $('#rulesText').value; S.rulesEdit = false; putRules(v); toast('Regolamento salvato'); },
   theme(t, v) { S.prefs.theme = v === 'light' ? 'light' : 'dark'; lsSet('bw:prefs', S.prefs); applyTheme(); renderAll(); },
   grid(t, v) { S.prefs.grid = v; lsSet('bw:prefs', S.prefs); renderAll(); },
-  exportAll, importRun, exportExcel,
+  exportAll, importRun, exportExcel, seedSite() { seedFromSite(false); },
   importCancel() { S.imp = null; renderAll(); },
   delExamples() { S.confirm = ''; allCards().filter(c => c.esempio).forEach(c => delCard(c.id)); toast('Carte di esempio eliminate'); },
   wipeCards() { S.confirm = ''; allCards().forEach(c => { if (c.img && ASSETS) ASSETS.delete(c.img).catch(() => {}); delCard(c.id); }); toast('Carte eliminate'); },
