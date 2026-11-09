@@ -186,6 +186,121 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .afd{margin-top:12px;border-left:3px solid var(--red);padding:2px 0 2px 12px}
 .afd>b{font:700 17px/1.2 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
 .afd .prose{padding-top:4px;font-size:16px}
+#sh-game .sheet-hd .gut{display:flex;align-items:center;gap:10px}
+.dice-btn svg{width:30px;height:30px}
+.dice-btn{color:#fff}
+.dice{position:absolute;inset:0;z-index:20;background:rgba(4,5,14,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
+.dice[hidden]{display:none}
+#sh-game>.dice{position:absolute;z-index:20}
+.dice-box{width:min(520px,100%);max-height:100%;overflow:auto;background:rgba(18,18,40,.94);border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 60px rgba(0,0,0,.6);padding:16px 18px 20px;color:#fff}
+.dice-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dice-hd b{font:800 26px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase}
+.dice-hd .ib{color:#fff}
+.dice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dice-pick{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;padding:14px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:background .15s,border-color .15s,transform .1s}
+.dice-pick:hover{background:rgba(224,53,46,.22);border-color:#e0352e}
+.dice-pick:active{transform:scale(.96)}
+.dice-pick span{font:800 18px/1 var(--font-display);letter-spacing:.1em}
+.die{width:64px;height:64px;overflow:visible}
+.die>polygon:first-child,.die>rect{fill:#e0352e;stroke:#ff8a83;stroke-width:3;stroke-linejoin:round}
+.die .ln{fill:none;stroke:rgba(255,255,255,.35);stroke-width:2.5;stroke-linejoin:round}
+.die text{fill:#fff;font:800 22px var(--font-display);letter-spacing:.02em}
+.die.big{width:min(190px,48vw);height:min(190px,48vw)}
+.die.big text{font-size:36px}
+.dice-res{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:4px}
+.dice-roll{filter:drop-shadow(0 12px 22px rgba(224,53,46,.45))}
+.dice-roll.spin{animation:dspin .66s cubic-bezier(.3,.6,.4,1)}
+.dice-roll.land{animation:dland .32s ease-out}
+@keyframes dspin{0%{transform:rotate(0) scale(.7)}60%{transform:rotate(320deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+@keyframes dland{0%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.dice-roll.spin,.dice-roll.land{animation:none}}
+.dice-out{font:700 20px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;min-height:20px;color:rgba(255,255,255,.85)}
+.dice-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.mt-setup{max-width:640px;margin-top:20px}
+.mt-wrap{padding-bottom:40px}
+.mt-bar{position:sticky;top:56px;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+.mt-turn{display:flex;align-items:baseline;gap:8px;font:700 14px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mt-turn b{font:800 30px/1 var(--font-display);color:var(--fg)}
+.mt-ctr{display:flex;align-items:center;gap:6px;font:700 13px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase}
+.mt-ctr>span{margin-right:4px}
+.mt-ctr.vita>span{color:#1fa463}.mt-ctr.glo>span{color:var(--red-text)}
+.mt-ctr b{font:800 28px/1 var(--font-display);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.mt-ctr b small{font-size:15px;color:var(--muted)}
+.mt-ctr .pm{width:34px;height:34px;font:800 20px/1 var(--font-display)}
+.mt-acts{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto}
+.mt-alert{margin-top:12px;padding:10px 14px;border-left:4px solid var(--red);background:var(--surface);font-weight:600}
+.mt-alert.win{border-left-color:#f5b301}
+.mz{margin-top:16px;border:1px solid var(--line);background:var(--surface);padding:12px 14px 14px}
+.mz-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.mz-hd h2{font:800 20px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase}
+.mz-n{min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:var(--raise);display:grid;place-items:center;font:700 14px/1 var(--font-display)}
+.mz-pw{margin-left:auto;font:600 13px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mz-empty{color:var(--muted);font-size:15px;padding:6px 0}
+.mz-row{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x proximity}
+.mz-row.big .mt{width:118px}
+.mz-row.hand .mt{width:112px}
+.mt{position:relative;flex:none;width:84px;border:0;padding:0;background:none;cursor:pointer;scroll-snap-align:start;transition:transform .15s}
+.mt:hover{transform:translateY(-3px)}
+.mt .art{width:100%}
+.mt.ex .art{filter:grayscale(.6) brightness(.7)}
+.mz-campo .mt.ex{transform:rotate(8deg)}
+.mt-dmg{position:absolute;top:-6px;right:-6px;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:var(--red);color:#fff;display:grid;place-items:center;font:800 15px/1 var(--font-display);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.mt-ex{position:absolute;left:4px;right:4px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font:700 11px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:4px 0;text-align:center}
+.mt-mid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);gap:0 14px}
+@media (max-width:860px){.mt-mid{grid-template-columns:1fr}}
+.pile{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.pile-c{width:84px;aspect-ratio:5/7;border:0;cursor:pointer;border-radius:6px;background:repeating-linear-gradient(135deg,#a11d18 0 6px,#c3241d 6px 12px);box-shadow:3px 3px 0 #5e100d,6px 6px 0 #3b0a08;color:#fff;font:800 16px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase}
+.pile-c:disabled{background:var(--raise);box-shadow:none;color:var(--muted);cursor:default}
+.pile-b{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.mt-log{margin-top:16px}
+.mt-log summary{cursor:pointer;font:700 15px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mt-log ol{list-style:none;margin-top:8px;display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--muted);max-height:220px;overflow:auto}
+.mc{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.mc[hidden]{display:none}
+.mc-box{position:relative;width:min(640px,100%);max-height:100%;overflow:auto;background:var(--bg);border:1px solid var(--line);padding:18px}
+.mc-x{position:absolute;top:8px;right:8px}
+.mc-in{display:flex;gap:18px;flex-wrap:wrap}
+.mc-art{width:min(230px,60vw);flex:none}
+.mc-art .art{width:100%}
+.mc-art.ex .art{filter:grayscale(.6) brightness(.75)}
+.mc-side{flex:1;min-width:200px;display:flex;flex-direction:column;gap:8px}
+.mc-side h3{font:800 26px/1.05 var(--font-display);letter-spacing:.04em;text-transform:uppercase;padding-right:36px}
+.mc-dmg{font-weight:600}
+.mc-acts{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 4px}
+.mm-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px;margin-top:22px;max-width:820px}
+.mm-opt{text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--red);padding:22px 20px;color:var(--fg);display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .15s}
+.mm-opt:hover{border-color:var(--red);transform:translateY(-2px)}
+.mm-opt b{font:800 30px/1 var(--font-display);letter-spacing:.05em;text-transform:uppercase}
+.mm-opt span{color:var(--muted);font-size:16px;line-height:1.4}
+.dr-form{max-width:520px;margin-top:20px}
+.dr-or{font:700 13px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.dr-code{font:800 64px/1 var(--font-display);letter-spacing:.2em;color:var(--red-text);margin:10px 0 6px}
+.dr-h{font:800 22px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase;margin-top:22px}
+.dr-pl{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.dr-pl li{padding:8px 12px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+.dr-pl li.me{border-left:4px solid var(--red)}
+.dr-pl i{font:700 11px/1 var(--font-display);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--red-text);margin-left:6px}
+.dr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.dr-c{border:2px solid transparent;background:none;padding:4px;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:var(--fg);border-radius:8px;transition:border-color .12s,transform .12s}
+.dr-c:hover{transform:translateY(-2px)}
+.dr-c.on{border-color:var(--red);background:rgba(224,53,46,.12)}
+.dr-c span{font:700 14px/1.1 var(--font-display);letter-spacing:.03em;text-align:center}
+.dr-cls{margin-top:6px;font:700 14px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase}
+.mt-share{border:1px solid var(--line);border-left:4px solid var(--red);background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:10px;margin:6px 0}
+.mt-share.on{border-left-color:#1fa463}
+.mt-share.on>b{color:#1fa463}
+.mt-share>b{font:800 20px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase}
+.gs{margin-top:14px;border:1px solid var(--line);background:var(--surface);padding:10px 12px}
+.gs-hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font:700 14px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.gs-hd b{color:var(--red-text);letter-spacing:.16em}
+.gs-turn{color:var(--fg)}
+.gs-turn.me{color:#1fa463}
+.gs-row{display:flex;gap:8px;overflow-x:auto;margin-top:10px}
+.gs-p{flex:none;min-width:190px;border:1px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:3px;background:var(--bg)}
+.gs-p.on{border-color:#1fa463;box-shadow:0 0 0 1px #1fa463 inset}
+.gs-p b{font:700 16px/1.1 var(--font-display);letter-spacing:.04em;text-transform:uppercase}
+.gs-p .v{color:#1fa463;font-weight:700}.gs-p .g{color:var(--red-text);font-weight:700}
+.gs-p .c{font-size:13px;color:var(--muted)}
 .pdf-card{margin-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--line);background:var(--surface);padding:18px 20px;max-width:640px}
 .pdf-ic{width:54px;height:66px;flex:none;background:#e0352e;color:#fff;display:grid;place-items:center;font:800 15px/1 var(--font-display);letter-spacing:.08em;clip-path:polygon(0 0,72% 0,100% 22%,100% 100%,0 100%)}
 .pdf-meta{flex:1;min-width:160px}
@@ -433,6 +548,8 @@ body:not([data-view="carte"]) .top .ib[data-act="search"]{visibility:hidden}
 .glo .orb{--oc:#e0352e;background:radial-gradient(circle at 35% 28%,#ff6b60,#c3241d 62%,#7d1410)}
 .orb .oi{position:absolute;inset:7%;width:86%;height:86%;opacity:.34;fill:#fff;pointer-events:none}
 .orb img.oi{object-fit:contain;opacity:.5}
+.glo .orb .oi{inset:-4%;width:108%;height:108%}
+.glo .orb img.oi{inset:2%;width:96%;height:96%}
 .orb output{position:relative;font:800 calc(var(--o)*.46)/1 var(--font-display);font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 12px rgba(0,0,0,.25)}
 .orb input{position:relative;width:calc(var(--o)*.8);background:rgba(0,0,0,.35);border:2px solid #fff;border-radius:8px;color:#fff;text-align:center;font:800 calc(var(--o)*.36)/1 var(--font-display);padding:2px 0;-moz-appearance:textfield}
 .orb input::-webkit-outer-spin-button,.orb input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -554,9 +671,10 @@ button.affl:hover{color:var(--red-text)}
   <div class="sheet-ft"><div class="gut wrap" id="ru-ft"></div></div>
 </section>
 <section class="sheet" id="sh-game" aria-label="Partita">
-  <div class="sheet-hd"><div class="gut"><h2 id="gm-title">Gioca</h2><button class="ib" data-act="closeSheet" data-v="sh-game" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div>
+  <div class="sheet-hd"><div class="gut"><h2 id="gm-title">Gioca</h2><button class="ib dice-btn" data-act="diceOpen" aria-label="Tira un dado" title="Tira un dado"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-14 11 19)"><rect x="3" y="11" width="15" height="15" rx="3"/><circle cx="7.3" cy="15.3" r="1.4" fill="currentColor" stroke="none"/><circle cx="10.5" cy="18.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="13.7" cy="21.7" r="1.4" fill="currentColor" stroke="none"/></g><g transform="rotate(18 23 11)"><rect x="16" y="4" width="13" height="13" rx="2.6"/><circle cx="19.6" cy="7.6" r="1.25" fill="currentColor" stroke="none"/><circle cx="25.4" cy="7.6" r="1.25" fill="currentColor" stroke="none"/><circle cx="19.6" cy="13.4" r="1.25" fill="currentColor" stroke="none"/><circle cx="25.4" cy="13.4" r="1.25" fill="currentColor" stroke="none"/></g><path d="M2 6.5c1.5-1 3-1.3 4.6-.8M4.5 3.5c1-.5 2-.6 3-.3" stroke-linecap="round" opacity=".6"/></svg></button><span style="flex:1"></span><button class="ib" data-act="closeSheet" data-v="sh-game" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div>
   <div class="sheet-bd"><div class="gut wrap" id="gm-body"></div></div>
   <div class="sheet-ft"><div class="gut wrap" id="gm-ft"></div></div>
+  <div class="dice" id="dice" hidden><div class="dice-box" role="dialog" aria-label="Dadi" aria-modal="true"><div class="dice-hd"><b id="dice-t">Scegli il dado</b><button class="ib" data-act="diceClose" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div><div id="dice-body"></div></div></div>
 </section>
 <section class="sheet" id="sh-filter" aria-label="Cerca e filtra">
   <div class="sheet-hd"><div class="gut"><h2>Cerca</h2><button class="ib" data-act="closeSheet" data-v="sh-filter" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button></div></div>
@@ -568,6 +686,7 @@ button.affl:hover{color:var(--red-text)}
 <input type="file" id="pdfFile" accept="application/pdf,.pdf" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
 <input type="file" id="quickFile" accept="image/*,.webp,.jpg,.jpeg,.png,.gif,.avif" style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
 <div id="zoom" class="zoom" role="dialog" aria-label="Carta a tutto schermo" data-act="zoomClose"><button class="ib zoom-x" data-act="zoomClose" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button><div class="zoom-in" id="zoom-in"></div></div>
+<div id="mc" class="mc" hidden><div class="mc-box" role="dialog" aria-modal="true" aria-label="Carta"><button class="ib mc-x" data-act="mcClose" aria-label="Chiudi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"><path d="M5 5l14 14M19 5 5 19"/></svg></button><div id="mc-body"></div></div></div>
 <div id="toast" aria-live="polite"></div>
 
 <script>
@@ -632,7 +751,7 @@ const CARATT = ['Eroe','Antieroe','Cattivo','Alieno','Alleanza','Alleato','Andro
 const ABIL = ['Protettore','Temerario','Aggressivo','Resistente','Evasivo','Aiutante','Agile','Protetto','Evoluzione','Soccorritore'];
 const STATS = [['costo','Costo'],['forza','Forza'],['resistenza','Resistenza'],['gloria','Gloria'],['spostamento','Costo di spostamento']];
 const SORTS = [['set','Set e codice'],['numero','Set e N°'],['code','Codice carta'],['nome','Nome'],['tipo','Tipo carta'],['classe','Classe'],['costo','Costo'],['forza','Forza'],['resistenza','Resistenza'],['gloria','Gloria'],['spostamento','Costo di spostamento'],['rarita','Rarità'],['added','Ultime aggiunte']];
-const VIEWS = ['home','mazzi','carte','classi','affiliazioni','regolamento','stampa','impostazioni'];
+const VIEWS = ['home','mazzi','carte','classi','affiliazioni','regolamento','stampa','impostazioni','partita'];
 const PAGE = 60;
 const SETS = {1:'Secret War',2:'Contest of Champions',3:'Marvels',4:'Secret Warrior',5:'Marvel Cinematic Universe'};
 const setName = n => n == null ? 'Senza set' : 'Set ' + n + (SETS[n] ? ' · ' + SETS[n] : '');
@@ -1033,7 +1152,7 @@ function renderView() {
   const v = $('#view'), a = document.activeElement;
   if (a && v.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { S.dirty = true; return; }
   S.dirty = false;
-  v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, stampa: vStampa, impostazioni: vSet}[S.view] || vHome)();
+  v.innerHTML = ({home: vHome, mazzi: vMazzi, carte: vCarte, classi: vClassi, affiliazioni: vAffil, regolamento: vRegole, stampa: vStampa, partita: vMatch, impostazioni: vSet}[S.view] || vHome)();
 }
 function renderMenu() {
   const row = (id, label, sub) => `<button class="nav-row${S.view === id ? ' on' : ''}" data-act="${sub ? 'sub' : 'nav'}" data-v="${id}"${sub ? ` aria-expanded="${!!S.menuSub[id]}"` : ''}>${label}${sub ? ICON_CHEV : ''}</button>`;
@@ -1043,7 +1162,7 @@ function renderMenu() {
     row('mazzi', 'I tuoi mazzi', 1) + `<div class="sub${S.menuSub.mazzi ? ' open' : ''}"><button data-act="nav" data-v="mazzi">Tutti i mazzi</button>${dec.map(d => `<button data-act="deckOpen" data-v="${esc(d.id)}">${esc(d.nome)}</button>`).join('')}<button data-act="newDeckGo" style="color:var(--red-text)">+ Nuovo mazzo</button></div>` +
     row('carte', 'Carte', 1) + `<div class="sub${S.menuSub.carte ? ' open' : ''}"><button data-act="navCarte" data-v="">Tutte le carte</button><button data-act="navFav">★ Preferite</button><button data-act="navPrint">Lista stampa</button>${Object.keys(SETS).map(n => `<button data-act="goSet" data-v="${n}">Set ${n} · ${esc(SETS[n])}</button>`).join('')}${TIPI.map(t => `<button data-act="navCarte" data-v="${t}">${TIPI_PL[t]}</button>`).join('')}</div>` +
     row('classi', 'Classi', 1) + `<div class="sub${S.menuSub.classi ? ' open' : ''}"><button data-act="nav" data-v="classi">Panoramica</button>${classi().map(k => `<button data-act="goClass" data-v="${k}">${classIcon(k)}${k}</button>`).join('')}</div>` +
-    `<button class="nav-row" data-act="game">Gioca</button>` + row('affiliazioni', 'Affiliazioni') + row('regolamento', 'Regolamento') + row('stampa', 'Stampa') + row('impostazioni', 'Impostazioni');
+    `<button class="nav-row" data-act="game">Gioca</button>` + row('partita', 'Partita') + row('affiliazioni', 'Affiliazioni') + row('regolamento', 'Regolamento') + row('stampa', 'Stampa') + row('impostazioni', 'Impostazioni');
   $('#menuFt').textContent = 'Marvel Battleworld · ' + allCards().length + ' carte · ' + Object.keys(S.decks).length + ' mazzi';
 }
 function applyTheme() { if (S.prefs.theme === 'light') document.documentElement.dataset.theme = 'light'; else document.documentElement.removeAttribute('data-theme'); }
@@ -1554,12 +1673,12 @@ function openGame() { closeMenu(); closeSheets(); openSheet('sh-game'); renderGa
 function renderGame() {
   const body = $('#gm-body'), ft = $('#gm-ft');
   if (!G || S.gameSetup) {
-    $('#gm-title').textContent = 'Nuova partita'; $('#sh-game').classList.remove('playing');
+    $('#gm-title').textContent = 'Gioca'; $('#sh-game').classList.remove('playing');
     body.innerHTML = `<div class="form"><div><div class="lbl">Quanti giocatori?</div><div class="pl-pick">${Object.entries(GAME_RULES).map(([n, [v, g]]) => `<button data-act="gameStart" data-v="${n}"><b>${n}</b><span>${v} punti vita<br>${g} gloria per vincere</span></button>`).join('')}</div></div></div>`;
     ft.innerHTML = G ? `<div style="display:flex;gap:10px;justify-content:flex-end;padding-block:12px">${btn('Torna alla partita', 'gameBack', {cls: 'alt'})}</div>` : '';
     return;
   }
-  $('#gm-title').textContent = 'Partita';
+  $('#gm-title').textContent = 'Gioca';
   const MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>', PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>';
   const HEART = '<svg class="oi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C1 8.2 3.1 4.5 6.7 4.5c2.1 0 3.6 1.1 4.4 2.6h1.8c.8-1.5 2.3-2.6 4.4-2.6 3.6 0 5.7 3.7 4.3 7.1C19.5 16.4 12 21 12 21z"/></svg>';
   const gIco = icoGet('simbolo', 'G'), GLORY = gIco && gIco.data ? `<img class="oi" src="${esc(gIco.data)}" alt="">` : '<svg class="oi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l2.9 6.2 6.7.8-5 4.6 1.3 6.7L12 16.8l-5.9 3.3 1.3-6.7-5-4.6 6.7-.8z"/></svg>';
@@ -2038,6 +2157,217 @@ function renderAff() {
   $('#af-ft').innerHTML = `<div class="ru-ft"><span class="muted">${n} ${n === 1 ? 'carta' : 'carte'}</span><span style="flex:1"></span>${n ? `<button class="btn sm" data-act="goAff" data-v="${esc(a)}"><span>Vedi le carte</span></button>` : ''}</div>`;
 }
 
+/* ---------- dadi ---------- */
+const DICE = [4, 6, 8, 10, 12, 20];
+const diceShape = n => ({
+  4: '<polygon points="50,8 94,86 6,86"/>',
+  6: '<rect x="12" y="12" width="76" height="76" rx="10"/>',
+  8: '<polygon points="50,4 92,50 50,96 8,50"/><path d="M8 50h84" class="ln"/>',
+  10: '<polygon points="50,4 94,40 50,96 6,40"/><path d="M6 40l44 16 44-16M50 56v40" class="ln"/>',
+  12: '<polygon points="50,4 95,37 78,92 22,92 5,37"/><polygon points="50,24 73,41 64,70 36,70 27,41" class="ln"/>',
+  20: '<polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/><polygon points="50,22 76,66 24,66" class="ln"/>'
+}[n]);
+const diceSvg = (n, label, big) => `<svg class="die${big ? ' big' : ''}" viewBox="0 0 100 100" aria-hidden="true">${diceShape(n)}<text x="50" y="${n === 4 ? 70 : n === 10 ? 46 : 55}" text-anchor="middle" dominant-baseline="middle">${label}</text></svg>`;
+const rollD = n => { const a = new Uint32Array(1), lim = Math.floor(4294967296 / n) * n; let x; do { crypto.getRandomValues(a); x = a[0]; } while (x >= lim); return x % n + 1; };
+let DIE = {n: 0, t: 0};
+function diceRender() {
+  const body = $('#dice-body');
+  if (!DIE.n) { $('#dice-t').textContent = 'Scegli il dado'; body.innerHTML = `<div class="dice-grid">${DICE.map(n => `<button class="dice-pick" data-act="diceRoll" data-v="${n}" aria-label="Tira un D${n}">${diceSvg(n, 'D' + n)}<span>D${n}</span></button>`).join('')}</div>`; return; }
+  $('#dice-t').textContent = 'D' + DIE.n;
+  body.innerHTML = `<div class="dice-res"><div class="dice-roll" id="dice-roll">${diceSvg(DIE.n, '', true)}</div><p class="dice-out" aria-live="polite" id="dice-out"></p>
+    <div class="dice-acts"><button class="btn alt sm" data-act="diceBack"><span>Cambia dado</span></button><button class="btn sm" data-act="diceRoll" data-v="${DIE.n}"><span>Tira di nuovo</span></button></div></div>`;
+}
+function diceThrow(n) {
+  DIE.n = n; diceRender();
+  const res = rollD(n), box = $('#dice-roll'), txt = () => box.querySelector('text'), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  clearInterval(DIE.t);
+  const done = () => { txt().textContent = res; box.classList.remove('spin'); box.classList.add('land'); $('#dice-out').textContent = 'Risultato: ' + res + (res === n ? ' · massimo!' : res === 1 ? ' · minimo' : ''); };
+  if (reduce) { done(); return; }
+  box.classList.add('spin'); let k = 0;
+  DIE.t = setInterval(() => { txt().textContent = Math.floor(Math.random() * n) + 1; if (++k >= 12) { clearInterval(DIE.t); done(); } }, 55);
+}
+
+/* ---------- partita reale: la mia area (mazzo, mano, campo, potere, scarti) ---------- */
+const MZ = {mazzo: 'Mazzo', mano: 'Mano', campo: 'In campo', potere: 'Serbatoio del potere', scarti: 'Scarti'};
+let M = lsGet('bw:match', null), MH = [], MSEL = null;
+const mSave = () => { lsSet('bw:match', M); if (M && M.code) gPublish(); };
+/* partita condivisa: ognuno tiene la sua area in locale e pubblica solo un riepilogo */
+let GM = {session: null, players: [], subs: [], t: 0, missing: false};
+const gPath = s => 'game/' + M.code + (s ? '/' + s : '');
+function gUnsub() { GM.subs.forEach(u => { try { if (typeof u === 'function') u(); } catch (e) {} }); GM.subs = []; }
+function gWatch() {
+  gUnsub(); if (!DB || !M || !M.code) return;
+  const r = () => { if (S.view === 'partita' && $('#mc').hidden) renderAll(); };
+  GM.subs.push(DB.doc(gPath()).onSnapshot(s => { GM.session = s.exists ? s.data() : null; GM.missing = !s.exists && !(s.metadata && s.metadata.fromCache); r(); }, () => {}));
+  GM.subs.push(DB.collection(gPath('players')).onSnapshot(s => { GM.players = s.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (a.at || 0) - (b.at || 0)); r(); }, () => {}));
+}
+function gPublish(now) {
+  if (!DB || !M || !M.code) return;
+  clearTimeout(GM.t);
+  const go = () => { const z = M.zones; DB.collection(gPath('players')).doc(M.pid).set({name: M.name || 'Giocatore', at: M.joinedAt || Date.now(), vita: M.vita, gloria: M.gloria, target: M.target, mano: z.mano.length, mazzo: z.mazzo.length, campo: z.campo.length, potere: z.potere.length, scarti: z.scarti.length, deck: M.deckName || ''}).catch(() => {}); };
+  if (now) go(); else GM.t = setTimeout(go, 350);
+}
+const gOrder = () => GM.players.map(p => p.id);
+const gMyTurn = () => !M || !M.code || !GM.session || GM.session.turnOf === M.pid;
+function gStrip() {
+  if (!M || !M.code) return '';
+  const s = GM.session, others = GM.players.filter(p => p.id !== M.pid), turnOf = s && s.turnOf, who = GM.players.find(p => p.id === turnOf);
+  return `<div class="gs"><div class="gs-hd"><span>Partita condivisa <b>${esc(M.code)}</b></span><span class="gs-turn${turnOf === M.pid ? ' me' : ''}">${GM.missing ? 'Codice non trovato' : !s ? 'Collegamento…' : turnOf === M.pid ? 'Tocca a te' : 'Turno di ' + esc(who ? who.name : '…')}</span></div>
+    <div class="gs-row">${others.length ? others.map(p => `<div class="gs-p${p.id === turnOf ? ' on' : ''}"><b>${esc(p.name || 'Giocatore')}</b><span class="v">♥ ${p.vita ?? '–'}</span><span class="g">★ ${p.gloria ?? 0}/${p.target ?? '–'}</span><span class="c">Mano ${p.mano ?? 0} · Mazzo ${p.mazzo ?? 0} · Campo ${p.campo ?? 0} · Potere ${p.potere ?? 0}</span></div>`).join('') : '<p class="muted">In attesa degli altri giocatori: condividi il codice.</p>'}</div></div>`;
+}
+async function gJoin(code, host) {
+  M.code = code; M.pid = DR.pid; M.name = DR.name || 'Giocatore'; M.joinedAt = Date.now(); lsSet('bw:match', M);
+  gWatch(); gPublish(true);
+  if (host) await DB.doc(gPath()).set({host: M.pid, turnOf: M.pid, round: 1, createdAt: Date.now()});
+}
+const mPush = () => { MH.push(JSON.stringify(M)); if (MH.length > 40) MH.shift(); };
+const mLog = t => { M.log.unshift('T' + M.turn + ' · ' + t); M.log = M.log.slice(0, 30); };
+const mCard = iid => S.cards[M.inst[iid].id] || normCard(M.inst[iid].id, {code: M.inst[iid].code || '?', nome: M.inst[iid].nome || 'Carta non trovata'});
+const mShuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rollD(i + 1) - 1; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const mZoneOf = iid => Object.keys(MZ).find(z => M.zones[z].includes(iid));
+function mMove(iid, to, where) {
+  const from = mZoneOf(iid); if (from) M.zones[from] = M.zones[from].filter(x => x !== iid);
+  if (where === 'bottom') M.zones[to].push(iid); else if (to === 'mazzo') M.zones[to].unshift(iid); else M.zones[to].push(iid);
+  if (to !== 'campo' && to !== 'potere') { M.inst[iid].ex = false; M.inst[iid].dmg = 0; }
+}
+function mStart(deckId, hand, players) {
+  const d = S.decks[deckId]; if (!d) return;
+  const [vita, target] = GAME_RULES[players] || GAME_RULES[2];
+  const inst = {}, pile = []; let k = 0;
+  Object.entries(d.cards).forEach(([id, q]) => { for (let i = 0; i < (Number(q) || 0); i++) { const iid = 'i' + (k++); const c = S.cards[id]; inst[iid] = {id, code: c ? c.code : id, nome: c ? c.nome : '', ex: false, dmg: 0}; pile.push(iid); } });
+  M = {deckId, deckName: d.nome, turn: 1, vita, gloria: 0, target, players, inst, zones: {mazzo: mShuffle(pile), mano: [], campo: [], potere: [], scarti: []}, log: [], powerTurn: 0};
+  for (let i = 0; i < hand && M.zones.mazzo.length; i++) M.zones.mano.push(M.zones.mazzo.shift());
+  MH = []; mLog('Partita iniziata con “' + d.nome + '”: pescate ' + M.zones.mano.length + ' carte'); mSave();
+}
+const mThumb = (iid, zone) => { const c = mCard(iid), st = M.inst[iid]; return `<button class="mt${st.ex ? ' ex' : ''}" data-act="mcOpen" data-v="${iid}" aria-label="${esc(c.nome || c.code)}${st.ex ? ', esaurita' : ''}">${art(c, true)}${st.dmg ? `<span class="mt-dmg" title="Danni">${st.dmg}</span>` : ''}${st.ex ? '<span class="mt-ex">Esaurita</span>' : ''}</button>`; };
+function vMatch() {
+  if (!S.loaded) return loadingBlock();
+  if (!M && S.mMode === 'draft') return vDraft();
+  if (!M && !S.mMode) return `<div class="gut"><div class="page-hd"><h1>Partita</h1></div>
+    ${S.mPend ? `<div class="mt-share on"><b>Partita condivisa ${esc(S.mPend.code)}</b><p>${S.mPend.host ? 'Condividi questo codice con gli altri giocatori.' : 'Sei nella partita.'} Ora scegli come preparare il tuo mazzo.</p><div class="btns">${btn('Annulla', 'mPendClear', {cls: 'alt sm'})}</div></div>`
+    : `<div class="mt-share"><b>Gioca insieme</b><p class="muted">Crea una partita condivisa e dai il codice agli altri, oppure entra con il codice che ti hanno dato. Ognuno vede la propria area.</p>
+      <div class="row2"><label class="fl"><span>Il tuo nome</span><input id="m-name" value="${esc(DR.name || '')}" autocomplete="off" maxlength="30" placeholder="Es. Greta"></label><label class="fl"><span>Codice partita</span><input id="m-code" autocomplete="off" maxlength="6" placeholder="Es. K7QX" style="text-transform:uppercase"></label></div>
+      <div class="btns">${btn('Crea partita condivisa', 'mHost')}${btn('Entra con il codice', 'mJoin', {cls: 'alt'})}</div></div>`}
+    <h2 class="dr-h">${S.mPend ? 'Prepara il tuo mazzo' : 'Oppure gioca da solo'}</h2>
+    <div class="mm-pick"><button class="mm-opt" data-act="mMode" data-v="deck"><b>Seleziona un mazzo</b><span>Gioca con uno dei mazzi che hai già creato.</span></button><button class="mm-opt" data-act="mMode" data-v="draft"><b>Draft</b><span>Tu e gli altri giocatori vi passate le buste e scegliete una carta alla volta: 2 buste da 10 carte per ogni classe.</span></button></div></div>`;
+  if (!M) {
+    const decks = Object.values(S.decks).map(d => ({d, n: Object.values(d.cards).reduce((a, b) => a + (Number(b) || 0), 0)})).filter(x => x.n > 0).sort((a, b) => a.d.nome.localeCompare(b.d.nome, 'it'));
+    return `<div class="gut"><div class="page-hd"><h1>Partita</h1><div class="count">Gestisci la tua area di gioco: mazzo, mano, campo, serbatoio del potere e scarti. Gli avversari non la vedono.</div><div class="btns">${btn('Indietro', 'mMode', {cls: 'alt sm', v: ''})}</div></div>
+      ${decks.length ? `<div class="form mt-setup"><label class="fl"><span>Mazzo</span><select id="m-deck">${decks.map(x => `<option value="${esc(x.d.id)}"${S.mDeck === x.d.id ? ' selected' : ''}>${esc(x.d.nome)} · ${x.n} carte</option>`).join('')}</select></label>
+        <div class="row2"><label class="fl"><span>Giocatori</span><select id="m-pl">${Object.entries(GAME_RULES).map(([n, [v, g]]) => `<option value="${n}">${n} giocatori · ${v} vita · ${g} gloria</option>`).join('')}</select></label><label class="fl"><span>Carte in mano all’inizio</span><input id="m-hand" type="number" inputmode="numeric" min="0" max="20" value="5"></label></div>
+        <div class="btns">${S.mPend ? btn('Inizia la partita ' + esc(S.mPend.code), 'mGo') : btn('Inizia partita', 'mStart')}</div></div>` : `<div class="empty"><h2>Nessun mazzo pronto</h2><p>Crea un mazzo con delle carte per iniziare una partita.</p><div class="btns">${btn('Vai ai mazzi', 'nav', {v: 'mazzi'})}</div></div>`}
+    </div>`;
+  }
+  if (M.code && DB && !GM.subs.length) setTimeout(gWatch, 0);
+  const z = M.zones, pw = z.potere.length, pwFree = z.potere.filter(i => !M.inst[i].ex).length;
+  const zone = (k, inner, extra) => `<section class="mz mz-${k}"><div class="mz-hd"><h2>${MZ[k]}</h2><span class="mz-n">${z[k].length}</span>${extra || ''}</div>${inner}</section>`;
+  return `<div class="gut mt-wrap">
+    ${gStrip()}
+    <div class="mt-bar">
+      <div class="mt-turn"><span>Turno</span><b>${M.code && GM.session ? GM.session.round || 1 : M.turn}</b></div>
+      <div class="mt-ctr vita"><span>Vita</span><button class="pm" data-act="mAdj" data-k="vita" data-d="-1" aria-label="Vita meno 1">−</button><b>${M.vita}</b><button class="pm" data-act="mAdj" data-k="vita" data-d="1" aria-label="Vita più 1">+</button></div>
+      <div class="mt-ctr glo"><span>Gloria</span><button class="pm" data-act="mAdj" data-k="gloria" data-d="-1" aria-label="Gloria meno 1">−</button><b>${M.gloria}<small>/${M.target}</small></b><button class="pm" data-act="mAdj" data-k="gloria" data-d="1" aria-label="Gloria più 1">+</button></div>
+      <div class="mt-acts">${btn(M.code ? (gMyTurn() ? 'Fine turno' : 'Non è il tuo turno') : 'Fine turno', 'mEndTurn', {cls: M.code && !gMyTurn() ? 'alt sm' : 'sm'})}${btn('Riattiva tutte', 'mReady', {cls: 'alt sm'})}${btn('Annulla', 'mUndo', {cls: 'alt sm'})}</div>
+    </div>
+    ${M.vita <= 0 ? '<p class="mt-alert">Hai finito i punti vita: hai perso.</p>' : M.gloria >= M.target ? '<p class="mt-alert win">Hai raggiunto i punti gloria: hai vinto!</p>' : !z.mazzo.length ? '<p class="mt-alert">Il mazzo è vuoto: se devi pescare, hai perso.</p>' : ''}
+    ${zone('campo', z.campo.length ? `<div class="mz-row big">${z.campo.map(i => mThumb(i, 'campo')).join('')}</div>` : '<p class="mz-empty">Nessuna carta in campo. Gioca una carta dalla mano.</p>')}
+    <div class="mt-mid">
+      ${zone('mazzo', `<div class="pile"><button class="pile-c" data-act="mDraw" aria-label="Pesca una carta"${z.mazzo.length ? '' : ' disabled'}><span>${z.mazzo.length ? 'Pesca' : 'Vuoto'}</span></button><div class="pile-b">${btn('Pesca 1', 'mDraw', {cls: 'sm'})}${btn('Potere dal mazzo', 'mPowerTop', {cls: 'alt sm'})}${btn('Mescola', 'mShuffle', {cls: 'alt sm'})}</div></div>`)}
+      ${zone('potere', pw ? `<div class="mz-row">${z.potere.map(i => mThumb(i, 'potere')).join('')}</div>` : '<p class="mz-empty">Vuoto.</p>', `<span class="mz-pw">${pwFree} disponibili</span>`)}
+      ${zone('scarti', z.scarti.length ? `<div class="mz-row">${z.scarti.slice().reverse().map(i => mThumb(i, 'scarti')).join('')}</div>` : '<p class="mz-empty">Vuoto.</p>')}
+    </div>
+    ${zone('mano', z.mano.length ? `<div class="mz-row hand">${z.mano.map(i => mThumb(i, 'mano')).join('')}</div>` : '<p class="mz-empty">Nessuna carta in mano.</p>')}
+    <details class="mt-log"><summary>Registro azioni</summary><ol>${M.log.map(l => `<li>${esc(l)}</li>`).join('')}</ol></details>
+    <div class="btns" style="margin-top:18px">${S.confirm === 'match' ? btn('Conferma: termina partita', 'mQuit', {cls: 'danger'}) + btn('Annulla', 'confirmNo', {cls: 'alt'}) : btn('Termina partita', 'confirm', {cls: 'alt', v: 'match'})}</div>
+  </div>`;
+}
+function mcRender() {
+  const iid = MSEL; if (!iid || !M || !M.inst[iid]) { ACT.mcClose(); return; }
+  const c = mCard(iid), st = M.inst[iid], zn = mZoneOf(iid);
+  const a = (act, label, cls) => `<button class="btn ${cls || 'alt'} sm" data-act="${act}" data-v="${iid}"><span>${label}</span></button>`;
+  const acts = {
+    mano: [a('mToCampo', 'Gioca in campo', ''), a('mToPotere', 'Metti nel potere'), a('mToScarti', 'Scarta'), a('mToTop', 'In cima al mazzo'), a('mToBottom', 'In fondo al mazzo')],
+    campo: [a('mExhaust', st.ex ? 'Attiva' : 'Esaurisci', ''), a('mDmgUp', '+1 danno'), a('mDmgDown', '−1 danno'), a('mToScarti', 'Scarta'), a('mToMano', 'Torna in mano'), a('mToBottom', 'In fondo al mazzo')],
+    potere: [a('mExhaust', st.ex ? 'Ripristina' : 'Usa (esaurisci)', ''), a('mToMano', 'Torna in mano'), a('mToScarti', 'Scarta')],
+    scarti: [a('mToMano', 'Torna in mano', ''), a('mToCampo', 'Metti in campo'), a('mToTop', 'In cima al mazzo'), a('mToBottom', 'In fondo al mazzo')]
+  }[zn] || [];
+  $('#mc-body').innerHTML = `<div class="mc-in"><div class="mc-art${st.ex ? ' ex' : ''}">${art(c)}</div><div class="mc-side"><div class="lbl">${esc(MZ[zn] || '')}</div><h3>${esc(c.nome || c.code)}</h3>${c.sottonome ? `<p class="muted">${esc(c.sottonome)}</p>` : ''}${st.dmg ? `<p class="mc-dmg">Danni: <b>${st.dmg}</b></p>` : ''}${st.ex ? '<p class="mc-dmg">Esaurita</p>' : ''}<div class="mc-acts">${acts.join('')}</div><button class="btn alt sm" data-act="mcInfo" data-v="${esc(c.id)}"><span>Scheda della carta</span></button></div></div>`;
+}
+function mDo(fn, text) { if (!M) return; mPush(); fn(); if (text) mLog(text); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) mcRender(); }
+const mName = iid => { const c = mCard(iid); return c.nome || c.code; };
+
+/* ---------- draft tra giocatori: 2 buste da 10 carte per ogni classe, ci si passano le buste ---------- */
+const DRAFT_PACK = 10, DRAFT_PER_CLASS = 2;
+let DR = Object.assign({code: '', pid: '', name: ''}, lsGet('bw:draft', {}), {session: null, players: [], packs: [], picks: [], subs: [], sel: ''});
+if (!DR.pid) DR.pid = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const drSave = () => lsSet('bw:draft', {code: DR.code, pid: DR.pid, name: DR.name});
+const drPath = s => 'draft/' + DR.code + (s ? '/' + s : '');
+function drUnsub() { DR.subs.forEach(u => { try { if (typeof u === 'function') u(); } catch (e) {} }); DR.subs = []; }
+function drWatch() {
+  drUnsub(); if (!DB || !DR.code) return;
+  const r = () => { if (S.view === 'partita') drRender(); };
+  DR.subs.push(DB.doc(drPath()).onSnapshot(s => { DR.session = s.exists ? s.data() : null; r(); }, () => {}));
+  DR.subs.push(DB.collection(drPath('players')).onSnapshot(s => { DR.players = s.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (a.at || 0) - (b.at || 0)); r(); }, () => {}));
+  DR.subs.push(DB.collection(drPath('packs')).onSnapshot(s => { DR.packs = s.docs.map(d => Object.assign({id: d.id}, d.data())); r(); }, () => {}));
+  DR.subs.push(DB.doc(drPath('picks/' + DR.pid)).onSnapshot(s => { DR.picks = s.exists ? (s.data().cards || []) : []; r(); }, () => {}));
+}
+function drRender() { const keep = document.activeElement && document.activeElement.id; renderAll(); if (keep === 'dr-name' || keep === 'dr-code') { const el = $('#' + keep); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } } }
+const drMyPacks = () => DR.packs.filter(p => p.holder === DR.pid && (p.cards || []).length).sort((a, b) => (a.at || 0) - (b.at || 0));
+const drDone = () => DR.session && DR.session.status === 'drafting' && DR.packs.length > 0 && DR.packs.every(p => !(p.cards || []).length);
+function drPool() {
+  const packs = [];
+  classi().forEach(cl => {
+    const pool = mShuffle(allCards().filter(c => c.classe === cl && !c.esempio).map(c => c.id));
+    if (!pool.length) return;
+    for (let k = 0; k < DRAFT_PER_CLASS; k++) {
+      let cards = pool.slice(k * DRAFT_PACK, (k + 1) * DRAFT_PACK);
+      while (cards.length < DRAFT_PACK) cards.push(pool[rollD(pool.length) - 1]);
+      packs.push({cls: cl, cards});
+    }
+  });
+  return packs;
+}
+function vDraft() {
+  const back = btn('Indietro', 'drLeave', {cls: 'alt sm'});
+  if (S.mode !== 'db') return `<div class="gut"><div class="page-hd"><h1>Draft</h1></div><div class="empty"><h2>Serve la pagina condivisa</h2><p>Il draft tra giocatori funziona solo sulla pagina pubblicata, aperta da tutti i giocatori con il proprio account.</p><div class="btns">${back}</div></div></div>`;
+  if (!DR.code) return `<div class="gut"><div class="page-hd"><h1>Draft</h1><div class="count">Crea un draft e condividi il codice con gli altri giocatori, oppure entra con il codice che ti hanno dato.</div></div>
+    <div class="form dr-form"><label class="fl"><span>Il tuo nome</span><input id="dr-name" value="${esc(DR.name)}" autocomplete="off" maxlength="30" placeholder="Es. Greta"></label>
+      <div class="btns">${btn('Crea un nuovo draft', 'drCreate')}</div>
+      <div class="dr-or">oppure</div>
+      <label class="fl"><span>Codice del draft</span><input id="dr-code" autocomplete="off" maxlength="6" placeholder="Es. K7QX" style="text-transform:uppercase"></label>
+      <div class="btns">${btn('Entra nel draft', 'drJoin', {cls: 'alt'})}${back}</div></div></div>`;
+  const s = DR.session;
+  if (!s) return `<div class="gut"><div class="page-hd"><h1>Draft ${esc(DR.code)}</h1></div><p class="muted" style="margin-top:20px">Collegamento al draft…</p><div class="btns" style="margin-top:14px">${back}</div></div>`;
+  const isHost = s.host === DR.pid, me = DR.players.find(p => p.id === DR.pid);
+  const plist = `<ul class="dr-pl">${DR.players.map(p => `<li${p.id === DR.pid ? ' class="me"' : ''}>${esc(p.name || 'Giocatore')}${p.id === s.host ? ' <i>host</i>' : ''}${s.status === 'drafting' ? ` <span class="muted">· ${DR.packs.filter(k => k.holder === p.id && (k.cards || []).length).length} buste in attesa</span>` : ''}</li>`).join('')}</ul>`;
+  if (s.status === 'lobby') return `<div class="gut"><div class="page-hd"><h1>Draft</h1><div class="count">Condividi questo codice con gli altri giocatori:</div></div>
+    <div class="dr-code">${esc(DR.code)}</div>
+    <h2 class="dr-h">Giocatori (${DR.players.length})</h2>${plist}
+    ${!me ? `<p class="muted">Ti sto aggiungendo…</p>` : ''}
+    <p class="muted" style="margin-top:12px">Buste: ${DRAFT_PER_CLASS} per ognuna delle ${classi().length} classi, ${DRAFT_PACK} carte ciascuna. A ogni turno scegli 1 carta dalla busta che hai e la passi al giocatore successivo.</p>
+    <div class="btns" style="margin-top:14px">${isHost ? btn('Inizia il draft', 'drStart') : '<span class="muted">In attesa che l’host inizi il draft…</span>'}${btn('Esci', 'drLeave', {cls: 'alt sm'})}</div></div>`;
+  const mine = DR.picks.map(id => S.cards[id]).filter(Boolean), byCls = {};
+  mine.forEach(c => { (byCls[c.classe || 'Altro'] = byCls[c.classe || 'Altro'] || []).push(c); });
+  const picksHtml = `<section class="mz"><div class="mz-hd"><h2>Le tue carte</h2><span class="mz-n">${mine.length}</span></div>${mine.length ? Object.entries(byCls).map(([cl, l]) => `<div class="dr-cls"><b>${esc(cl)}</b> <span class="muted">${l.length}</span></div><div class="mz-row">${l.map(c => `<button class="mt" data-act="mcInfo" data-v="${esc(c.id)}" aria-label="${esc(c.nome)}">${art(c, true)}</button>`).join('')}</div>`).join('') : '<p class="mz-empty">Ancora nessuna carta.</p>'}</section>`;
+  if (drDone()) return `<div class="gut"><div class="page-hd"><h1>Draft finito</h1><div class="count">Hai scelto ${mine.length} carte. Crea il tuo mazzo e inizia la partita.</div></div>
+    <div class="btns" style="margin-top:14px">${btn('Crea il mazzo e gioca', 'drDeck')}${btn('Esci dal draft', 'drLeave', {cls: 'alt'})}</div>${picksHtml}</div>`;
+  const pk = drMyPacks()[0], left = DR.packs.reduce((a, p) => a + (p.cards || []).length, 0);
+  return `<div class="gut"><div class="page-hd"><h1>Draft ${esc(DR.code)}</h1><div class="count">${left} carte ancora nelle buste · ${drMyPacks().length} ${drMyPacks().length === 1 ? 'busta' : 'buste'} in attesa per te</div></div>
+    ${pk ? `<section class="mz dr-pack"><div class="mz-hd"><h2>Busta ${esc(pk.cls)}</h2><span class="mz-n">${pk.cards.length}</span><span class="mz-pw">Scegli 1 carta</span></div>
+      <div class="dr-grid">${pk.cards.map((id, i) => { const c = S.cards[id] || normCard(id, {code: id, nome: '?'}); return `<button class="dr-c${DR.sel === pk.id + ':' + i ? ' on' : ''}" data-act="drSel" data-v="${pk.id}:${i}" aria-label="${esc(c.nome)}">${art(c, true)}<span>${esc(c.nome)}</span></button>`; }).join('')}</div>
+      <div class="btns" style="margin-top:10px">${btn(DR.sel && DR.sel.startsWith(pk.id + ':') ? 'Prendi questa carta e passa la busta' : 'Tocca una carta per sceglierla', 'drPick', {cls: DR.sel && DR.sel.startsWith(pk.id + ':') ? '' : 'alt'})}${DR.sel && DR.sel.startsWith(pk.id + ':') ? btn('Vedi la scheda', 'drInfo', {cls: 'alt sm'}) : ''}</div></section>`
+      : `<div class="empty"><h2>In attesa</h2><p>Aspetta che un altro giocatore ti passi una busta.</p></div>`}
+    <h2 class="dr-h">Giocatori</h2>${plist}
+    ${picksHtml}
+    <div class="btns" style="margin-top:14px">${btn('Esci dal draft', 'drLeave', {cls: 'alt sm'})}</div></div>`;
+}
+async function drJoinCode(code, host) {
+  DR.code = code; drSave(); drWatch();
+  await DB.collection(drPath('players')).doc(DR.pid).set({name: DR.name || 'Giocatore', at: Date.now()});
+  if (host) await DB.doc(drPath()).set({host: DR.pid, status: 'lobby', createdAt: Date.now()});
+  drRender();
+}
+
 /* ---------- azioni ---------- */
 const ACT = {
   menu() { renderMenu(); $('#menu').classList.add('open'); syncLock(); },
@@ -2067,6 +2397,92 @@ const ACT = {
   newCard() { openEdit(null); },
   editCard() { openEdit(detailId); },
   game: openGame,
+  mMode(t, v) { S.mMode = v || ''; if (v === 'draft' && DR.code) drWatch(); renderAll(); window.scrollTo(0, 0); },
+  async drCreate() {
+    const n = ($('#dr-name').value || '').trim(); if (!n) { toast('Scrivi il tuo nome'); $('#dr-name').focus(); return; }
+    DR.name = n; const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let code = ''; for (let i = 0; i < 4; i++) code += A[rollD(A.length) - 1];
+    try { await drJoinCode(code, true); } catch (e) { toast('Non riesco a creare il draft'); }
+  },
+  async drJoin() {
+    const n = ($('#dr-name').value || '').trim(), code = ($('#dr-code').value || '').trim().toUpperCase();
+    if (!n) { toast('Scrivi il tuo nome'); $('#dr-name').focus(); return; }
+    if (!/^[A-Z0-9]{4,6}$/.test(code)) { toast('Scrivi il codice del draft'); $('#dr-code').focus(); return; }
+    DR.name = n;
+    try { await drJoinCode(code, false); } catch (e) { toast('Non riesco a entrare nel draft'); }
+  },
+  async drStart() {
+    const s = DR.session; if (!s || s.host !== DR.pid) return;
+    if (DR.players.length < 2) { toast('Servono almeno 2 giocatori'); return; }
+    const packs = mShuffle(drPool()); if (!packs.length) { toast('Non ci sono carte con una classe'); return; }
+    const pl = DR.players.map(p => p.id), t0 = Date.now();
+    try {
+      for (let i = 0; i < packs.length; i++) await DB.collection(drPath('packs')).doc('k' + i).set({cls: packs[i].cls, cards: packs[i].cards, holder: pl[i % pl.length], at: t0 + i});
+      await DB.doc(drPath()).set({host: s.host, status: 'drafting', order: pl, createdAt: s.createdAt || t0});
+    } catch (e) { toast('Non riesco a iniziare il draft'); }
+  },
+  drSel(t, v) { DR.sel = DR.sel === v ? '' : v; drRender(); },
+  drInfo() { const [pid, i] = DR.sel.split(':'), pk = DR.packs.find(p => p.id === pid); if (pk) openDetail(pk.cards[Number(i)]); },
+  async drPick() {
+    if (!DR.sel) { toast('Tocca prima una carta'); return; }
+    const [pid, i] = DR.sel.split(':'), pk = DR.packs.find(p => p.id === pid); if (!pk || pk.holder !== DR.pid) { DR.sel = ''; drRender(); return; }
+    const order = (DR.session && DR.session.order) || DR.players.map(p => p.id), next = order[(order.indexOf(DR.pid) + 1) % order.length] || DR.pid;
+    const cards = pk.cards.slice(), card = cards.splice(Number(i), 1)[0];
+    DR.sel = '';
+    try {
+      await DB.collection(drPath('picks')).doc(DR.pid).set({cards: [...DR.picks, card], name: DR.name});
+      await DB.collection(drPath('packs')).doc(pk.id).set({cls: pk.cls, cards, holder: cards.length ? next : '', at: Date.now()});
+      toast('Carta presa: ' + ((S.cards[card] || {}).nome || card));
+    } catch (e) { toast('Non riesco a salvare la scelta'); }
+  },
+  drDeck() {
+    const cards = {}; DR.picks.forEach(id => { cards[id] = (cards[id] || 0) + 1; });
+    const id = 'draft-' + DR.code.toLowerCase() + '-' + Date.now().toString(36), d = {id, nome: 'Draft ' + DR.code + (DR.name ? ' · ' + DR.name : ''), cards, created: Date.now(), updated: Date.now()};
+    putDeck(d, true); S.mDeck = id; if (!S.mPend) { const host = DR.session && DR.session.host === DR.pid; S.mPend = {code: DR.code, host}; if (host && DB) DB.doc('game/' + DR.code).set({host: DR.pid, turnOf: DR.pid, round: 1, createdAt: Date.now()}).catch(() => {}); } S.mMode = 'deck'; renderAll(); toast('Mazzo creato: ' + d.nome);
+  },
+  drLeave() { drUnsub(); DR.code = ''; DR.session = null; DR.players = []; DR.packs = []; DR.picks = []; DR.sel = ''; drSave(); S.mMode = ''; renderAll(); },
+  async mHost() {
+    if (!DB) { toast('La partita condivisa funziona solo sulla pagina pubblicata'); return; }
+    const name = ($('#m-name').value || '').trim(); if (!name) { toast('Scrivi il tuo nome'); $('#m-name').focus(); return; }
+    DR.name = name; drSave(); const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let code = ''; for (let i = 0; i < 4; i++) code += A[rollD(A.length) - 1];
+    try { await DB.doc('game/' + code).set({host: DR.pid, turnOf: DR.pid, round: 1, createdAt: Date.now()}); } catch (e) { toast('Non riesco a creare la partita'); return; }
+    S.mPend = {code, host: true}; renderAll(); toast('Partita creata: codice ' + code);
+  },
+  mJoin() {
+    if (!DB) { toast('La partita condivisa funziona solo sulla pagina pubblicata'); return; }
+    const name = ($('#m-name').value || '').trim(), code = ($('#m-code').value || '').trim().toUpperCase();
+    if (!name) { toast('Scrivi il tuo nome'); $('#m-name').focus(); return; }
+    if (!/^[A-Z0-9]{4,6}$/.test(code)) { toast('Scrivi il codice della partita'); $('#m-code').focus(); return; }
+    DR.name = name; drSave(); S.mPend = {code, host: false}; renderAll();
+  },
+  mPendClear() { S.mPend = null; renderAll(); },
+  async mGo() { const pend = S.mPend; if (!pend) return; ACT.mStart(); if (!M) return; S.mPend = null; try { await gJoin(pend.code, false); } catch (e) { toast('Non riesco a entrare nella partita'); } renderAll(); },
+  mStart() { const n = Number($('#m-hand').value); mStart($('#m-deck').value, Number.isFinite(n) ? Math.max(0, Math.min(20, n)) : 5, Number($('#m-pl').value) || 2); renderAll(); window.scrollTo(0, 0); },
+  mQuit() { if (M && M.code && DB) { const pid = M.pid, path = gPath('players'); const s = GM.session; if (s && s.turnOf === pid) { const o = gOrder().filter(x => x !== pid); if (o.length) DB.doc(gPath()).set(Object.assign({}, s, {turnOf: o[0]})).catch(() => {}); } DB.collection(path).doc(pid).delete().catch(() => {}); } gUnsub(); GM = {session: null, players: [], subs: [], t: 0, missing: false}; M = null; MH = []; S.confirm = ''; S.mMode = ''; mSave(); renderAll(); toast('Partita terminata'); },
+  mDraw() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } mDo(() => { M.zones.mano.push(M.zones.mazzo.shift()); }, 'Pescata 1 carta'); },
+  mShuffle() { mDo(() => { mShuffle(M.zones.mazzo); }, 'Mazzo mescolato'); toast('Mazzo mescolato'); },
+  mPowerTop() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } const twice = M.powerTurn === M.turn; mDo(() => { const iid = M.zones.mazzo.shift(); M.zones.potere.push(iid); M.powerTurn = M.turn; }, 'Estratto potere dal mazzo'); if (twice) toast('Attenzione: hai già estratto potere in questo turno'); },
+  mAdj(t) { const k = t.dataset.k === 'gloria' ? 'gloria' : 'vita'; mDo(() => { M[k] = Math.max(0, M[k] + Number(t.dataset.d)); }); },
+  mEndTurn() {
+    if (M && M.code) { if (!gMyTurn()) { toast('Non è il tuo turno'); return; } const o = gOrder(), i = o.indexOf(M.pid), nx = o[(i + 1) % o.length] || M.pid, s = GM.session || {}; DB.doc(gPath()).set(Object.assign({}, s, {turnOf: nx, round: (s.round || 1) + (i + 1 >= o.length ? 1 : 0)})).catch(() => {}); }
+    mDo(() => { M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno'); toast('Turno ' + M.turn); },
+  mReady() { mDo(() => { [...M.zones.campo, ...M.zones.potere].forEach(i => { M.inst[i].ex = false; }); }, 'Riattivate tutte le carte'); },
+  mUndo() { if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
+  mcOpen(t, v) { MSEL = v; mcRender(); $('#mc').hidden = false; },
+  mcClose() { MSEL = null; $('#mc').hidden = true; },
+  mcInfo(t, v) { ACT.mcClose(); openDetail(v); },
+  mToCampo(t, v) { const pw = mZoneOf(v) === 'mano'; mDo(() => mMove(v, 'campo'), (pw ? 'Giocata in campo: ' : 'Messa in campo: ') + mName(v)); ACT.mcClose(); },
+  mToPotere(t, v) { const twice = M.powerTurn === M.turn; mDo(() => { mMove(v, 'potere'); M.powerTurn = M.turn; }, 'Messa nel potere: ' + mName(v)); ACT.mcClose(); if (twice) toast('Attenzione: hai già estratto potere in questo turno'); },
+  mToScarti(t, v) { mDo(() => mMove(v, 'scarti'), 'Scartata: ' + mName(v)); ACT.mcClose(); },
+  mToMano(t, v) { mDo(() => mMove(v, 'mano'), 'Tornata in mano: ' + mName(v)); ACT.mcClose(); },
+  mToTop(t, v) { mDo(() => mMove(v, 'mazzo'), 'Messa in cima al mazzo: ' + mName(v)); ACT.mcClose(); },
+  mToBottom(t, v) { mDo(() => mMove(v, 'mazzo', 'bottom'), 'Messa in fondo al mazzo: ' + mName(v)); ACT.mcClose(); },
+  mExhaust(t, v) { const ex = !M.inst[v].ex; mDo(() => { M.inst[v].ex = ex; }, (ex ? 'Esaurita: ' : 'Attivata: ') + mName(v)); },
+  mDmgUp(t, v) { mDo(() => { M.inst[v].dmg++; }, '+1 danno a ' + mName(v)); },
+  mDmgDown(t, v) { mDo(() => { M.inst[v].dmg = Math.max(0, M.inst[v].dmg - 1); }, '−1 danno a ' + mName(v)); },
+  diceOpen() { DIE = {n: 0, t: 0}; diceRender(); $('#dice').hidden = false; },
+  diceClose() { clearInterval(DIE.t); $('#dice').hidden = true; },
+  diceBack() { clearInterval(DIE.t); DIE.n = 0; diceRender(); },
+  diceRoll(t, v) { diceThrow(Number(v)); },
   afOpen(t, v) { AF = {name: v, edit: false}; renderAff(); openSheet('sh-aff'); },
   afEdit() { AF.edit = true; renderAff(); setTimeout(() => { const el = $('#af-n'); if (el) el.focus(); }, 30); },
   afCancel() { AF.edit = false; renderAff(); },
@@ -2255,6 +2671,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'e-aff-new') { e.preventDefault(); ACT.affAdd(); return; }
   if (e.target.dataset && e.target.dataset.gedit && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); commitGameEdit(e.target, e.key === 'Escape'); return; }
   if (e.key === 'Escape' && $('#zoom').classList.contains('open')) { ACT.zoomClose(); return; }
+  if (e.key === 'Escape' && !$('#dice').hidden) { ACT.diceClose(); return; }
+  if (e.key === 'Escape' && !$('#mc').hidden) { ACT.mcClose(); return; }
   if (e.key === 'Escape') { const open = $$('.sheet.open'); if (open.length) closeSheet(open[open.length - 1].id); else closeMenu(); }
   if (e.key === 'Enter' && e.target.id === 'newDeckName') ACT.deckCreate();
   if (e.key === 'Enter' && e.target.id === 'fq') ACT.fApply();
