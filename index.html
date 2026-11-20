@@ -1375,6 +1375,16 @@ body.mt-land .mxp-ca .mt-dmg.dmg-i b{font-size:18px}
 .pwp-c em{font-style:normal;font:700 10px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:#7dffa0}
 .pwp-c.ex em{color:var(--muted)}
 .pw-stack,.pw-dots{cursor:pointer}
+
+/* v25: duelli, azioni sulle carte avversarie, luoghi, oggetti */
+.du-pl{display:grid;place-items:center;aspect-ratio:5/7;background:linear-gradient(160deg,#3a1d22,#140b10);border:2px solid rgba(255,255,255,.2);font:900 48px/1 var(--font-display);color:#fff}
+.mx-sw{position:absolute;left:4px;top:4px;z-index:3;background:#f5b301;color:#1a1200;font:900 13px/1 var(--font-display);padding:3px 5px;border-radius:4px}
+.mx-atx{position:absolute;left:4px;right:4px;bottom:4px;z-index:3;background:rgba(10,10,26,.85);color:#fff;font:700 10px/1.2 var(--font-display);padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;letter-spacing:.02em}
+.mx-atn{position:absolute;left:4px;top:4px;z-index:3;background:var(--red);color:#fff;font:800 11px/1 var(--font-display);padding:3px 5px;border-radius:9px}
+.oc-att{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+.mxp-r select,.mxp-r input[list]{height:34px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);color:#fff;padding:0 6px;font-size:14px;max-width:200px}
+.mxp-r input[type=number][id$=n]{height:34px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);color:#fff;padding:0 6px;margin-left:4px}
+.mxp-r .chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
 </style>
 
 <header class="top">
@@ -3211,7 +3221,7 @@ function vSavedMatches() {
 const mPush = () => { MH.push(JSON.stringify(M)); if (MH.length > 40) MH.shift(); };
 const mLog = t => { M.log.unshift('T' + M.turn + ' · ' + t); M.log = M.log.slice(0, 30); if (!MFORCE) { M.tlog = (M.tlog || []).concat(t).slice(-80); } };
 const xCard = o => S.cards[o.id] || normCard(o.id, Object.assign({}, o.cd || {}, {code: (o.cd && o.cd.code) || o.code || '?', nome: (o.cd && o.cd.nome) || o.nome || 'Carta non trovata'}));
-const mCard = iid => xCard(M.inst[iid]);
+const mCard = iid => { const st = M.inst[iid], b = xCard(st); if (!st.xab && !st.xcar) return b; return Object.assign({}, b, {abilita: [...(b.abilita || []), ...(st.xab || [])], caratteristiche: [...(b.caratteristiche || []), ...(st.xcar || [])]}); };
 const mShuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rollD(i + 1) - 1; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const mZoneOf = iid => Object.keys(MZ).find(z => M.zones[z].includes(iid));
 function mMove(iid, to, where) {
@@ -3219,11 +3229,13 @@ function mMove(iid, to, where) {
   if (where === 'bottom' || where === 'distrutta' || where === 'sconfitta') M.zones[to].push(iid); else if (to === 'mazzo') M.zones[to].unshift(iid); else M.zones[to].push(iid);
   const st = M.inst[iid];
   if (to !== 'campo' && to !== 'potere' && to !== 'evocate') { st.ex = false; st.dmg = 0; }
+  if (to !== 'potere') delete st.fresh;
   if (to === 'campo' && from !== 'campo' && from !== 'evocate' && mTipo(iid) === 'Luogo') st.ex = true; /* i luoghi entrano in gioco esauriti */
   if (to !== 'campo' && to !== 'evocate') {
     delete st.tf; delete st.tr; delete st.lock; delete st.at;
     /* le carte assegnate a questa: gli oggetti vanno negli scarti, le altre restano in campo */
-    [...M.zones.campo, ...M.zones.evocate].filter(i => M.inst[i].at === iid).forEach(i => { if ((mCard(i).tipo || '') === 'Oggetto') mMove(i, 'scarti'); else delete M.inst[i].at; });
+    [...M.zones.campo, ...M.zones.evocate].filter(i => M.inst[i].at === iid).forEach(i => { if (mIsObj(i)) mMove(i, 'scarti'); else delete M.inst[i].at; });
+    delete st.atx; delete st.sw; delete st.ao;
   }
   if (to !== 'mano') delete st.seg;
   if (to === 'scarti') st.how = where === 'distrutta' || where === 'sconfitta' ? where : 'scartata'; else delete st.how;
@@ -3250,12 +3262,13 @@ const LIBS = {};
 const loadLib = url => LIBS[url] || (LIBS[url] = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = url; sc.onload = res; sc.onerror = () => { delete LIBS[url]; rej(new Error('load')); }; document.head.appendChild(sc); }));
 const netCd = c => ({nome: c.nome, sottonome: c.sottonome || '', code: c.code, tipo: c.tipo, classe: c.classe, rarita: c.rarita, set: c.set, costo: c.costo, forza: c.forza, resistenza: c.resistenza, gloria: c.gloria, spostamento: c.spostamento, caratteristiche: c.caratteristiche || [], abilita: c.abilita || [], affiliazioni: affList(c), mossaSpeciale: c.mossaSpeciale || null, mossaAttiva: c.mossaAttiva || '', mossaSecondaria: c.mossaSecondaria || null, mosse: cardMosse(c)});
 const netCardOut = i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, code: c.code, nome: c.nome || st.nome || '', cd: netCd(c)}; };
+const netItem = i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', atx: st.atx || null, ao: !!st.ao, sw: !!st.sw, evo: M.zones.evocate.includes(i), f: mF(i), r: mR(i), g: mGlory(i), cst: mCost(i), tipo: c.tipo || '', cd: netCd(c)}; };
 function netSummary() {
   if (!M) return {inGame: false};
   const z = M.zones, f = [...z.campo, ...z.evocate];
   return {inGame: true, lost: M.vita <= 0 || M.lost === 'mazzo', out: !z.mazzo.length, deck: M.deckName, vita: M.vita, gloria: M.gloria, target: M.target, turn: M.turn, mano: z.mano.length, mazzo: z.mazzo.length, scarti: z.scarti.length,
     scTop: z.scarti.length ? M.inst[z.scarti[z.scarti.length - 1]].id : '', pwA: z.potere.filter(i => !M.inst[i].ex).length, pwT: z.potere.length,
-    campo: f.map(i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', evo: z.evocate.includes(i), f: mF(i), r: mR(i), g: c.gloria || 0, cst: mCost(i), tipo: c.tipo || '', cd: netCd(c)}; })};
+    campo: f.map(netItem)};
 }
 const netName = () => NET.name || 'Giocatore';
 function netRender() { if (S.view === 'partita') { const el = $('.xd,.mxp') ? null : null; renderAll(); } }
@@ -3348,6 +3361,56 @@ function netHandle(d) {
   if (d.t === 'mull' && M) { mForce(() => { if (M.zones.mazzo.length) M.zones.mano.push(M.zones.mazzo.shift()); }, who + ' ha fatto mulligan: peschi 1 carta'); toast(who + ' ha fatto mulligan: peschi 1 carta'); return; }
   if (d.t === 'hit' && M) { const n = Math.max(0, Number(d.n) || 0); mForce(() => { M.vita = Math.max(0, M.vita - n); }, who + ' ti infligge ' + n + ' danni con ' + (d.card || 'una carta')); toast(who + ': −' + n + ' vita'); return; }
   if (d.t === 'gloria' && M) { const n = Math.max(0, Number(d.n) || 0); mForce(() => { M.gloria += n; }, 'Hai sconfitto ' + (d.card || 'una carta') + ' di ' + who + ': +' + n + ' gloria'); toast('Carta sconfitta: +' + n + ' gloria'); return; }
+  if (d.t === 'atkq') {
+    const opts = M ? mSoccOpts() : [];
+    if (!opts.length) { netSend({t: 'atka', to: d.from, qid: d.qid}); return; }
+    S.mPop = {type: 'socc', from: d.from, qid: d.qid, who, card: String(d.card || ''), n: Number(d.n) || 0, tgt: String(d.tgt || ''), opts};
+    clearTimeout(NET.soccT); NET.soccT = setTimeout(() => { if (S.mPop && S.mPop.type === 'socc' && S.mPop.qid === d.qid) ACT.soccNo(); }, 35000);
+    if (S.view === 'partita') renderAll(); return;
+  }
+  if (d.t === 'atka') { netResolveAtk(d.qid, d.sk && d.card && d.card.k ? d.card : null); return; }
+  if (d.t === 'nack') { toast(String(d.msg || 'Azione rifiutata')); return; }
+  if (d.t === 'mod' && M) {
+    const k = d.k; if (!M.inst[k] || ![...M.zones.campo, ...M.zones.evocate].includes(k)) return;
+    const c = mCard(k), st = M.inst[k], nm = mName(k);
+    if (hasAb(c, 'Protetto')) { netSend({t: 'nack', to: d.from, msg: nm + ' è Protetto: gli avversari non possono modificarla'}); return; }
+    const L = [], cl = v => Math.max(-99, Math.min(99, Math.round(Number(v) || 0)));
+    if (d.cst != null) L.push('costo ' + Math.max(0, cl(d.cst)));
+    if (d.tf != null || d.tr != null) L.push('segnalini F' + cl(d.tf != null ? d.tf : st.tf) + ' R' + cl(d.tr != null ? d.tr : st.tr));
+    if (d.sw) L.push(st.sw ? 'forza e resistenza tornano normali' : 'forza e resistenza invertite');
+    if (d.xab) L.push('nuova abilità ' + String(d.xab).slice(0, 40));
+    if (d.xcar) L.push('nuova caratteristica ' + String(d.xcar).slice(0, 40));
+    const atL = d.at && M.inst[d.at] && mTipo(d.at) === 'Luogo' && d.at !== k ? d.at : '';
+    if (atL) L.push('spostata su ' + mName(atL));
+    if (d.atx && d.atx.k) L.push('spostata su ' + String(d.atx.nome || 'un luogo'));
+    if (d.off) L.push('tolta dal luogo');
+    if (L.length) mForce(() => {
+      if (d.cst != null) { const n = Math.max(0, cl(d.cst)); if (n === (c.costo || 0)) delete st.costo; else st.costo = n; }
+      if (d.tf != null) { const n = cl(d.tf); if (n) st.tf = n; else delete st.tf; }
+      if (d.tr != null) { const n = cl(d.tr); if (n) st.tr = n; else delete st.tr; }
+      if (d.sw) { if (st.sw) delete st.sw; else st.sw = true; }
+      if (d.xab) (st.xab = st.xab || []).push(String(d.xab).slice(0, 40));
+      if (d.xcar) (st.xcar = st.xcar || []).push(String(d.xcar).slice(0, 40));
+      if (atL) { st.at = atL; delete st.atx; }
+      if (d.atx && d.atx.k) { st.atx = {pid: String(d.atx.pid), k: String(d.atx.k), nome: String(d.atx.nome || '').slice(0, 60)}; delete st.at; }
+      if (d.off) { delete st.at; delete st.atx; }
+    }, who + ' modifica ' + nm + ': ' + L.join(', '));
+    if (d.dmg) {
+      const n = Math.max(0, Math.round(Number(d.dmg) || 0) - abVal(c, 'Resistente')), tot = (st.dmg || 0) + n;
+      if (tot >= mR(k)) { const g = mGlory(k); mForce(() => { mMove(k, 'scarti', 'sconfitta'); }, who + ' infligge ' + n + ' danni a ' + nm + ': sconfitta'); netSend({t: 'gloria', to: d.from, n: g, card: nm}); toast(nm + ' è stata sconfitta da ' + who); }
+      else { mForce(() => { st.dmg = tot; }, who + ' infligge ' + n + ' danni a ' + nm); toast(who + ' infligge ' + n + ' danni a ' + nm); }
+    } else if (L.length) toast(who + ' modifica ' + nm);
+    return;
+  }
+  if (d.t === 'take' && M && d.src === 'campo') {
+    const k = d.k; if (!M.inst[k] || ![...M.zones.campo, ...M.zones.evocate].includes(k)) return;
+    const nm = mName(k);
+    if (hasAb(mCard(k), 'Protetto')) { netSend({t: 'nack', to: d.from, msg: nm + ' è Protetto: gli avversari non possono prenderla'}); return; }
+    const out = netCardOut(k);
+    mForce(() => { mMove(k, 'rimosse'); }, who + ' ti prende ' + nm + ' dal campo');
+    netSend({t: 'given', to: d.from, src: 'campo', host: d.host, card: out});
+    toast(who + ' ti prende ' + nm + ' dal campo'); return;
+  }
   if (d.t === 'take' && M) {
     const src = ['mano', 'mazzo', 'scarti'].includes(d.src) ? d.src : 'mano', z = M.zones[src];
     const k = src === 'mano' ? (d.k && z.includes(d.k) ? d.k : z[rollD(z.length || 1) - 1]) : src === 'mazzo' ? z[0] : z[z.length - 1];
@@ -3363,6 +3426,12 @@ function netHandle(d) {
     if (d.none || !d.card || !d.card.id) { toast(who + ' non ha carte ' + (d.src === 'mano' ? 'in mano' : d.src === 'mazzo' ? 'nel mazzo' : 'negli scarti')); return; }
     const o = d.card, iid = 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     M.inst[iid] = {id: String(o.id), code: String(o.code || ''), nome: String(o.nome || ''), cd: o.cd && typeof o.cd === 'object' ? o.cd : null, ex: false, dmg: 0, da: who};
+    if (d.src === 'campo') {
+      const h = d.host && M.inst[d.host] && [...M.zones.campo, ...M.zones.evocate].includes(d.host) ? d.host : '';
+      if (h) { M.inst[iid].at = h; M.inst[iid].ao = true; }
+      mForce(() => { M.zones.campo.push(iid); }, 'Hai preso ' + mName(iid) + ' dal campo di ' + who + (h ? ' e l’hai collegata a ' + mName(h) + ' come oggetto' : ''));
+      toast('Hai preso ' + mName(iid) + (h ? ': collegata a ' + mName(h) : '')); return;
+    }
     mForce(() => { M.zones.mano.push(iid); }, 'Hai preso ' + mName(iid) + ' ' + SL[d.src] + ' di ' + who);
     toast('Hai preso ' + mName(iid) + ' ' + (SL[d.src] || '') + ' di ' + who); return;
   }
@@ -3391,7 +3460,7 @@ function netHandle(d) {
   }
   if (d.t === 'duel' && M) {
     const k = d.k; if (!M.inst[k] || ![...M.zones.campo, ...M.zones.evocate].includes(k)) return;
-    const c = mCard(k), n = Math.max(0, (Number(d.n) || 0) - abVal(c, 'Resistente')), st = M.inst[k], tot = (st.dmg || 0) + n, r = mR(k), name = mName(k), g = c.gloria || 0;
+    const c = mCard(k), n = Math.max(0, (Number(d.n) || 0) - abVal(c, 'Resistente')), st = M.inst[k], tot = (st.dmg || 0) + n, r = mR(k), name = mName(k), g = mGlory(k);
     if (tot >= r) {
       mForce(() => { mMove(k, 'scarti', 'sconfitta'); }, who + ' attacca ' + name + ' con ' + (d.card || 'una carta') + ': ' + tot + ' danni, sconfitta');
       if (!d.atkDies) netSend({t: 'gloria', to: d.from, n: g, card: name});
@@ -3399,7 +3468,7 @@ function netHandle(d) {
     } else { mForce(() => { st.dmg = tot; }, who + ' attacca ' + name + ' con ' + (d.card || 'una carta') + ': ' + n + ' danni'); toast(who + ' attacca ' + name + ': −' + n); }
   }
 }
-const oppTargets = p => ((p && p.s && p.s.campo) || []).filter(c => c.ex && !c.evo && c.tipo !== 'Oggetto');
+const oppTargets = p => ((p && p.s && p.s.campo) || []).filter(c => c.ex && !c.evo && !c.ao && c.tipo !== 'Oggetto' && c.tipo !== 'Luogo' && !(c.at && ((c.cd && c.cd.abilita) || []).some(x => norm(x).startsWith('evoluzione'))));
 function mCanAttack(atk) {
   if (netLocked()) { toast('È il turno di ' + netCurName()); return false; }
   if (M.phase !== 'play') { toast('Prima inizia il turno'); return false; }
@@ -3407,6 +3476,7 @@ function mCanAttack(atk) {
   if (mTipo(atk) !== 'Personaggio') { toast('Solo i personaggi possono duellare'); return false; }
   if (M.inst[atk].ex) { toast('Questo personaggio è esaurito: non può duellare'); return false; }
   if (M.inst[atk].lock) { toast('Questo personaggio è bloccato: non può essere esaurito'); return false; }
+  if (mIsObj(atk) && M.inst[atk].at) { toast('È collegata come oggetto: non può duellare'); return false; }
   return true;
 }
 function netDuel(atk, pid, k) {
@@ -3417,58 +3487,110 @@ function netDuel(atk, pid, k) {
   const ca = mCard(atk), dab = (d.cd && d.cd.abilita) || [];
   const prot = oppTargets(p).filter(c => ((c.cd && c.cd.abilita) || []).some(x => norm(x).startsWith('protettore')));
   if (prot.length && !prot.some(c => c.k === k)) { toast('Devi attaccare prima il Protettore: ' + prot[0].nome); return; }
-  if (dab.some(x => norm(x).startsWith('evasivo')) && !hasAb(ca, 'Evasivo')) { toast(d.nome + ' è Evasivo: può essere attaccato solo da un personaggio Evasivo'); return; }
+  const eva = dab.some(x => norm(x).startsWith('evasivo')) && !hasAb(ca, 'Evasivo');
   const ac = ca.classe || '', dc = (d.cd && d.cd.classe) || '';
-  mPopOpen({type: 'duel', atk, pid, k, ua: !!ac && CLS_BEATS[ac] === dc, ud: !!dc && CLS_BEATS[dc] === ac, x: Math.max(1, Number(S.prefs.clsBonus) || 1)});
+  mPopOpen({type: 'duel', atk, pid, k, ua: !!ac && CLS_BEATS[ac] === dc, ud: !!dc && CLS_BEATS[dc] === ac, x: Math.max(1, Number(S.prefs.clsBonus) || 1), eva, evaIgn: false, help: []});
 }
 /* ciclo delle classi del regolamento: ognuna è forte contro la successiva */
 const CLS_BEATS = {Cosmici: 'Tech', Tech: 'Mutanti', Mutanti: 'Talent', Talent: 'Scientifici', Scientifici: 'Mistici', Mistici: 'Cosmici'};
+const mHelpers = atk => M.zones.campo.filter(h => h !== atk && mTipo(h) === 'Personaggio' && !M.inst[h].ex && !M.inst[h].lock && !(mIsObj(h) && M.inst[h].at) && hasAb(mCard(h), 'Aiutante'));
+/* valori del duello: forza dell'attaccante (con Aggressivo, classe e aiutanti) e del difensore */
+function duelCalc(P, d) {
+  const ca = mCard(P.atk), help = (P.help || []).filter(h => mHelpers(P.atk).includes(h)), hf = help.reduce((a, h) => a + mF(h), 0);
+  const ba = !P.hit && P.ua ? P.x : 0, bd = !P.hit && P.ud ? P.x : 0, ag = abVal(ca, 'Aggressivo');
+  const af = mF(P.atk) + ag + ba + hf;
+  if (P.hit || !d) return {ca, help, hf, ba, bd, ag, af, toD: af, toA: 0};
+  const dRes = abVal(d.cd || {}, 'Resistente'), myRes = abVal(ca, 'Resistente');
+  return {ca, help, hf, ba, bd, ag, af, dRes, toD: Math.max(0, af - dRes), toA: Math.max(0, (d.f || 0) + bd - myRes)};
+}
 function mDuelHtml(P, wrap, row) {
-  const p = NET.players[P.pid], d = p && p.s && (p.s.campo || []).find(c => c.k === P.k);
-  if (!d || !M.inst[P.atk] || !M.zones.campo.includes(P.atk)) return wrap('Duello', '<p class="muted">Il duello non è più possibile: una delle due carte non è più al suo posto.</p>');
-  const ca = mCard(P.atk), ac = ca.classe || '', dc = (d.cd && d.cd.classe) || '', x = P.x, ba = P.ua ? x : 0, bd = P.ud ? x : 0;
-  const ag = abVal(ca, 'Aggressivo'), af = mF(P.atk) + ag + ba, dRes = abVal(d.cd || {}, 'Resistente'), myRes = abVal(ca, 'Resistente');
-  const toD = Math.max(0, af - dRes), toA = Math.max(0, (d.f || 0) + bd - myRes), st = M.inst[P.atk];
-  const defDies = (d.dmg || 0) + toD >= (d.r || 0), atkDies = (st.dmg || 0) + toA >= mR(P.atk), name = esc(mName(P.atk)), dn = esc(d.nome || '');
+  const p = NET.players[P.pid], d = P.hit ? null : p && p.s && (p.s.campo || []).find(c => c.k === P.k);
+  if (!p || (!P.hit && !d) || !M.inst[P.atk] || !M.zones.campo.includes(P.atk)) return wrap('Duello', '<p class="muted">Il duello non è più possibile: una delle due carte non è più al suo posto.</p>');
+  const V = duelCalc(P, d), ca = V.ca, ac = ca.classe || '', st = M.inst[P.atk], name = esc(mName(P.atk)), x = P.x;
+  const side = (artH, nm, cls, f, extra, r, dmg) => `<div class="du-s"><div class="du-a">${artH}</div><b>${nm}</b><span class="du-c">${cls ? classIcon(cls, 'fi', '#fff') + esc(cls) : 'Classe —'}</span><span>Forza <b>${f}</b>${extra}</span>${r != null ? `<span>Resistenza ${r} · danni ${dmg}</span>` : ''}</div>`;
+  const tog = (act, k, on, l1, l0) => `<button class="chip" data-act="${act}" data-k="${k}" aria-pressed="${on}">${on ? l1 || 'Applicata' : l0 || 'Non applicata'}</button>`;
+  const ext = `${V.ag ? ` <small>(+${V.ag} Aggressivo)</small>` : ''}${V.ba ? ` <small class="up">(+${V.ba} classe)</small>` : ''}${V.hf ? ` <small class="up">(+${V.hf} aiutanti)</small>` : ''}`;
+  const hl = mHelpers(P.atk);
+  const helpRows = hl.map(h => row(`<b>Aiutante</b> · ${esc(mName(h))} si esaurisce e aggiunge la sua forza (+${mF(h)})`, '', `<button class="chip" data-act="duelHelp" data-v="${h}" aria-pressed="${(P.help || []).includes(h)}">${(P.help || []).includes(h) ? 'Aiuta' : 'Non aiuta'}</button>`)).join('');
+  if (P.hit) {
+    return wrap('Attacco a ' + esc(p.name), `<div class="du">${side(art(ca, true), name, ac, V.af, ext, mR(P.atk), st.dmg || 0)}<div class="du-vs">VS</div><div class="du-s"><div class="du-a du-pl">${esc((p.name || '?').slice(0, 1).toUpperCase())}</div><b>${esc(p.name)}</b><span>Giocatore · Forza 0</span><span>Vita ${p.s ? p.s.vita : '?'}</span></div></div>
+      ${hl.length ? `<div class="mxp-l">${helpRows}</div>` : ''}
+      <p class="du-res">${name} infligge <b>${V.af}</b> danni a ${esc(p.name)}. L’attacco a un giocatore è un duello: ${name}${V.help.length ? ' e gli aiutanti' : ''} si esauriscono.</p>
+      <p class="mxp-hint" style="margin:0 0 8px">Se ${esc(p.name)} ha in mano un Soccorritore può giocarlo ora: in quel caso il duello si fa contro di lui.</p>
+      <div class="btns">${btn('Attacca', 'duelGo')}${btn('Annulla', 'mPopClose', {cls: 'alt'})}</div>`, 'wide');
+  }
+  const dc = (d.cd && d.cd.classe) || '', dn = esc(d.nome || '');
+  const defDies = (d.dmg || 0) + V.toD >= (d.r || 0), atkDies = (st.dmg || 0) + V.toA >= mR(P.atk);
   const autoA = !!ac && CLS_BEATS[ac] === dc, autoD = !!dc && CLS_BEATS[dc] === ac;
-  const side = (artH, nm, cls, f, extra, r, dmg) => `<div class="du-s"><div class="du-a">${artH}</div><b>${nm}</b><span class="du-c">${cls ? classIcon(cls, 'fi', '#fff') + esc(cls) : 'Classe —'}</span><span>Forza <b>${f}</b>${extra}</span><span>Resistenza ${r} · danni ${dmg}</span></div>`;
-  const tog = (k, on) => `<button class="chip" data-act="duelTog" data-k="${k}" aria-pressed="${on}">${on ? 'Applicata' : 'Non applicata'}</button>`;
   return wrap('Duello', `<div class="du">
-      ${side(art(ca, true), name, ac, af, `${ag ? ` <small>(+${ag} Aggressivo)</small>` : ''}${ba ? ` <small class="up">(+${ba} classe)</small>` : ''}`, mR(P.atk), st.dmg || 0)}
+      ${side(art(ca, true), name, ac, V.af, ext, mR(P.atk), st.dmg || 0)}
       <div class="du-vs">VS</div>
-      ${side(art(xCard(d), true), dn + ' <small>· ' + esc(p.name) + '</small>', dc, (d.f || 0) + bd, bd ? ` <small class="up">(+${bd} classe)</small>` : '', d.r || 0, d.dmg || 0)}
+      ${side(art(xCard(d), true), dn + ' <small>· ' + esc(p.name) + '</small>', dc, (d.f || 0) + V.bd, V.bd ? ` <small class="up">(+${V.bd} classe)</small>` : '', d.r || 0, d.dmg || 0)}
     </div>
     <div class="mxp-l">
-      ${row(`<b>Forza di classe</b> · ${esc(ac || '?')} è forte contro ${esc(CLS_BEATS[ac] || '?')}: +${x} forza a ${name}${autoA ? ' <em class="du-auto">automatica</em>' : ''}`, '', tog('a', !!P.ua))}
-      ${row(`<b>Debolezza di classe</b> · ${esc(ac || '?')} è debole contro ${esc(Object.keys(CLS_BEATS).find(c => CLS_BEATS[c] === ac) || '?')}: +${x} forza a ${dn}${autoD ? ' <em class="du-auto">automatica</em>' : ''}`, '', tog('d', !!P.ud))}
+      ${P.eva ? row(`<b>Evasivo</b> · ${dn} può essere attaccato solo da un personaggio Evasivo`, '', tog('duelEva', '', !!P.evaIgn, 'Ignorato', 'Rispettato')) : ''}
+      ${row(`<b>Forza di classe</b> · ${esc(ac || '?')} è forte contro ${esc(CLS_BEATS[ac] || '?')}: +${x} forza a ${name}${autoA ? ' <em class="du-auto">automatica</em>' : ''}`, '', tog('duelTog', 'a', !!P.ua))}
+      ${row(`<b>Debolezza di classe</b> · ${esc(ac || '?')} è debole contro ${esc(Object.keys(CLS_BEATS).find(c => CLS_BEATS[c] === ac) || '?')}: +${x} forza a ${dn}${autoD ? ' <em class="du-auto">automatica</em>' : ''}`, '', tog('duelTog', 'd', !!P.ud))}
       ${row('Valore della forza / debolezza di classe', `<span class="mxs"><button class="mxs-b" data-act="duelX" data-d="-1" aria-label="Meno">−</button><b class="du-x">${x}</b><button class="mxs-b" data-act="duelX" data-d="1" aria-label="Più">+</button></span>`, '')}
+      ${helpRows}
     </div>
-    <p class="du-res">${name} infligge <b>${toD}</b> danni${defDies ? ' → <b class="dn">' + dn + ' sconfitta</b>' : ''} · subisce <b>${toA}</b> danni${atkDies ? ' → <b class="dn">' + name + ' distrutta</b>' : ''}</p>
+    <p class="du-res">${name} infligge <b>${V.toD}</b> danni${V.dRes ? ` <small>(−${V.dRes} Resistente)</small>` : ''}${defDies ? ' → <b class="dn">' + dn + ' sconfitta</b>' : ''} · subisce <b>${V.toA}</b> danni${atkDies ? ' → <b class="dn">' + name + ' distrutta</b>' : ''}</p>
     ${!autoA && !autoD ? '<p class="mxp-hint" style="margin:0 0 8px">Tra ' + esc(ac || '?') + ' e ' + esc(dc || '?') + ' non c’è forza o debolezza di classe: puoi comunque applicarle a mano.</p>' : ''}
+    ${P.eva && !P.evaIgn ? '<p class="mxp-hint" style="margin:0 0 8px;color:#ffb3ad">' + dn + ' è Evasivo: per duellare devi ignorare l’abilità (tocca “Rispettato”).</p>' : ''}
     <div class="btns">${btn('Duella', 'duelGo')}${btn('Annulla', 'mPopClose', {cls: 'alt'})}</div>`, 'wide');
 }
-function netDuelGo(atk, pid, k, ba, bd) {
-  if (!mCanAttack(atk)) return;
-  const p = NET.players[pid], d = p && p.s && (p.s.campo || []).find(c => c.k === k); if (!d || !d.ex) { toast('Il duello non è più possibile'); return; }
-  const ca = mCard(atk), cl = (ba ? ' (+' + ba + ' forza di classe)' : '') + (bd ? ' (+' + bd + ' forza di classe all’avversario)' : '');
-  const af = mF(atk) + abVal(ca, 'Aggressivo') + ba, dRes = abVal(d.cd || {}, 'Resistente'), myRes = abVal(ca, 'Resistente');
-  const df = Math.max(0, (d.f || 0) + bd - myRes), name = mName(atk), st = M.inst[atk], tot = (st.dmg || 0) + df, ar = mR(atk), dies = tot >= ar;
-  const defDies = (d.dmg || 0) + Math.max(0, af - dRes) >= (d.r || 0);
-  netSend({t: 'duel', to: pid, k, n: af, card: name + cl, atkDies: dies});
-  if (dies) mDo(() => { mMove(atk, 'scarti', 'distrutta'); }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + ((d.f || 0) + bd) + ') di ' + p.name + cl + ': ' + name + ' distrutta');
-  else mDo(() => { st.dmg = tot; st.ex = true; }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + ((d.f || 0) + bd) + ') di ' + p.name + cl);
-  toast('Duello: infliggi ' + af + ', subisci ' + df + (defDies ? (dies ? ' · ' + d.nome + ' sconfitta, ' + name + ' distrutta: nessuna gloria' : ' · ' + d.nome + ' sconfitta') : '') + (dies && !defDies ? ' · ' + name + ' distrutta' : ''));
+/* conferma dell'attacco: il difensore può rispondere con un Soccorritore, poi si risolve */
+function duelStart(P) {
+  if (!mCanAttack(P.atk)) return;
+  if (P.eva && !P.evaIgn) { toast('Il bersaglio è Evasivo: ignora l’abilità per duellare'); return; }
+  const qid = 'q' + Date.now().toString(36);
+  NET.pend = {P, qid, t: setTimeout(() => netResolveAtk(qid, null), 40000)};
+  const p = NET.players[P.pid], d = P.hit ? null : (p.s.campo || []).find(c => c.k === P.k), V = duelCalc(P, d);
+  netSend({t: 'atkq', to: P.pid, qid, card: mName(P.atk), n: V.af, tgt: d ? d.nome : ''});
+  S.mPop = {type: 'wait', pid: P.pid}; renderAll();
+}
+function netResolveAtk(qid, sc) {
+  const pd = NET.pend; if (!pd || pd.qid !== qid) return;
+  clearTimeout(pd.t); NET.pend = null;
+  if (S.mPop && S.mPop.type === 'wait') S.mPop = null;
+  const P = pd.P;
+  if (!M || !M.inst[P.atk] || !M.zones.campo.includes(P.atk) || M.inst[P.atk].ex) { renderAll(); toast('L’attacco non è più possibile'); return; }
+  const p = NET.players[P.pid]; if (!p) { renderAll(); return; }
+  if (sc) {
+    /* il difensore ha giocato un Soccorritore: il duello si fa contro di lui */
+    const ac = mCard(P.atk).classe || '', dc = (sc.cd && sc.cd.classe) || '';
+    Object.assign(P, {hit: false, k: sc.k, ua: !!ac && CLS_BEATS[ac] === dc, ud: !!dc && CLS_BEATS[dc] === ac});
+    toast(p.name + ' gioca il Soccorritore ' + sc.nome + ': il duello si fa contro di lui');
+    return duelDo(P, sc);
+  }
+  if (P.hit) return hitDo(P);
+  const d = (p.s.campo || []).find(c => c.k === P.k); if (!d || !d.ex) { renderAll(); toast('Il duello non è più possibile'); return; }
+  duelDo(P, d);
+}
+function hitDo(P) {
+  const p = NET.players[P.pid], V = duelCalc(P, null), name = mName(P.atk), st = M.inst[P.atk];
+  netSend({t: 'hit', to: P.pid, n: V.af, card: name});
+  mDo(() => { st.ex = true; V.help.forEach(h => { M.inst[h].ex = true; }); }, 'Duello contro ' + p.name + ': ' + name + (V.help.length ? ' (con ' + V.help.map(mName).join(', ') + ')' : '') + ' infligge ' + V.af + ' danni');
+  toast(name + ' infligge ' + V.af + ' danni a ' + p.name);
+}
+function duelDo(P, d) {
+  const p = NET.players[P.pid], V = duelCalc(P, d), name = mName(P.atk), st = M.inst[P.atk];
+  const cl = (V.ba ? ' (+' + V.ba + ' forza di classe)' : '') + (V.bd ? ' (+' + V.bd + ' forza di classe all’avversario)' : '') + (V.help.length ? ' (aiutanti: ' + V.help.map(mName).join(', ') + ')' : '');
+  const tot = (st.dmg || 0) + V.toA, dies = tot >= mR(P.atk), defDies = (d.dmg || 0) + V.toD >= (d.r || 0);
+  netSend({t: 'duel', to: P.pid, k: d.k, n: V.af, card: name + cl, atkDies: dies});
+  const txt = 'Duello: ' + name + ' (F' + V.af + ') contro ' + d.nome + ' (F' + ((d.f || 0) + V.bd) + ') di ' + p.name + cl;
+  mDo(() => { V.help.forEach(h => { M.inst[h].ex = true; }); if (dies) mMove(P.atk, 'scarti', 'distrutta'); else { st.dmg = tot; st.ex = true; } }, txt + (dies ? ': ' + name + ' distrutta' : ''));
+  toast('Duello: infliggi ' + V.toD + ', subisci ' + V.toA + (defDies ? (dies ? ' · ' + d.nome + ' sconfitta, ' + name + ' distrutta: nessuna gloria' : ' · ' + d.nome + ' sconfitta') : '') + (dies && !defDies ? ' · ' + name + ' distrutta' : ''));
 }
 function netHit(atk, pid) {
   if (!mCanAttack(atk)) return;
   const p = NET.players[pid]; if (!p) return;
   const t = oppTargets(p);
   if (t.length) { toast(p.name + ' ha personaggi esauriti: devi duellare con uno di loro (' + t[0].nome + ')'); return; }
-  const af = mF(atk) + abVal(mCard(atk), 'Aggressivo'), name = mName(atk), st = M.inst[atk];
-  netSend({t: 'hit', to: pid, n: af, card: name});
-  mDo(() => { st.ex = true; }, name + ' infligge ' + af + ' danni a ' + p.name);
-  toast(name + ' infligge ' + af + ' danni a ' + p.name + ' (il giocatore ha Forza 0)');
+  mPopOpen({type: 'duel', atk, pid, k: null, hit: true, help: [], x: Math.max(1, Number(S.prefs.clsBonus) || 1)});
 }
+/* difensore: soccorritori che si possono pagare adesso */
+const mSoccOpts = () => { const pw = M.zones.potere.filter(i => !M.inst[i].ex).length; return M.zones.mano.filter(i => mTipo(i) === 'Personaggio' && hasAb(mCard(i), 'Soccorritore') && mCost(i) <= pw); };
 function netClose(keep) {
   clearTimeout(NET.t);
   try { Object.values(NET.conns).forEach(c => c.close()); } catch (e) {}
@@ -3501,7 +3623,7 @@ function netPopHtml() {
 }
 function mOppHalf(pid, p) {
   const s = p.s || {}, name = esc(p.name || 'Giocatore');
-  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}" role="button" tabindex="0" data-act="oppCard" data-v="${esc(c.k)}" data-p="${esc(pid)}" aria-label="${esc(c.nome || '')}${c.ex ? ', esaurita: trascina qui una tua carta per duellare' : ''}">${art(sc || xCard(c), true)}${c.f != null || c.r != null ? frBadge(c.f, c.r, c.f - (c.tf || 0), c.r - (c.tr || 0)) : ''}${c.dmg ? `${dmgBadge(c.dmg)}` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}</div>`; };
+  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}" role="button" tabindex="0" data-act="oppCard" data-v="${esc(c.k)}" data-p="${esc(pid)}" aria-label="${esc(c.nome || '')}${c.ex ? ', esaurita: trascina qui una tua carta per duellare' : ''}">${art(sc || xCard(c), true)}${c.f != null || c.r != null ? frBadge(c.f, c.r, c.f - (c.tf || 0), c.r - (c.tr || 0)) : ''}${c.dmg ? `${dmgBadge(c.dmg)}` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}${c.sw ? '<span class="mx-sw" title="Forza e resistenza invertite">⇄</span>' : ''}${c.at || c.atx ? '<span class="mx-atx">' + (c.ao ? 'oggetto' : '📍 ' + esc(c.atx ? c.atx.nome : ((s.campo || []).find(x => x.k === c.at) || {}).nome || '')) + '</span>' : ''}${(s.campo || []).some(x => x.at === c.k) ? `<span class="mx-atn" title="Carte collegate">+${(s.campo || []).filter(x => x.at === c.k).length}</span>` : ''}</div>`; };
   const it = (ic, l, v) => `<span class="oh-i" title="${l}"><i>${ic}</i><b>${v}</b><small>${l}</small></span>`;
   return `<section class="mx-opf" aria-label="Campo di ${name}">
     <div class="oh-bar"><b class="oh-n" data-hitp="${esc(pid)}" title="Trascina qui una tua carta per colpire direttamente ${name}">${name}${NET.cur === pid ? ' <em class="oh-turn">di turno</em>' : ''}</b>${s.inGame ? `${it('♥', 'Vita', s.vita)}${it('★', 'Gloria', s.gloria + '/' + s.target)}${it('✋', 'In mano', s.mano)}${it('⚡', 'Potere', s.pwA + '/' + s.pwT)}${it('🂠', 'Pesca', s.mazzo)}${it('♻', 'Scarti', s.scarti)}` : '<span class="muted">non ha ancora iniziato la partita</span>'}</div>
@@ -3537,8 +3659,16 @@ function mSearchList() {
 }
 /* ---------- interazioni del tavolo ---------- */
 const mCost = iid => { const st = M.inst[iid]; return st.costo != null ? st.costo : (mCard(iid).costo || 0); };
-const mF = iid => (mCard(iid).forza || 0) + (M.inst[iid].tf || 0);
-const mR = iid => (mCard(iid).resistenza || 0) + (M.inst[iid].tr || 0);
+/* oggetti (ed evoluzioni o carte prese come oggetto) collegati a un personaggio: sommano forza, resistenza e gloria */
+const mIsObj = o => { const st = M.inst[o]; return !!st && (st.ao || mTipo(o) === 'Oggetto' || hasAb(mCard(o), 'Evoluzione')); };
+const mObjs = iid => [...M.zones.campo, ...M.zones.evocate].filter(o => o !== iid && M.inst[o].at === iid && mIsObj(o));
+const mRawF = iid => (mCard(iid).forza || 0) + (M.inst[iid].tf || 0), mRawR = iid => (mCard(iid).resistenza || 0) + (M.inst[iid].tr || 0);
+const mSumF = iid => mRawF(iid) + (mTipo(iid) === 'Personaggio' ? mObjs(iid).reduce((a, o) => a + mRawF(o), 0) : 0);
+const mSumR = iid => mRawR(iid) + (mTipo(iid) === 'Personaggio' ? mObjs(iid).reduce((a, o) => a + mRawR(o), 0) : 0);
+const mF = iid => M.inst[iid].sw ? mSumR(iid) : mSumF(iid);
+const mR = iid => M.inst[iid].sw ? mSumF(iid) : mSumR(iid);
+const mGlory = iid => (mCard(iid).gloria || 0) + mObjs(iid).reduce((a, o) => a + (mCard(o).gloria || 0), 0);
+const isColl = c => (c.caratteristiche || []).some(x => norm(x) === 'collettivo');
 let TAP = {k: '', t: 0}, NOCLICK = 0, DICEHOME = null;
 /* forza e resistenza effettive nell'angolo in basso a destra della carta */
 const IC_F = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 2.5l7 7-2 2-1.6-1.6-6.2 6.2 1.4 1.4-1.8 1.8-1.4-1.4-3.3 3.3a1.6 1.6 0 0 1-2.3 0l-.5-.5a1.6 1.6 0 0 1 0-2.3l3.3-3.3-1.4-1.4 1.8-1.8 1.4 1.4 6.2-6.2L12.5 4.5z" fill="currentColor"/></svg>';
@@ -3565,7 +3695,7 @@ function mBeginTurn(force) {
   const nev = z.evocate.length;
   M.tlog = [];
   const fn = () => {
-    [...z.campo, ...z.evocate, ...z.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; });
+    [...z.campo, ...z.evocate, ...z.potere].forEach(i => { delete M.inst[i].fresh; if (!M.inst[i].lock) M.inst[i].ex = false; });
     z.campo.push(...z.evocate); z.evocate = [];
     if (!first) { if (z.mazzo.length) z.mano.push(z.mazzo.shift()); else M.lost = 'mazzo'; }
     M.phase = 'play'; M.began = true;
@@ -3580,14 +3710,38 @@ const mHow = iid => HOWL[M.inst[iid].how] ? M.inst[iid].how : 'scartata';
 const mTipo = iid => mCard(iid).tipo || 'Personaggio';
 const mNoField = iid => ['Alleanza', 'Fumetto'].includes(mTipo(iid));
 /* può la carta "iid" essere assegnata alla carta "host"? luoghi: qualsiasi carta; personaggi: solo oggetti */
-const mCanAttach = (iid, host) => { if (!host || iid === host || !M.inst[host] || M.inst[host].at) return false; const ht = mTipo(host), t = mTipo(iid); if (mNoField(iid)) return false; return ht === 'Luogo' ? t !== 'Luogo' : ht === 'Personaggio' && t === 'Oggetto'; };
+const mCanAttach = (iid, host) => { if (!host || iid === host || !M.inst[host] || M.inst[host].at) return false; const ht = mTipo(host), t = mTipo(iid); if (mNoField(iid)) return false; return ht === 'Luogo' ? t !== 'Luogo' : ht === 'Personaggio' && (t === 'Oggetto' || hasAb(mCard(iid), 'Evoluzione')); };
 function mTap(key, single, dbl) { if (TAP.k === key) { clearTimeout(TAP.t); TAP.k = ''; dbl(); return; } clearTimeout(TAP.t); TAP = {k: key, t: setTimeout(() => { TAP.k = ''; single(); }, 300)}; }
 const mPopOpen = pop => { S.mPop = pop; renderAll(); };
 const mStep = (id, val, min, max) => `<span class="mxs"><button class="mxs-b" data-act="mStep" data-v="${id}" data-d="-1" aria-label="Meno">−</button><input id="${id}" type="number" inputmode="numeric" value="${val}" min="${min}" max="${max}" aria-label="Quantità"><button class="mxs-b" data-act="mStep" data-v="${id}" data-d="1" aria-label="Più">+</button></span>`;
 const mNum = (id, d) => { const el = $('#' + id); const v = Math.round(Number(el ? el.value : d)); return Number.isFinite(v) ? v : d; };
 function mFieldCard(iid, ev) {
   const c = mCard(iid), st = M.inst[iid];
-  return `<button class="mt mxf${st.ex ? ' ex' : ''}${st.lock ? ' lock' : ''}${ev ? ' evo' : ''}${S.mDmgMode ? ' aim' : ''}" data-act="mFieldTap" data-v="${iid}" aria-label="${esc(c.nome || c.code)}${st.ex ? ', esaurita' : ''}${st.lock ? ', bloccata' : ''}${st.dmg ? ', ' + st.dmg + ' danni' : ''}">${art(c, true)}${mFR(iid)}${st.dmg ? `${dmgBadge(st.dmg)}` : ''}${st.tf || st.tr ? `<span class="mx-tok">${st.tf ? `<i class="tf">F${st.tf > 0 ? '+' : ''}${st.tf}</i>` : ''}${st.tr ? `<i class="tr">R${st.tr > 0 ? '+' : ''}${st.tr}</i>` : ''}</span>` : ''}${st.lock ? '<span class="mx-lock" title="Bloccata">🔒</span>' : ''}</button>`;
+  return `<button class="mt mxf${st.ex ? ' ex' : ''}${st.lock ? ' lock' : ''}${ev ? ' evo' : ''}${S.mDmgMode ? ' aim' : ''}" data-act="mFieldTap" data-v="${iid}" aria-label="${esc(c.nome || c.code)}${st.ex ? ', esaurita' : ''}${st.lock ? ', bloccata' : ''}${st.dmg ? ', ' + st.dmg + ' danni' : ''}">${art(c, true)}${mFR(iid)}${st.dmg ? `${dmgBadge(st.dmg)}` : ''}${st.tf || st.tr ? `<span class="mx-tok">${st.tf ? `<i class="tf">F${st.tf > 0 ? '+' : ''}${st.tf}</i>` : ''}${st.tr ? `<i class="tr">R${st.tr > 0 ? '+' : ''}${st.tr}</i>` : ''}</span>` : ''}${st.lock ? '<span class="mx-lock" title="Bloccata">🔒</span>' : ''}${st.sw ? '<span class="mx-sw" title="Forza e resistenza invertite">⇄</span>' : ''}${st.atx ? `<span class="mx-atx" title="Su un luogo di un altro giocatore">📍 ${esc(st.atx.nome)}</span>` : ''}</button>`;
+}
+const abSelect = id => `<select id="${id}" aria-label="Abilità speciale">${ABIL.map(x => `<option>${x}</option>`).join('')}</select><input id="${id}n" type="number" min="0" max="9" placeholder="N°" aria-label="Numero (per Aggressivo e Resistente)" style="width:58px">`;
+const carInput = id => `<input id="${id}" list="dl-car" placeholder="Caratteristica" aria-label="Caratteristica" autocomplete="off" style="width:140px"><datalist id="dl-car">${[...new Set([...CARATT, ...allCards().flatMap(c => c.caratteristiche || [])])].sort((a, b) => a.localeCompare(b, 'it')).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`;
+const abFromInput = id => { const a = ($('#' + id) || {}).value || '', n = ($('#' + id + 'n') || {}).value; return a ? (n !== '' && n != null && Number(n) > 0 ? a + ' ' + Math.round(Number(n)) : a) : ''; };
+/* luoghi dove può andare un personaggio: i miei, e quelli Collettivo di tutti */
+function luoghiPer(ownerPid, k) {
+  const out = [];
+  if (M) [...M.zones.campo].filter(l => l !== k && mTipo(l) === 'Luogo' && (ownerPid === NET.pid || !ownerPid || isColl(mCard(l)))).forEach(l => out.push({v: 'me:' + l, l: mName(l) + (ownerPid && ownerPid !== NET.pid ? ' (tuo)' : '')}));
+  netOpps().forEach(([pid, p]) => ((p.s && p.s.campo) || []).filter(c => c.k !== k && c.tipo === 'Luogo' && (pid === ownerPid || isColl(c.cd || {}))).forEach(c => out.push({v: pid + ':' + c.k, l: (c.nome || '') + ' (di ' + p.name + ')'})));
+  return out;
+}
+function mExtraRows(i, row, a) {
+  const st = M.inst[i], c = mCard(i), isP = mTipo(i) === 'Personaggio';
+  const extra = [...(st.xab || []).map((x, k) => `<button class="chip" data-act="mDelX" data-v="${i}" data-k="ab:${k}" title="Togli">${esc(x)} ✕</button>`), ...(st.xcar || []).map((x, k) => `<button class="chip" data-act="mDelX" data-v="${i}" data-k="car:${k}" title="Togli">${esc(x)} ✕</button>`)].join('');
+  const lu = isP && !st.ao ? luoghiPer(NET.pid, i) : [];
+  const where = st.at && M.inst[st.at] && mTipo(st.at) === 'Luogo' ? mName(st.at) : st.atx ? st.atx.nome + ' (di ' + ((NET.players[st.atx.pid] || {}).name || '?') + ')' : '';
+  return `${row('Costo per questa partita', mStep('mp-cost', mCost(i), 0, 99), a('mSetCost', 'Salva'))}
+    ${isP || c.forza != null ? row(`Inverti forza e resistenza${st.sw ? ' <span class="muted">(ora invertite)</span>' : ''}`, '', a('mSwap', st.sw ? 'Ripristina' : 'Inverti')) : ''}
+    ${row('Aggiungi un’abilità speciale', abSelect('mp-ab'), a('mAddAb', 'Aggiungi'))}
+    ${row('Aggiungi una caratteristica', carInput('mp-car'), a('mAddCar', 'Aggiungi'))}
+    ${extra ? `<div class="mxp-r"><span>Aggiunte in questa partita</span><span class="chips">${extra}</span></div>` : ''}
+    ${isP && !st.ao ? row(where ? 'Su: <b>' + esc(where) + '</b>' : 'Sposta su un luogo', lu.length ? `<select id="mp-lu" aria-label="Luogo">${lu.map(o => `<option value="${esc(o.v)}">${esc(o.l)}</option>`).join('')}</select>` : '<span class="muted">nessun luogo disponibile</span>', (lu.length ? a('mToLuogo', 'Sposta') : '') + (where ? a('mOffLuogo', 'Togli') : '')) : ''}
+    ${st.ao ? `<p class="mxp-hint" style="margin:4px 0">Presa a un avversario: è collegata come oggetto${st.at && M.inst[st.at] ? ' a ' + esc(mName(st.at)) : ''} e somma forza e resistenza.</p>` : ''}
+    ${mObjs(i).length ? `<p class="mxp-hint" style="margin:4px 0">Oggetti collegati: ${mObjs(i).map(o => esc(mName(o))).join(', ')} (forza e resistenza già sommate)</p>` : ''}`;
 }
 function mPopHtml() {
   const P = S.mPop; if (!P || (!M && !['net', 'ocard', 'recap'].includes(P.type))) return '';
@@ -3611,6 +3765,8 @@ function mPopHtml() {
       ${chips('Caratteristiche', d.caratteristiche)}${chips('Abilità speciali', d.abilita)}${chips('Affiliazioni', d.affiliazioni)}
       <div class="oc-mv">${mv('Mossa speciale', ms.nome, ms.desc)}${mv('Mossa attiva', '', d.mossaAttiva)}${mv('Mossa secondaria', m2.nome, m2.desc)}</div>
       ${chips('Tipi di mosse', d.mosse)}
+      ${ocLinked(P.pid, c)}
+      ${ocActs(P.pid, c, d, row)}
       <div class="mxp-acts">${sc ? btn('Scheda carta', 'oppInfo', {cls: 'alt sm', v: c.id}) : ''}</div></div></div>`, 'wide');
   }
   if (P.type === 'opp') { const pl = NET.players[P.pid]; return wrap(esc(pl ? pl.name : 'Giocatore'), netOppHtml(P.pid), 'wide'); }
@@ -3642,12 +3798,17 @@ function mPopHtml() {
       <div class="srch-bar">${sel ? `<b>${esc(mName(sel))}</b><span class="srch-a">${[['mano', 'In mano'], ['campo', 'In campo'], ['potere', 'Nel potere'], ['top', 'In cima'], ['bottom', 'In fondo'], ['scarti', 'Scarta']].map(([v, l]) => btn(l, 'mSearchTake', {cls: (v === 'mano' ? '' : 'alt') + ' sm', v: sel, k: v})).join('')}</span>` : '<span class="muted">Nessuna carta scelta</span>'}</div>`, 'wide');
   }
   if (P.type === 'duel') return mDuelHtml(P, wrap, row);
+  if (P.type === 'wait') return wrap('Attacco', `<p>Aspetto la risposta di ${esc((NET.players[P.pid] || {}).name || 'avversario')} (può giocare un Soccorritore)…</p><div class="btns">${btn('Annulla l’attacco', 'duelCancel', {cls: 'alt'})}</div>`);
+  if (P.type === 'socc') return wrap('Sei attaccato!', `<p><b>${esc(P.who)}</b> attacca ${P.tgt ? esc(P.tgt) : 'te'} con <b>${esc(P.card)}</b> (forza ${P.n}).</p><p class="mxp-hint">Puoi pagare il costo di un Soccorritore e giocarlo subito esaurito: il duello si farà contro di lui.</p>
+    <div class="mxp-cards">${P.opts.filter(i => M.zones.mano.includes(i)).map(i => `<div class="mxp-c"><div class="mxp-cb">${art(mCard(i), true)}</div><span>${esc(mName(i))}</span>${btn('Gioca (' + mCost(i) + ')', 'soccGo', {cls: 'sm', v: i})}</div>`).join('')}</div><div class="btns">${btn('Non giocare nessun Soccorritore', 'soccNo', {cls: 'alt'})}</div>`, 'wide');
+  if (P.type === 'prot') { const i = P.iid; if (!M.inst[i]) return ''; return wrap('Protettore', `<div class="mxp-cede"><div class="mxp-ca">${art(mCard(i), true)}</div><div><p><b>${esc(mName(i))}</b> è un Protettore: può entrare in gioco subito esaurito (e proteggere gli altri da ora) oppure essere evocato normalmente.</p><div class="btns">${btn('Entra in gioco esaurito', 'mPlayPay', {v: i, k: 'ex'})}${btn('Evoca normalmente', 'mPlayPay', {cls: 'alt', v: i, k: 'evo'})}</div></div></div>`); }
+  if (P.type === 'estr') { const i = P.iid; if (!M.inst[i]) return ''; const c = mCard(i); return wrap('Estrai potere', `<div class="mxp-cede"><div class="mxp-ca">${art(c, true)}</div><div><p><b>${esc(mName(i))}</b> ${['Alleanza', 'Fumetto'].includes(c.tipo) ? 'è ' + (c.tipo === 'Alleanza' ? 'un’alleanza' : 'un fumetto') + ' e ' : ''}ha “Estrazione: No”.</p><p class="muted">Se un effetto lo permette puoi estrarla comunque.</p><div class="btns">${btn('Estrai comunque', 'mToPotere', {cls: 'danger', v: i, k: 'force'})}${btn('Annulla', 'mPopClose', {cls: 'alt'})}</div></div></div>`); }
   if (P.type === 'pow') {
     const l = [...z.potere.filter(i => !M.inst[i].ex), ...z.potere.filter(i => M.inst[i].ex)], na = l.filter(i => !M.inst[i].ex).length, sel = l.includes(P.sel) ? P.sel : '';
     if (!l.length) return wrap('Serbatoio del potere', '<p class="muted">Il serbatoio è vuoto. Trascina una carta dalla mano sul serbatoio per estrarre potere.</p>');
     return wrap(`Serbatoio del potere · ${l.length}`, `<div class="mxp-l">${row(`Carte attive <span class="muted">(le altre sono esaurite) · ora ${na} attive e ${l.length - na} esaurite</span>`, mStep('mp-pa', na, 0, l.length), btn('Salva', 'mPowSet', {cls: 'alt sm'}))}</div>
       <p class="mxp-hint" style="margin:8px 0">Tocca una carta per sceglierla e decidere dove metterla.</p>
-      <div class="pwp-l">${l.map(i => { const c = mCard(i), ex = M.inst[i].ex; return `<div class="pwp-c${ex ? ' ex' : ''}${sel === i ? ' on' : ''}"><button class="mxp-cb" data-act="mPowSel" data-v="${i}" aria-label="${esc(c.nome || c.code)}">${art(c, true)}</button><span>${esc(c.nome || c.code)}</span><em>${ex ? 'Esaurita' : 'Attiva'}</em></div>`; }).join('')}</div>
+      <div class="pwp-l">${l.map(i => { const c = mCard(i), ex = M.inst[i].ex; return `<div class="pwp-c${ex ? ' ex' : ''}${sel === i ? ' on' : ''}"><button class="mxp-cb" data-act="mPowSel" data-v="${i}" aria-label="${esc(c.nome || c.code)}">${art(c, true)}</button><span>${esc(c.nome || c.code)}</span><em>${M.inst[i].fresh ? 'Appena estratta' : ex ? 'Esaurita' : 'Attiva'}</em></div>`; }).join('')}</div>
       <div class="srch-bar">${sel ? `<b>${esc(mName(sel))}</b><span class="srch-a">${btn(M.inst[sel].ex ? 'Attiva' : 'Esaurisci', 'mPowEx', {cls: 'sm', v: sel})}${[['mano', 'In mano'], ['scarti', 'Negli scarti'], ['top', 'In cima al mazzo'], ['bottom', 'In fondo al mazzo']].map(([v, lb]) => btn(lb, 'mPowTake', {cls: 'alt sm', v: sel, k: v})).join('')}</span>` : '<span class="muted">Nessuna carta scelta</span>'}</div>`, 'wide');
   }
   if (P.type === 'olist') {
@@ -3668,12 +3829,43 @@ function mPopHtml() {
     const a = (act, l, cls) => btn(l, act, {cls: (cls || 'alt') + ' sm', v: i});
     let acts = '';
     if (zn === 'mano') acts = `<div class="mxp-l">${row('Modifica costo (solo per questa partita)', mStep('mp-cost', mCost(i), 0, 99), a('mSetCost', 'Salva'))}${row('Segnalini su questa carta', mStep('mp-seg', st.seg || 0, 0, 99), a('mSetSeg', 'Salva'))}</div><div class="mxp-acts">${a('mPlayPay', 'Gioca (paga ' + mCost(i) + ' potere)', ' ')}${a('mToPotere', 'Metti nel potere')}${a('mToScarti', 'Scarta')}${a('mToTop', 'In cima al mazzo')}${a('mToBottom', 'In fondo al mazzo')}${a('mcInfo', 'Scheda carta')}</div>`;
-    else if (zn === 'campo' || zn === 'evocate') acts = `<div class="mxp-l">${row(st.lock ? 'Bloccata: non può essere attivata o esaurita' : 'Blocca: non potrà essere attivata o esaurita', '', a('mLock', st.lock ? 'Sblocca' : 'Blocca', st.lock ? ' ' : 'alt'))}${row('Segnalini forza', mStep('mp-tf', st.tf || 0, -99, 99), a('mSetTok', 'Salva'))}${row('Segnalini resistenza', mStep('mp-tr', st.tr || 0, -99, 99), '')}</div><div class="mxp-acts">${st.lock ? '' : a('mExhaust', st.ex ? 'Attiva' : 'Esaurisci')}${zn === 'evocate' ? a('mToField', 'In campo ora') : ''}${a('mDmgOpen', 'Assegna danni')}${st.dmg ? a('mDmgDown', '−1 danno') : ''}${a('mDefeat', 'Sconfiggi', 'danger')}${a('mDestroy', 'Distruggi', 'danger')}${a('mToScarti', 'Scarta')}${a('mToMano', 'Torna in mano')}${a('mcInfo', 'Scheda carta')}</div>`;
+    else if (zn === 'campo' || zn === 'evocate') acts = `<div class="mxp-l">${mExtraRows(i, row, a)}${row(st.lock ? 'Bloccata: non può essere attivata o esaurita' : 'Blocca: non potrà essere attivata o esaurita', '', a('mLock', st.lock ? 'Sblocca' : 'Blocca', st.lock ? ' ' : 'alt'))}${row('Segnalini forza', mStep('mp-tf', st.tf || 0, -99, 99), a('mSetTok', 'Salva'))}${row('Segnalini resistenza', mStep('mp-tr', st.tr || 0, -99, 99), '')}</div><div class="mxp-acts">${st.lock ? '' : a('mExhaust', st.ex ? 'Attiva' : 'Esaurisci')}${zn === 'evocate' ? a('mToField', 'In campo ora') : ''}${a('mDmgOpen', 'Assegna danni')}${st.dmg ? a('mDmgDown', '−1 danno') : ''}${a('mDefeat', 'Sconfiggi', 'danger')}${a('mDestroy', 'Distruggi', 'danger')}${a('mToScarti', 'Scarta')}${a('mToMano', 'Torna in mano')}${a('mcInfo', 'Scheda carta')}</div>`;
     else if (zn === 'potere') acts = `<div class="mxp-acts">${a('mExhaust', st.ex ? 'Ripristina' : 'Usa (esaurisci)', ' ')}${a('mToMano', 'Torna in mano')}${a('mToScarti', 'Scarta')}</div>`;
     else if (zn === 'scarti') acts = `<p class="mxp-hint" style="margin-top:0">${HOWL[mHow(i)]}</p><div class="mxp-acts">${a('mToMano', 'Torna in mano', ' ')}${a('mToCampo', 'Metti in campo')}${a('mToTop', 'In cima al mazzo')}${a('mToBottom', 'In fondo al mazzo')}${a('mcInfo', 'Scheda carta')}</div>`;
     return wrap(esc(c.nome || c.code), `<div class="mxp-card"><div class="mxp-ca${st.ex && zn !== 'mano' ? ' ex' : ''}" data-act="mZoom" data-v="${esc(st.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta">${art(c, true)}${mFR(i)}${st.dmg ? dmgBadge(st.dmg) : ''}<span class="mxp-zh">⤢ Ingrandisci</span></div><div class="mxp-cm"><div class="lbl">${esc(MZ[zn] || '')}${c.classe ? ' · ' + esc(c.classe) : ''}${c.tipo ? ' · ' + esc(c.tipo) : ''}</div>${stats}${acts}</div></div>`, 'wide');
   }
   return '';
+}
+/* carte collegate a una carta avversaria (oggetti, personaggi sul luogo) */
+function ocLinked(pid, c) {
+  const pl = NET.players[pid], own = ((pl && pl.s && pl.s.campo) || []);
+  const host = c.at ? own.find(x => x.k === c.at) : null, hx = c.atx ? (c.atx.pid === NET.pid && M && M.inst[c.atx.k] ? mName(c.atx.k) + ' (tuo)' : (c.atx.nome || '') + ' (di ' + ((NET.players[c.atx.pid] || {}).name || '?') + ')') : '';
+  const L = own.filter(x => x.at === c.k).map(x => ({pid, c: x}));
+  netOpps().forEach(([op, p]) => ((p.s && p.s.campo) || []).filter(x => x.atx && x.atx.pid === pid && x.atx.k === c.k).forEach(x => L.push({pid: op, c: x, who: p.name})));
+  if (M) [...M.zones.campo, ...M.zones.evocate].filter(i => M.inst[i].atx && M.inst[i].atx.pid === pid && M.inst[i].atx.k === c.k).forEach(i => L.push({me: i}));
+  const tile = o => o.me ? `<div class="mxp-c"><button class="mxp-cb" data-act="mPopCard" data-v="${o.me}">${art(mCard(o.me), true)}</button><span>${esc(mName(o.me))} <small>(tua)</small></span></div>`
+    : `<div class="mxp-c"><button class="mxp-cb" data-act="oppCard" data-v="${esc(o.c.k)}" data-p="${esc(o.pid)}">${art(xCard(o.c), true)}${frBadge(o.c.f, o.c.r)}</button><span>${esc(o.c.nome || '')}${o.who ? ' <small>(' + esc(o.who) + ')</small>' : ''}</span></div>`;
+  return `${host || hx ? `<p class="mxp-hint" style="margin:6px 0">Collegata a <b>${esc(host ? host.nome : hx)}</b>${c.ao ? ' come oggetto' : ''}.</p>` : ''}${L.length ? `<div class="oc-l"><div class="lbl">Carte collegate${c.tipo === 'Personaggio' ? ' (forza e resistenza già sommate)' : ''}</div><div class="mxp-cards oc-att">${L.map(tile).join('')}</div></div>` : ''}`;
+}
+/* azioni su una carta avversaria */
+function ocActs(pid, c, d, row) {
+  if (!M || NET.spect || pid === NET.pid) return '';
+  if (netLocked()) return '<p class="mxp-hint">Le azioni su questa carta (danni, costo, forza e resistenza, abilità, luoghi…) si usano durante il tuo turno.</p>';
+  if ((d.abilita || []).some(x => norm(x).startsWith('protetto'))) return '<p class="mxp-hint"><b>Protetto</b>: gli avversari non possono modificare questa carta.</p>';
+  const b = (l, w, cls) => `<button class="btn ${cls || 'alt'} sm" data-act="ocDo" data-k="${w}">${l}</button>`, isP = (c.tipo || 'Personaggio') === 'Personaggio';
+  const lu = isP ? luoghiPer(pid, c.k).map(o => o.v.startsWith('me:') ? o : o) : [];
+  const hosts = M.zones.campo.filter(i => mTipo(i) === 'Personaggio' && !M.inst[i].ao);
+  return `<div class="lbl" style="margin:12px 0 2px">Azioni su questa carta</div><div class="mxp-l">
+    ${row('Infliggi danni', mStep('oc-dmg', 1, 1, 99), b('Infliggi', 'dmg', ' '))}
+    ${row('Costo', mStep('oc-cst', c.cst || 0, 0, 99), b('Imposta', 'cst'))}
+    ${row('Segnalini forza', mStep('oc-tf', c.tf || 0, -99, 99), '')}
+    ${row('Segnalini resistenza', mStep('oc-tr', c.tr || 0, -99, 99), b('Salva', 'tok'))}
+    ${isP || c.f != null ? row(`Inverti forza e resistenza${c.sw ? ' <span class="muted">(ora invertite)</span>' : ''}`, '', b(c.sw ? 'Ripristina' : 'Inverti', 'sw')) : ''}
+    ${row('Dai un’abilità speciale', abSelect('oc-ab'), b('Aggiungi', 'ab'))}
+    ${row('Dai una caratteristica', carInput('oc-car'), b('Aggiungi', 'car'))}
+    ${isP && !c.ao ? row(c.at || c.atx ? 'Sposta su un altro luogo' : 'Sposta su un luogo', lu.length ? `<select id="oc-lu" aria-label="Luogo">${lu.map(o => `<option value="${esc(o.v.startsWith('me:') ? 'me:' + o.v.slice(3) : o.v)}">${esc(o.l)}</option>`).join('')}</select>` : '<span class="muted">nessun luogo disponibile</span>', (lu.length ? b('Sposta', 'lu') : '') + (c.at || c.atx ? b('Togli', 'off') : '')) : ''}
+    ${row('Prendila e collegala a un tuo personaggio come oggetto', hosts.length ? `<select id="oc-host" aria-label="Tuo personaggio">${hosts.map(i => `<option value="${i}">${esc(mName(i))}</option>`).join('')}</select>` : '<span class="muted">non hai personaggi in campo</span>', hosts.length ? b('Prendi', 'take') : '')}
+  </div>`;
 }
 function vSpectSetup() {
   return `<div class="gut"><div class="page-hd"><h1>Spettatore</h1><div class="count">Questo dispositivo mostra l’intero tavolo di una partita condivisa: il campo, la vita, la gloria e il potere di ogni giocatore. Le carte in mano restano nascoste.</div><div class="btns">${btn('Indietro', 'mMode', {cls: 'alt sm', v: ''})}</div></div>
@@ -4225,7 +4417,7 @@ const ACT = {
   },
   duelTog(t) { const P = S.mPop; if (t.dataset.k === 'a') P.ua = !P.ua; else P.ud = !P.ud; renderAll(); },
   duelX(t) { const P = S.mPop; P.x = Math.max(1, Math.min(9, P.x + Number(t.dataset.d))); S.prefs.clsBonus = P.x; lsSet('bw:prefs', S.prefs); renderAll(); },
-  duelGo() { const P = S.mPop; S.mPop = null; netDuelGo(P.atk, P.pid, P.k, P.ua ? P.x : 0, P.ud ? P.x : 0); },
+  duelGo() { duelStart(Object.assign({}, S.mPop, {help: (S.mPop.help || []).slice()})); },
   oppTake(t, v) { oppAsk(v, () => { const src = t.dataset.k, s = (NET.players[v].s || {}), n = src === 'mano' ? s.mano : src === 'mazzo' ? s.mazzo : s.scarti; if (!n) { toast('Non ci sono carte ' + (src === 'mano' ? 'in mano' : src === 'mazzo' ? 'nel mazzo di pesca' : 'negli scarti')); return; } netSend({t: 'take', to: v, src}); S.mPop = null; renderAll(); toast('Richiesta inviata a ' + NET.players[v].name); }); },
   oppShuffle(t, v) { oppAsk(v, () => { netSend({t: 'shuffle', to: v}); mLog('Hai fatto mischiare il mazzo di ' + NET.players[v].name); mSave(); toast('Il mazzo di ' + NET.players[v].name + ' è stato mescolato'); }); },
   oppHand(t, v) { oppAsk(v, () => { if (!(NET.players[v].s || {}).mano) { toast('Non ha carte in mano'); return; } netSend({t: 'req', to: v, what: 'hand'}); mPopOpen({type: 'olist', pid: v, what: 'hand', wait: true, cards: [], sel: ''}); }); },
@@ -4253,13 +4445,53 @@ const ACT = {
   mDestroy(t, v) { S.mPop = null; mDo(() => { mMove(v, 'scarti', 'distrutta'); }, 'Distrutta: ' + mName(v)); },
   mLock(t, v) { const st = M.inst[v]; mDo(() => { if (st.lock) delete st.lock; else st.lock = true; }, (st.lock ? 'Sbloccata: ' : 'Bloccata: ') + mName(v)); },
   mSetTok(t, v) { const st = M.inst[v], f = mNum('mp-tf', 0), r = mNum('mp-tr', 0); mDo(() => { if (f) st.tf = f; else delete st.tf; if (r) st.tr = r; else delete st.tr; }, 'Segnalini su ' + mName(v) + ': forza ' + f + ', resistenza ' + r); toast('Segnalini salvati'); },
+  mSwap(t, v) { const st = M.inst[v], on = !st.sw; mDo(() => { if (on) st.sw = true; else delete st.sw; }, (on ? 'Forza e resistenza invertite: ' : 'Forza e resistenza ripristinate: ') + mName(v)); },
+  mAddAb(t, v) { const x = abFromInput('mp-ab'); if (!x) return; mDo(() => { (M.inst[v].xab = M.inst[v].xab || []).push(x); }, 'Abilità aggiunta a ' + mName(v) + ': ' + x); toast('Abilità aggiunta: ' + x); },
+  mAddCar(t, v) { const x = (($('#mp-car') || {}).value || '').trim().slice(0, 40); if (!x) { toast('Scrivi una caratteristica'); return; } mDo(() => { (M.inst[v].xcar = M.inst[v].xcar || []).push(x); }, 'Caratteristica aggiunta a ' + mName(v) + ': ' + x); toast('Caratteristica aggiunta: ' + x); },
+  mDelX(t, v) { const [w, k] = t.dataset.k.split(':'), key = w === 'ab' ? 'xab' : 'xcar', st = M.inst[v]; mDo(() => { st[key].splice(Number(k), 1); if (!st[key].length) delete st[key]; }, 'Tolta un’aggiunta da ' + mName(v)); },
+  mToLuogo(t, v) {
+    const sel = ($('#mp-lu') || {}).value || ''; if (!sel) return; const [o, k] = [sel.slice(0, sel.indexOf(':')), sel.slice(sel.indexOf(':') + 1)], st = M.inst[v];
+    if (o === 'me') { if (!M.inst[k]) return; mDo(() => { st.at = k; delete st.atx; }, mName(v) + ' si sposta su ' + mName(k)); toast(mName(v) + ' → ' + mName(k)); return; }
+    const p = NET.players[o], c = p && p.s && (p.s.campo || []).find(x => x.k === k); if (!c) return;
+    mDo(() => { st.atx = {pid: o, k, nome: c.nome || ''}; delete st.at; }, mName(v) + ' si sposta su ' + c.nome + ' (di ' + p.name + ')'); toast(mName(v) + ' → ' + c.nome);
+  },
+  mOffLuogo(t, v) { const st = M.inst[v]; mDo(() => { delete st.at; delete st.atx; }, mName(v) + ' lascia il luogo'); },
+  duelHelp(t, v) { const P = S.mPop, l = P.help || (P.help = []); const k = l.indexOf(v); if (k >= 0) l.splice(k, 1); else l.push(v); renderAll(); },
+  duelEva() { S.mPop.evaIgn = !S.mPop.evaIgn; renderAll(); },
+  duelCancel() { if (NET.pend) { clearTimeout(NET.pend.t); NET.pend = null; } S.mPop = null; renderAll(); toast('Attacco annullato'); },
+  soccNo() { const P = S.mPop; if (!P || P.type !== 'socc') return; clearTimeout(NET.soccT); S.mPop = null; netSend({t: 'atka', to: P.from, qid: P.qid}); renderAll(); },
+  soccGo(t, v) {
+    const P = S.mPop; if (!P || P.type !== 'socc' || !M.zones.mano.includes(v)) return; clearTimeout(NET.soccT);
+    const cost = mCost(v), act = M.zones.potere.filter(i => !M.inst[i].ex); if (cost > act.length) { toast('Potere insufficiente'); return; }
+    S.mPop = null;
+    mForce(() => { act.slice(0, cost).forEach(i => { M.inst[i].ex = true; }); mMove(v, 'campo'); M.inst[v].ex = true; }, 'Soccorritore: ' + mName(v) + ' entra in gioco esaurito per difenderti da ' + P.who);
+    netSend({t: 'atka', to: P.from, qid: P.qid, sk: v, card: netItem(v)});
+    toast(mName(v) + ' entra in gioco per difenderti');
+  },
+  ocDo(t, v) {
+    const P = S.mPop, w = t.dataset.k, pid = P.pid, k = P.k, p = NET.players[pid], c = p && p.s && (p.s.campo || []).find(x => x.k === k); if (!c) return;
+    if (netLocked()) { toast('È il turno di ' + netCurName()); return; }
+    const msg = {t: 'mod', to: pid, k}; let txt = '';
+    if (w === 'dmg') { msg.dmg = Math.max(1, mNum('oc-dmg', 1)); txt = 'Infliggi ' + msg.dmg + ' danni a ' + c.nome; }
+    else if (w === 'cst') { msg.cst = Math.max(0, mNum('oc-cst', c.cst || 0)); txt = 'Costo di ' + c.nome + ': ' + msg.cst; }
+    else if (w === 'tok') { msg.tf = mNum('oc-tf', c.tf || 0); msg.tr = mNum('oc-tr', c.tr || 0); txt = 'Segnalini su ' + c.nome + ': F' + msg.tf + ' R' + msg.tr; }
+    else if (w === 'sw') { msg.sw = 1; txt = (c.sw ? 'Ripristinate forza e resistenza di ' : 'Invertite forza e resistenza di ') + c.nome; }
+    else if (w === 'ab') { msg.xab = abFromInput('oc-ab'); if (!msg.xab) return; txt = 'Abilità ' + msg.xab + ' data a ' + c.nome; }
+    else if (w === 'car') { msg.xcar = (($('#oc-car') || {}).value || '').trim().slice(0, 40); if (!msg.xcar) { toast('Scrivi una caratteristica'); return; } txt = 'Caratteristica ' + msg.xcar + ' data a ' + c.nome; }
+    else if (w === 'lu') { const sel = ($('#oc-lu') || {}).value || '', o = sel.slice(0, sel.indexOf(':')), lk = sel.slice(sel.indexOf(':') + 1); if (!sel) return;
+      if (o === pid) msg.at = lk; else { const lc = o === 'me' ? {nome: mName(lk)} : ((NET.players[o] || {}).s.campo || []).find(x => x.k === lk) || {}; msg.atx = {pid: o === 'me' ? NET.pid : o, k: lk, nome: lc.nome || ''}; }
+      txt = c.nome + ' spostata su un luogo'; }
+    else if (w === 'off') { msg.off = 1; txt = c.nome + ' tolta dal luogo'; }
+    else if (w === 'take') { const h = ($('#oc-host') || {}).value || ''; if (!h) { toast('Scegli un tuo personaggio'); return; } netSend({t: 'take', to: pid, src: 'campo', k, host: h}); mLog('Prendi ' + c.nome + ' dal campo di ' + p.name + ' e la colleghi a ' + mName(h)); mSave(); S.mPop = null; renderAll(); return; }
+    netSend(msg); mLog(txt + ' (' + p.name + ')'); mSave(); toast(txt);
+  },
   mSetCost(t, v) { const st = M.inst[v], n = Math.max(0, mNum('mp-cost', 0)), base = mCard(v).costo || 0; mDo(() => { if (n === base) delete st.costo; else st.costo = n; }, 'Costo di ' + mName(v) + ' per questa partita: ' + n); toast('Costo modificato per questa partita'); },
   mSetSeg(t, v) { const st = M.inst[v], n = Math.max(0, mNum('mp-seg', 0)); mDo(() => { if (n) st.seg = n; else delete st.seg; }, 'Segnalini su ' + mName(v) + ': ' + n); toast('Segnalini salvati'); },
   mPlayPay(t, v, host) {
     if (mZoneOf(v) !== 'mano') return;
     if (M.phase !== 'play' && !netLocked()) { toast('Prima inizia il turno'); return; }
-    const cost = mCost(v), act = M.zones.potere.filter(i => !M.inst[i].ex), name = mName(v);
-    if (cost > act.length) { toast('Potere insufficiente: servono ' + cost + ', ne hai ' + act.length + ' attive'); return; }
+    const cost = mCost(v), act = M.zones.potere.filter(i => !M.inst[i].ex), name = mName(v), nf = M.zones.potere.filter(i => M.inst[i].fresh).length;
+    if (cost > act.length) { toast('Potere insufficiente: servono ' + cost + ', ne hai ' + act.length + ' attive' + (nf ? ' (il potere estratto in questo turno si usa dal prossimo)' : '')); return; }
     S.mPop = null; S.mSel = null;
     const pay = cost ? ' (esaurite ' + cost + ' carte potere)' : '';
     if (mNoField(v)) {
@@ -4270,10 +4502,11 @@ const ACT = {
       toast(mTipo(v) + ' giocata: ' + name + ' va negli scarti');
       return;
     }
-    const ev = mEvoca(v), h = host && mCanAttach(v, host) ? host : null;
+    const pm = t && t.dataset ? t.dataset.k || '' : '', h = host && mCanAttach(v, host) ? host : null, ev = mEvoca(v) && !(h && mTipo(h) === 'Personaggio') && pm !== 'ex';
     if (mTipo(v) === 'Oggetto' && !h) { toast('Gli oggetti vanno assegnati a un personaggio in gioco: trascinalo su un tuo personaggio'); return; }
-    mDo(() => { act.slice(0, cost).forEach(i => { M.inst[i].ex = true; }); mMove(v, ev ? 'evocate' : 'campo'); if (h) M.inst[v].at = h; }, (ev ? 'Evocata: ' : 'Giocata: ') + name + (h ? ' su ' + mName(h) : '') + pay);
-    toast((ev ? 'Evocata: ' : 'Giocata: ') + name + (h ? ' → ' + mName(h) : '') + (cost ? ' · −' + cost + ' potere' : ''));
+    if (mEvoca(v) && !h && !pm && hasAb(mCard(v), 'Protettore')) { mPopOpen({type: 'prot', iid: v}); return; }
+    mDo(() => { act.slice(0, cost).forEach(i => { M.inst[i].ex = true; }); mMove(v, ev ? 'evocate' : 'campo'); if (h) M.inst[v].at = h; if (pm === 'ex') M.inst[v].ex = true; }, (ev ? 'Evocata: ' : 'Giocata: ') + name + (h ? ' su ' + mName(h) : '') + (pm === 'ex' ? ' (entra esaurita)' : '') + pay);
+    toast((ev ? 'Evocata: ' : 'Giocata: ') + name + (h ? ' → ' + mName(h) : '') + (cost ? ' · −' + cost + ' potere' : '') + (ev ? ' · entra in gioco all’inizio del tuo prossimo turno' : ''));
   },
   mAttach(iid, host) {
     if (!mCanAttach(iid, host)) { toast(mTipo(host) === 'Personaggio' ? 'A un personaggio puoi assegnare solo oggetti' : 'Non puoi assegnarla a questa carta'); return; }
@@ -4305,9 +4538,10 @@ const ACT = {
     const fromHand = mZoneOf(v) === 'mano', c = mCard(v);
     if (fromHand) {
       if (M.powerTurn === M.turn) { toast('Puoi estrarre potere una sola volta per turno'); return; }
-      if (!c.estrazione) { toast(mName(v) + (['Alleanza', 'Fumetto'].includes(c.tipo) ? ' è ' + (c.tipo === 'Alleanza' ? 'un’alleanza' : 'un fumetto') + ': non si può estrarre' : ' non si può estrarre') + ' (non va nel potere)'); return; }
+      if (!c.estrazione && !(t && t.dataset && t.dataset.k === 'force')) { mPopOpen({type: 'estr', iid: v}); return; }
     }
-    S.mPop = null; S.mSel = null; mDo(() => { mMove(v, 'potere'); if (fromHand) M.powerTurn = M.turn; }, (fromHand ? 'Estratto potere: ' : 'Messa nel potere: ') + mName(v)); ACT.mcClose();
+    S.mPop = null; S.mSel = null; mDo(() => { mMove(v, 'potere'); if (fromHand) { M.powerTurn = M.turn; M.inst[v].ex = true; M.inst[v].fresh = true; } }, (fromHand ? 'Estratto potere: ' : 'Messa nel potere: ') + mName(v) + (fromHand ? ' (usabile dal prossimo turno)' : '')); ACT.mcClose();
+    if (fromHand) toast('Potere estratto: potrai usarlo dall’inizio del tuo prossimo turno');
   },
   mToScarti(t, v) { S.mPop = null; mDo(() => mMove(v, 'scarti'), 'Scartata: ' + mName(v)); ACT.mcClose(); },
   mToMano(t, v) { S.mPop = null; mDo(() => mMove(v, 'mano'), 'Tornata in mano: ' + mName(v)); ACT.mcClose(); },
