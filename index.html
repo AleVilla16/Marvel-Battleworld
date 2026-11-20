@@ -1398,6 +1398,12 @@ body.mt-land.mt-big .fr-b svg,body.mt-land.mt-big .fr-b img{width:28px;height:28
 body.mt-land.mt-big .fr-b b{font-size:15px}
 body.mt-land.mt-big .mt-dmg.dmg-i svg,body.mt-land.mt-big .mt-dmg.dmg-i img{width:30px;height:30px}
 body.mt-land.mt-big .mt-dmg.dmg-i b{font-size:16px}
+
+/* v27: i luoghi esauriti sono girati sul lato destro */
+.mx .mxf.ex.lu,.op-c.ex.lu{transform:rotate(90deg)}
+.mx .mxf.ex.lu .fr-b,.op-c.ex.lu .fr-b{left:auto;right:3px;top:3px;bottom:auto;transform:rotate(-90deg)}
+.mx .mxf.ex.lu .mt-dmg,.op-c.ex.lu .mt-dmg{right:auto;left:-4px;transform:rotate(-90deg)}
+.mxp-card .mxp-ca.ex.lu>.art{transform:rotate(90deg)}
 </style>
 
 <header class="top">
@@ -3511,6 +3517,7 @@ function netDuel(atk, pid, k) {
 }
 /* ciclo delle classi del regolamento: ognuna è forte contro la successiva */
 const CLS_BEATS = {Cosmici: 'Tech', Tech: 'Mutanti', Mutanti: 'Talent', Talent: 'Scientifici', Scientifici: 'Mistici', Mistici: 'Cosmici'};
+const mAttackers = () => M.zones.campo.filter(h => mTipo(h) === 'Personaggio' && !M.inst[h].ex && !M.inst[h].lock && !(mIsObj(h) && M.inst[h].at));
 const mHelpers = atk => M.zones.campo.filter(h => h !== atk && mTipo(h) === 'Personaggio' && !M.inst[h].ex && !M.inst[h].lock && !(mIsObj(h) && M.inst[h].at) && hasAb(mCard(h), 'Aiutante'));
 /* valori del duello: forza dell'attaccante (con Aggressivo, classe e aiutanti) e del difensore */
 function duelCalc(P, d) {
@@ -3641,7 +3648,7 @@ function netPopHtml() {
 }
 function mOppHalf(pid, p) {
   const s = p.s || {}, name = esc(p.name || 'Giocatore');
-  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}" role="button" tabindex="0" data-act="oppCard" data-v="${esc(c.k)}" data-p="${esc(pid)}" aria-label="${esc(c.nome || '')}${c.ex ? ', esaurita: trascina qui una tua carta per duellare' : ''}">${art(sc || xCard(c), true)}${c.f != null || c.r != null ? frBadge(c.f, c.r, c.f - (c.tf || 0), c.r - (c.tr || 0)) : ''}${c.dmg ? `${dmgBadge(c.dmg)}` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}${c.sw ? '<span class="mx-sw" title="Forza e resistenza invertite">⇄</span>' : ''}${c.at || c.atx ? '<span class="mx-atx">' + (c.ao ? 'oggetto' : '📍 ' + esc(c.atx ? c.atx.nome : ((s.campo || []).find(x => x.k === c.at) || {}).nome || '')) + '</span>' : ''}${(s.campo || []).some(x => x.at === c.k) ? `<span class="mx-atn" title="Carte collegate">+${(s.campo || []).filter(x => x.at === c.k).length}</span>` : ''}</div>`; };
+  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.tipo === 'Luogo' ? ' lu' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}" role="button" tabindex="0" data-act="oppCard" data-v="${esc(c.k)}" data-p="${esc(pid)}" aria-label="${esc(c.nome || '')}${c.ex ? ', esaurita: trascina qui una tua carta per duellare' : ''}">${art(sc || xCard(c), true)}${c.f != null || c.r != null ? frBadge(c.f, c.r, c.f - (c.tf || 0), c.r - (c.tr || 0)) : ''}${c.dmg ? `${dmgBadge(c.dmg)}` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}${c.sw ? '<span class="mx-sw" title="Forza e resistenza invertite">⇄</span>' : ''}${c.at || c.atx ? '<span class="mx-atx">' + (c.ao ? 'oggetto' : '📍 ' + esc(c.atx ? c.atx.nome : ((s.campo || []).find(x => x.k === c.at) || {}).nome || '')) + '</span>' : ''}${(s.campo || []).some(x => x.at === c.k) ? `<span class="mx-atn" title="Carte collegate">+${(s.campo || []).filter(x => x.at === c.k).length}</span>` : ''}</div>`; };
   const it = (ic, l, v) => `<span class="oh-i" title="${l}"><i>${ic}</i><b>${v}</b><small>${l}</small></span>`;
   return `<section class="mx-opf" aria-label="Campo di ${name}">
     <div class="oh-bar"><b class="oh-n" data-hitp="${esc(pid)}" title="Trascina qui una tua carta per colpire direttamente ${name}">${name}${NET.cur === pid ? ' <em class="oh-turn">di turno</em>' : ''}</b>${s.inGame ? `${it('♥', 'Vita', s.vita)}${it('★', 'Gloria', s.gloria + '/' + s.target)}${it('✋', 'In mano', s.mano)}${it('⚡', 'Potere', s.pwA + '/' + s.pwT)}${it('🂠', 'Pesca', s.mazzo)}${it('♻', 'Scarti', s.scarti)}` : '<span class="muted">non ha ancora iniziato la partita</span>'}</div>
@@ -3651,7 +3658,7 @@ function mOppHalf(pid, p) {
 function netOppHtml(pid) {
   const p = NET.players[pid]; if (!p) return '<p class="muted">Giocatore non più collegato.</p>';
   const s = p.s || {}; if (!s.inGame) return '<p class="muted">Non ha ancora iniziato la partita.</p>';
-  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}">${art(sc || xCard(c), true)}${c.f != null || c.r != null ? frBadge(c.f, c.r, c.f - (c.tf || 0), c.r - (c.tr || 0)) : ''}${c.dmg ? `${dmgBadge(c.dmg)}` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}<em>${esc(c.nome || '')}${c.at ? ' · assegnata' : ''}${c.evo ? ' · evocata' : ''}</em></div>`; };
+  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.tipo === 'Luogo' ? ' lu' : ''}${c.evo ? ' evo' : ''}">${art(sc || xCard(c), true)}${c.f != null || c.r != null ? frBadge(c.f, c.r, c.f - (c.tf || 0), c.r - (c.tr || 0)) : ''}${c.dmg ? `${dmgBadge(c.dmg)}` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}<em>${esc(c.nome || '')}${c.at ? ' · assegnata' : ''}${c.evo ? ' · evocata' : ''}</em></div>`; };
   const st = (l, v) => `<div class="mxp-st"><i>${l}</i><b>${v}</b></div>`;
   const r = (label, ctrl, b) => `<div class="mxp-r"><span>${label}</span>${ctrl || ''}${b}</div>`, o = {cls: 'alt sm', v: pid};
   const acts = !M || NET.spect ? '' : netLocked() ? '<p class="mxp-hint">Le azioni su questo giocatore (pescare dalla sua mano o dal suo mazzo, farlo mischiare…) si possono usare durante il tuo turno.</p>' : `<div class="lbl" style="margin:12px 0 2px">Azioni su ${esc(p.name)}</div><div class="mxp-l">
@@ -3713,7 +3720,7 @@ function mBeginTurn(force) {
   const nev = z.evocate.length;
   M.tlog = [];
   const fn = () => {
-    [...z.campo, ...z.evocate, ...z.potere].forEach(i => { delete M.inst[i].fresh; if (!M.inst[i].lock) M.inst[i].ex = false; });
+    [...z.campo, ...z.evocate, ...z.potere].forEach(i => { delete M.inst[i].fresh; if (mTipo(i) === 'Luogo' && !z.potere.includes(i)) M.inst[i].ex = true; else if (!M.inst[i].lock) M.inst[i].ex = false; }); /* i luoghi restano sempre esauriti */
     z.campo.push(...z.evocate); z.evocate = [];
     if (!first) { if (z.mazzo.length) z.mano.push(z.mazzo.shift()); else M.lost = 'mazzo'; }
     M.phase = 'play'; M.began = true;
@@ -3735,7 +3742,7 @@ const mStep = (id, val, min, max) => `<span class="mxs"><button class="mxs-b" da
 const mNum = (id, d) => { const el = $('#' + id); const v = Math.round(Number(el ? el.value : d)); return Number.isFinite(v) ? v : d; };
 function mFieldCard(iid, ev) {
   const c = mCard(iid), st = M.inst[iid];
-  return `<button class="mt mxf${st.ex ? ' ex' : ''}${st.lock ? ' lock' : ''}${ev ? ' evo' : ''}${S.mDmgMode ? ' aim' : ''}" data-act="mFieldTap" data-v="${iid}" aria-label="${esc(c.nome || c.code)}${st.ex ? ', esaurita' : ''}${st.lock ? ', bloccata' : ''}${st.dmg ? ', ' + st.dmg + ' danni' : ''}">${art(c, true)}${mFR(iid)}${st.dmg ? `${dmgBadge(st.dmg)}` : ''}${st.tf || st.tr ? `<span class="mx-tok">${st.tf ? `<i class="tf">F${st.tf > 0 ? '+' : ''}${st.tf}</i>` : ''}${st.tr ? `<i class="tr">R${st.tr > 0 ? '+' : ''}${st.tr}</i>` : ''}</span>` : ''}${st.lock ? '<span class="mx-lock" title="Bloccata">🔒</span>' : ''}${st.sw ? '<span class="mx-sw" title="Forza e resistenza invertite">⇄</span>' : ''}${st.atx ? `<span class="mx-atx" title="Su un luogo di un altro giocatore">📍 ${esc(st.atx.nome)}</span>` : ''}</button>`;
+  return `<button class="mt mxf${st.ex ? ' ex' : ''}${mTipo(iid) === 'Luogo' ? ' lu' : ''}${st.lock ? ' lock' : ''}${ev ? ' evo' : ''}${S.mDmgMode ? ' aim' : ''}" data-act="mFieldTap" data-v="${iid}" aria-label="${esc(c.nome || c.code)}${st.ex ? ', esaurita' : ''}${st.lock ? ', bloccata' : ''}${st.dmg ? ', ' + st.dmg + ' danni' : ''}">${art(c, true)}${mFR(iid)}${st.dmg ? `${dmgBadge(st.dmg)}` : ''}${st.tf || st.tr ? `<span class="mx-tok">${st.tf ? `<i class="tf">F${st.tf > 0 ? '+' : ''}${st.tf}</i>` : ''}${st.tr ? `<i class="tr">R${st.tr > 0 ? '+' : ''}${st.tr}</i>` : ''}</span>` : ''}${st.lock ? '<span class="mx-lock" title="Bloccata">🔒</span>' : ''}${st.sw ? '<span class="mx-sw" title="Forza e resistenza invertite">⇄</span>' : ''}${st.atx ? `<span class="mx-atx" title="Su un luogo di un altro giocatore">📍 ${esc(st.atx.nome)}</span>` : ''}</button>`;
 }
 const abSelect = id => `<select id="${id}" aria-label="Abilità speciale">${ABIL.map(x => `<option>${x}</option>`).join('')}</select><input id="${id}n" type="number" min="0" max="9" placeholder="N°" aria-label="Numero (per Aggressivo e Resistente)" style="width:58px">`;
 const carInput = id => `<input id="${id}" list="dl-car" placeholder="Caratteristica" aria-label="Caratteristica" autocomplete="off" style="width:140px"><datalist id="dl-car">${[...new Set([...CARATT, ...allCards().flatMap(c => c.caratteristiche || [])])].sort((a, b) => a.localeCompare(b, 'it')).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`;
@@ -3752,7 +3759,9 @@ function mExtraRows(i, row, a) {
   const extra = [...(st.xab || []).map((x, k) => `<button class="chip" data-act="mDelX" data-v="${i}" data-k="ab:${k}" title="Togli">${esc(x)} ✕</button>`), ...(st.xcar || []).map((x, k) => `<button class="chip" data-act="mDelX" data-v="${i}" data-k="car:${k}" title="Togli">${esc(x)} ✕</button>`)].join('');
   const lu = isP && !st.ao ? luoghiPer(NET.pid, i) : [];
   const where = st.at && M.inst[st.at] && mTipo(st.at) === 'Luogo' ? mName(st.at) : st.atx ? st.atx.nome + ' (di ' + ((NET.players[st.atx.pid] || {}).name || '?') + ')' : '';
-  return `${row('Costo per questa partita', mStep('mp-cost', mCost(i), 0, 99), a('mSetCost', 'Salva'))}
+  const atks = mTipo(i) === 'Luogo' && isColl(c) ? mAttackers() : null;
+  return `${atks ? row('Duella contro questo luogo (Collettivo)', atks.length ? `<select id="mp-atk" aria-label="Tuo personaggio">${atks.map(h => `<option value="${h}">${esc(mName(h))} (F${mF(h)})</option>`).join('')}</select>` : '<span class="muted">nessun personaggio attivo</span>', atks.length ? a('mLuDuel', 'Duella', ' ') : '') : ''}
+    ${row('Costo per questa partita', mStep('mp-cost', mCost(i), 0, 99), a('mSetCost', 'Salva'))}
     ${isP || c.forza != null ? row(`Inverti forza e resistenza${st.sw ? ' <span class="muted">(ora invertite)</span>' : ''}`, '', a('mSwap', st.sw ? 'Ripristina' : 'Inverti')) : ''}
     ${row('Aggiungi un’abilità speciale', abSelect('mp-ab'), a('mAddAb', 'Aggiungi'))}
     ${row('Aggiungi una caratteristica', carInput('mp-car'), a('mAddCar', 'Aggiungi'))}
@@ -3850,7 +3859,7 @@ function mPopHtml() {
     else if (zn === 'campo' || zn === 'evocate') acts = `<div class="mxp-l">${mExtraRows(i, row, a)}${row(st.lock ? 'Bloccata: non può essere attivata o esaurita' : 'Blocca: non potrà essere attivata o esaurita', '', a('mLock', st.lock ? 'Sblocca' : 'Blocca', st.lock ? ' ' : 'alt'))}${row('Segnalini forza', mStep('mp-tf', st.tf || 0, -99, 99), a('mSetTok', 'Salva'))}${row('Segnalini resistenza', mStep('mp-tr', st.tr || 0, -99, 99), '')}</div><div class="mxp-acts">${st.lock ? '' : a('mExhaust', st.ex ? 'Attiva' : 'Esaurisci')}${zn === 'evocate' ? a('mToField', 'In campo ora') : ''}${a('mDmgOpen', 'Assegna danni')}${st.dmg ? a('mDmgDown', '−1 danno') : ''}${a('mDefeat', 'Sconfiggi', 'danger')}${a('mDestroy', 'Distruggi', 'danger')}${a('mToScarti', 'Scarta')}${a('mToMano', 'Torna in mano')}${a('mcInfo', 'Scheda carta')}</div>`;
     else if (zn === 'potere') acts = `<div class="mxp-acts">${a('mExhaust', st.ex ? 'Ripristina' : 'Usa (esaurisci)', ' ')}${a('mToMano', 'Torna in mano')}${a('mToScarti', 'Scarta')}</div>`;
     else if (zn === 'scarti') acts = `<p class="mxp-hint" style="margin-top:0">${HOWL[mHow(i)]}</p><div class="mxp-acts">${a('mToMano', 'Torna in mano', ' ')}${a('mToCampo', 'Metti in campo')}${a('mToTop', 'In cima al mazzo')}${a('mToBottom', 'In fondo al mazzo')}${a('mcInfo', 'Scheda carta')}</div>`;
-    return wrap(esc(c.nome || c.code), `<div class="mxp-card"><div class="mxp-ca${st.ex && zn !== 'mano' ? ' ex' : ''}" data-act="mZoom" data-v="${esc(st.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta">${art(c, true)}${mFR(i)}${st.dmg ? dmgBadge(st.dmg) : ''}<span class="mxp-zh">⤢ Ingrandisci</span></div><div class="mxp-cm"><div class="lbl">${esc(MZ[zn] || '')}${c.classe ? ' · ' + esc(c.classe) : ''}${c.tipo ? ' · ' + esc(c.tipo) : ''}</div>${stats}${acts}</div></div>`, 'wide');
+    return wrap(esc(c.nome || c.code), `<div class="mxp-card"><div class="mxp-ca${st.ex && zn !== 'mano' ? ' ex' : ''}${c.tipo === 'Luogo' ? ' lu' : ''}" data-act="mZoom" data-v="${esc(st.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta">${art(c, true)}${mFR(i)}${st.dmg ? dmgBadge(st.dmg) : ''}<span class="mxp-zh">⤢ Ingrandisci</span></div><div class="mxp-cm"><div class="lbl">${esc(MZ[zn] || '')}${c.classe ? ' · ' + esc(c.classe) : ''}${c.tipo ? ' · ' + esc(c.tipo) : ''}</div>${stats}${acts}</div></div>`, 'wide');
   }
   return '';
 }
@@ -3868,12 +3877,13 @@ function ocLinked(pid, c) {
 /* azioni su una carta avversaria */
 function ocActs(pid, c, d, row) {
   if (!M || NET.spect || pid === NET.pid) return '';
-  if (netLocked()) return '<p class="mxp-hint">Le azioni su questa carta (danni, costo, forza e resistenza, abilità, luoghi…) si usano durante il tuo turno.</p>';
-  if ((d.abilita || []).some(x => norm(x).startsWith('protetto'))) return '<p class="mxp-hint"><b>Protetto</b>: gli avversari non possono modificare questa carta.</p>';
+  if (netLocked()) return '<p class="mxp-hint">Le azioni su questa carta (duello, danni, costo, forza e resistenza, abilità, luoghi…) si usano durante il tuo turno.</p>';
+  const atks = mAttackers(), duelRow = c.ex && !c.evo && !c.ao ? `<div class="lbl" style="margin:12px 0 2px">Duello${c.tipo === 'Luogo' ? ' contro questo luogo' : ''}</div><div class="mxp-l">${row('Sfidala con un tuo personaggio attivo', atks.length ? `<select id="oc-atk" aria-label="Tuo personaggio">${atks.map(i => `<option value="${i}">${esc(mName(i))} (F${mF(i)})</option>`).join('')}</select>` : '<span class="muted">nessun personaggio attivo</span>', atks.length ? `<button class="btn sm" data-act="ocDuel">Duella</button>` : '')}</div>` : '';
+  if ((d.abilita || []).some(x => norm(x).startsWith('protetto'))) return duelRow + '<p class="mxp-hint"><b>Protetto</b>: gli avversari non possono modificare questa carta.</p>';
   const b = (l, w, cls) => `<button class="btn ${cls || 'alt'} sm" data-act="ocDo" data-k="${w}">${l}</button>`, isP = (c.tipo || 'Personaggio') === 'Personaggio';
   const lu = isP ? luoghiPer(pid, c.k).map(o => o.v.startsWith('me:') ? o : o) : [];
   const hosts = M.zones.campo.filter(i => mTipo(i) === 'Personaggio' && !M.inst[i].ao);
-  return `<div class="lbl" style="margin:12px 0 2px">Azioni su questa carta</div><div class="mxp-l">
+  return `${duelRow}<div class="lbl" style="margin:12px 0 2px">Azioni su questa carta</div><div class="mxp-l">
     ${row('Infliggi danni', mStep('oc-dmg', 1, 1, 99), b('Infliggi', 'dmg', ' '))}
     ${row('Costo', mStep('oc-cst', c.cst || 0, 0, 99), b('Imposta', 'cst'))}
     ${row('Segnalini forza', mStep('oc-tf', c.tf || 0, -99, 99), '')}
@@ -4463,6 +4473,16 @@ const ACT = {
   mDestroy(t, v) { S.mPop = null; mDo(() => { mMove(v, 'scarti', 'distrutta'); }, 'Distrutta: ' + mName(v)); },
   mLock(t, v) { const st = M.inst[v]; mDo(() => { if (st.lock) delete st.lock; else st.lock = true; }, (st.lock ? 'Sbloccata: ' : 'Bloccata: ') + mName(v)); },
   mSetTok(t, v) { const st = M.inst[v], f = mNum('mp-tf', 0), r = mNum('mp-tr', 0); mDo(() => { if (f) st.tf = f; else delete st.tf; if (r) st.tr = r; else delete st.tr; }, 'Segnalini su ' + mName(v) + ': forza ' + f + ', resistenza ' + r); toast('Segnalini salvati'); },
+  ocDuel() { const P = S.mPop, atk = ($('#oc-atk') || {}).value; if (!atk) return; netDuel(atk, P.pid, P.k); },
+  mLuDuel(t, v) {
+    const atk = ($('#mp-atk') || {}).value; if (!atk || !M.inst[v] || !mCanAttack(atk)) return;
+    const ca = mCard(atk), lc = mCard(v), af = mF(atk) + abVal(ca, 'Aggressivo'), toD = Math.max(0, af - abVal(lc, 'Resistente')), toA = Math.max(0, mF(v) - abVal(ca, 'Resistente'));
+    const lt = (M.inst[v].dmg || 0) + toD, at = (M.inst[atk].dmg || 0) + toA, luDies = lt >= mR(v), atkDies = at >= mR(atk), nA = mName(atk), nL = mName(v);
+    S.mPop = null;
+    mDo(() => { if (luDies) mMove(v, 'scarti', 'distrutta'); else M.inst[v].dmg = lt; if (atkDies) mMove(atk, 'scarti', 'distrutta'); else { M.inst[atk].dmg = at; M.inst[atk].ex = true; } },
+      'Duello: ' + nA + ' (F' + af + ') contro il luogo ' + nL + ': ' + toD + ' danni al luogo' + (luDies ? ' (distrutto)' : '') + ', ' + toA + ' a ' + nA + (atkDies ? ' (distrutta)' : ''));
+    toast('Duello con ' + nL + ': infliggi ' + toD + ', subisci ' + toA + (luDies ? ' · luogo distrutto' : '') + (atkDies ? ' · ' + nA + ' distrutta' : ''));
+  },
   mSwap(t, v) { const st = M.inst[v], on = !st.sw; mDo(() => { if (on) st.sw = true; else delete st.sw; }, (on ? 'Forza e resistenza invertite: ' : 'Forza e resistenza ripristinate: ') + mName(v)); },
   mAddAb(t, v) { const x = abFromInput('mp-ab'); if (!x) return; mDo(() => { (M.inst[v].xab = M.inst[v].xab || []).push(x); }, 'Abilità aggiunta a ' + mName(v) + ': ' + x); toast('Abilità aggiunta: ' + x); },
   mAddCar(t, v) { const x = (($('#mp-car') || {}).value || '').trim().slice(0, 40); if (!x) { toast('Scrivi una caratteristica'); return; } mDo(() => { (M.inst[v].xcar = M.inst[v].xcar || []).push(x); }, 'Caratteristica aggiunta a ' + mName(v) + ': ' + x); toast('Caratteristica aggiunta: ' + x); },
@@ -4542,7 +4562,7 @@ const ACT = {
   mEndTurn() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } const tem = M.zones.campo.filter(i => !M.inst[i].ex && !M.inst[i].lock && hasAb(mCard(i), 'Temerario'));
     if (tem.length && S.temWarn !== M.turn) { S.temWarn = M.turn; toast(mName(tem[0]) + ' è Temerario: deve attaccare ogni turno. Premi di nuovo Fine turno per chiudere comunque'); return; }
     mDo(() => { M.phase = 'start'; M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno'); if (netLive()) { const rec = (M.tlog || []).slice(); netOpps().forEach(([pid]) => netSend({t: 'recap', to: pid, turn: M.turn - 1, acts: rec, vita: M.vita, gloria: M.gloria})); M.tlog = []; netSend({t: 'endturn', pid: NET.pid}); if (NET.role === 'host') netNextTurn(NET.pid); toast('Turno passato a ' + netCurName()); } else toast('Turno ' + M.turn); },
-  mReady() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); }, 'Riattivate tutte le carte'); },
+  mReady() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock && !(mTipo(i) === 'Luogo' && !M.zones.potere.includes(i))) M.inst[i].ex = false; }); }, 'Riattivate tutte le carte (i luoghi restano esauriti)'); },
   mUndo() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
   mcOpen(t, v) { MSEL = v; MLIST = ''; mcRender(); $('#mc').hidden = false; },
   mDiscards() { MSEL = null; MLIST = 'scarti'; mcDiscards(); $('#mc').hidden = false; },
@@ -4565,7 +4585,7 @@ const ACT = {
   mToMano(t, v) { S.mPop = null; mDo(() => mMove(v, 'mano'), 'Tornata in mano: ' + mName(v)); ACT.mcClose(); },
   mToTop(t, v) { S.mPop = null; mDo(() => mMove(v, 'mazzo'), 'Messa in cima al mazzo: ' + mName(v)); ACT.mcClose(); },
   mToBottom(t, v) { S.mPop = null; mDo(() => mMove(v, 'mazzo', 'bottom'), 'Messa in fondo al mazzo: ' + mName(v)); ACT.mcClose(); },
-  mExhaust(t, v) { if (M.inst[v].lock) { toast('Carta bloccata'); return; } const ex = !M.inst[v].ex; mDo(() => { M.inst[v].ex = ex; }, (ex ? 'Esaurita: ' : 'Attivata: ') + mName(v)); },
+  mExhaust(t, v) { if (M.inst[v].lock) { toast('Carta bloccata'); return; } if (mTipo(v) === 'Luogo' && mZoneOf(v) === 'campo') { toast('I luoghi restano sempre esauriti'); return; } const ex = !M.inst[v].ex; mDo(() => { M.inst[v].ex = ex; }, (ex ? 'Esaurita: ' : 'Attivata: ') + mName(v)); },
   mDmgUp(t, v) { mDo(() => { M.inst[v].dmg++; }, '+1 danno a ' + mName(v)); },
   mDmgDown(t, v) { mDo(() => { M.inst[v].dmg = Math.max(0, M.inst[v].dmg - 1); }, '−1 danno a ' + mName(v)); },
   mDice() { const d = $('#dice'); if (!DICEHOME) DICEHOME = d.parentNode; document.body.appendChild(d); d.classList.add('dice-fixed'); ACT.diceOpen(); },
