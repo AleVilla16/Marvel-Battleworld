@@ -3029,7 +3029,7 @@ const loadLib = url => LIBS[url] || (LIBS[url] = new Promise((res, rej) => { con
 function netSummary() {
   if (!M) return {inGame: false};
   const z = M.zones, f = [...z.campo, ...z.evocate];
-  return {inGame: true, deck: M.deckName, vita: M.vita, gloria: M.gloria, target: M.target, turn: M.turn, mano: z.mano.length, mazzo: z.mazzo.length, scarti: z.scarti.length,
+  return {inGame: true, lost: M.vita <= 0 || M.lost === 'mazzo', out: !z.mazzo.length, deck: M.deckName, vita: M.vita, gloria: M.gloria, target: M.target, turn: M.turn, mano: z.mano.length, mazzo: z.mazzo.length, scarti: z.scarti.length,
     scTop: z.scarti.length ? M.inst[z.scarti[z.scarti.length - 1]].id : '', pwA: z.potere.filter(i => !M.inst[i].ex).length, pwT: z.potere.length,
     campo: f.map(i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', evo: z.evocate.includes(i), f: mF(i), r: mR(i), g: c.gloria || 0, cst: mCost(i), tipo: c.tipo || '', cd: {nome: c.nome, sottonome: c.sottonome || '', code: c.code, tipo: c.tipo, classe: c.classe, rarita: c.rarita, set: c.set, costo: c.costo, forza: c.forza, resistenza: c.resistenza, gloria: c.gloria, spostamento: c.spostamento, caratteristiche: c.caratteristiche || [], abilita: c.abilita || [], affiliazioni: affList(c), mossaSpeciale: c.mossaSpeciale || null, mossaAttiva: c.mossaAttiva || '', mossaSecondaria: c.mossaSecondaria || null, mosse: cardMosse(c)}}; })};
 }
@@ -3112,44 +3112,59 @@ let MFORCE = false;
 const mForce = (fn, text) => { MFORCE = true; try { mDo(fn, text); } finally { MFORCE = false; } };
 function netMyTurn() {
   if (!M) { toast('È il tuo turno'); return; }
-  if (M.phase !== 'play') mForce(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); M.phase = 'play'; }, 'Inizio turno ' + M.turn + ': carte riattivate');
-  toast('È il tuo turno: carte riattivate');
+  if (M.phase !== 'play') mBeginTurn(true); else toast('È il tuo turno');
 }
 function netHandle(d) {
   const who = String(d.fromName || 'Un avversario');
+  if (d.t === 'mull' && M) { mForce(() => { if (M.zones.mazzo.length) M.zones.mano.push(M.zones.mazzo.shift()); }, who + ' ha fatto mulligan: peschi 1 carta'); toast(who + ' ha fatto mulligan: peschi 1 carta'); return; }
   if (d.t === 'hit' && M) { const n = Math.max(0, Number(d.n) || 0); mForce(() => { M.vita = Math.max(0, M.vita - n); }, who + ' ti infligge ' + n + ' danni con ' + (d.card || 'una carta')); toast(who + ': −' + n + ' vita'); return; }
   if (d.t === 'gloria' && M) { const n = Math.max(0, Number(d.n) || 0); mForce(() => { M.gloria += n; }, 'Hai sconfitto ' + (d.card || 'una carta') + ' di ' + who + ': +' + n + ' gloria'); toast('Carta sconfitta: +' + n + ' gloria'); return; }
   if (d.t === 'duel' && M) {
     const k = d.k; if (!M.inst[k] || ![...M.zones.campo, ...M.zones.evocate].includes(k)) return;
-    const n = Math.max(0, Number(d.n) || 0), st = M.inst[k], tot = (st.dmg || 0) + n, r = mR(k), name = mName(k), g = mCard(k).gloria || 0;
+    const c = mCard(k), n = Math.max(0, (Number(d.n) || 0) - abVal(c, 'Resistente')), st = M.inst[k], tot = (st.dmg || 0) + n, r = mR(k), name = mName(k), g = c.gloria || 0;
     if (tot >= r) {
       mForce(() => { mMove(k, 'scarti', 'sconfitta'); }, who + ' attacca ' + name + ' con ' + (d.card || 'una carta') + ': ' + tot + ' danni, sconfitta');
-      netSend({t: 'gloria', to: d.from, n: g, card: name});
+      if (!d.atkDies) netSend({t: 'gloria', to: d.from, n: g, card: name});
       toast(name + ' è stata sconfitta da ' + who);
     } else { mForce(() => { st.dmg = tot; }, who + ' attacca ' + name + ' con ' + (d.card || 'una carta') + ': ' + n + ' danni'); toast(who + ' attacca ' + name + ': −' + n); }
   }
 }
+const oppTargets = p => ((p && p.s && p.s.campo) || []).filter(c => c.ex && !c.evo && c.tipo !== 'Oggetto');
+function mCanAttack(atk) {
+  if (netLocked()) { toast('È il turno di ' + netCurName()); return false; }
+  if (M.phase !== 'play') { toast('Prima inizia il turno'); return false; }
+  if (!M.zones.campo.includes(atk)) { toast(M.zones.evocate.includes(atk) ? 'Le carte appena evocate non possono duellare (tranne quelle con Agile)' : 'Solo i personaggi nell’area di gioco possono duellare'); return false; }
+  if (mTipo(atk) !== 'Personaggio') { toast('Solo i personaggi possono duellare'); return false; }
+  if (M.inst[atk].ex) { toast('Questo personaggio è esaurito: non può duellare'); return false; }
+  if (M.inst[atk].lock) { toast('Questo personaggio è bloccato: non può essere esaurito'); return false; }
+  return true;
+}
 function netDuel(atk, pid, k) {
-  if (netLocked()) { toast('È il turno di ' + netCurName()); return; }
+  if (!mCanAttack(atk)) return;
   const p = NET.players[pid], d = p && p.s && (p.s.campo || []).find(c => c.k === k); if (!d) return;
-  if (!M.zones.campo.includes(atk)) { toast(M.zones.evocate.includes(atk) ? 'Le carte appena evocate non possono duellare' : 'Solo le carte in campo possono duellare'); return; }
-  if (M.inst[atk].ex) { toast('Questa carta è esaurita: non può attaccare'); return; }
-  if (!d.ex) { toast('Puoi attaccare solo le carte esaurite'); return; }
-  const af = mF(atk), df = d.f || 0, name = mName(atk), st = M.inst[atk], tot = (st.dmg || 0) + df, ar = mR(atk);
-  netSend({t: 'duel', to: pid, k, n: af, card: name});
-  if (tot >= ar) mDo(() => { mMove(atk, 'scarti', 'distrutta'); }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + df + ') di ' + p.name + ': ' + name + ' distrutta');
-  else mDo(() => { st.dmg = tot; if (!st.lock) st.ex = true; }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + df + ') di ' + p.name);
-  toast('Duello: infliggi ' + af + ', subisci ' + df + (tot >= ar ? ' · ' + name + ' distrutta' : ''));
+  if (d.evo) { toast('Le carte nell’area di evocazione non possono essere scelte'); return; }
+  if (!d.ex) { toast('Puoi sfidare solo personaggi già esauriti'); return; }
+  const ca = mCard(atk), dab = (d.cd && d.cd.abilita) || [];
+  const prot = oppTargets(p).filter(c => ((c.cd && c.cd.abilita) || []).some(x => norm(x).startsWith('protettore')));
+  if (prot.length && !prot.some(c => c.k === k)) { toast('Devi attaccare prima il Protettore: ' + prot[0].nome); return; }
+  if (dab.some(x => norm(x).startsWith('evasivo')) && !hasAb(ca, 'Evasivo')) { toast(d.nome + ' è Evasivo: può essere attaccato solo da un personaggio Evasivo'); return; }
+  const af = mF(atk) + abVal(ca, 'Aggressivo'), dRes = abVal(d.cd || {}, 'Resistente'), myRes = abVal(ca, 'Resistente');
+  const df = Math.max(0, (d.f || 0) - myRes), name = mName(atk), st = M.inst[atk], tot = (st.dmg || 0) + df, ar = mR(atk), dies = tot >= ar;
+  const defDies = (d.dmg || 0) + Math.max(0, af - dRes) >= (d.r || 0);
+  netSend({t: 'duel', to: pid, k, n: af, card: name, atkDies: dies});
+  if (dies) mDo(() => { mMove(atk, 'scarti', 'distrutta'); }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + (d.f || 0) + ') di ' + p.name + ': ' + name + ' distrutta');
+  else mDo(() => { st.dmg = tot; st.ex = true; }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + (d.f || 0) + ') di ' + p.name);
+  toast('Duello: infliggi ' + af + ', subisci ' + df + (defDies ? (dies ? ' · ' + d.nome + ' sconfitta, ' + name + ' distrutta: nessuna gloria' : ' · ' + d.nome + ' sconfitta') : '') + (dies && !defDies ? ' · ' + name + ' distrutta' : ''));
 }
 function netHit(atk, pid) {
-  if (netLocked()) { toast('È il turno di ' + netCurName()); return; }
+  if (!mCanAttack(atk)) return;
   const p = NET.players[pid]; if (!p) return;
-  if (!M.zones.campo.includes(atk)) { toast(M.zones.evocate.includes(atk) ? 'Le carte appena evocate non possono attaccare' : 'Solo le carte in campo possono attaccare'); return; }
-  if (M.inst[atk].ex) { toast('Questa carta è esaurita: non può attaccare'); return; }
-  const af = mF(atk), name = mName(atk), st = M.inst[atk];
+  const t = oppTargets(p);
+  if (t.length) { toast(p.name + ' ha personaggi esauriti: devi duellare con uno di loro (' + t[0].nome + ')'); return; }
+  const af = mF(atk) + abVal(mCard(atk), 'Aggressivo'), name = mName(atk), st = M.inst[atk];
   netSend({t: 'hit', to: pid, n: af, card: name});
-  mDo(() => { if (!st.lock) st.ex = true; }, name + ' infligge ' + af + ' danni a ' + p.name);
-  toast(name + ' infligge ' + af + ' danni a ' + p.name);
+  mDo(() => { st.ex = true; }, name + ' infligge ' + af + ' danni a ' + p.name);
+  toast(name + ' infligge ' + af + ' danni a ' + p.name + ' (il giocatore ha Forza 0)');
 }
 function netClose(keep) {
   clearTimeout(NET.t);
@@ -3203,6 +3218,30 @@ const mCost = iid => { const st = M.inst[iid]; return st.costo != null ? st.cost
 const mF = iid => (mCard(iid).forza || 0) + (M.inst[iid].tf || 0);
 const mR = iid => (mCard(iid).resistenza || 0) + (M.inst[iid].tr || 0);
 let TAP = {k: '', t: 0}, NOCLICK = 0;
+/* ---------- regolamento applicato alla partita ---------- */
+/* abilità speciale con valore (es. "Aggressivo 2", "Resistente +1"): se il numero non è scritto vale 1 */
+function abVal(c, name) {
+  const re = new RegExp(name + '\\s*\\+?\\s*(\\d+)', 'i'), ab = (c.abilita || []);
+  if (!ab.some(x => norm(x).startsWith(norm(name)))) return 0;
+  for (const x of ab) { const m = String(x).match(re); if (m) return Number(m[1]); }
+  const t = [c.mossaSpeciale && c.mossaSpeciale.desc, c.mossaAttiva, c.mossaSecondaria && c.mossaSecondaria.desc].filter(Boolean).join(' '), m = t.match(re);
+  return m ? Number(m[1]) : 1;
+}
+const hasAb = (c, name) => (c.abilita || []).some(x => norm(x).startsWith(norm(name)));
+/* attivazione, inizio del turno e pesca */
+function mBeginTurn(force) {
+  const z = M.zones, first = M.turn === 1 && (!netLive() || NET.order[0] === NET.pid || !NET.order.length);
+  const nev = z.evocate.length;
+  const fn = () => {
+    [...z.campo, ...z.evocate, ...z.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; });
+    z.campo.push(...z.evocate); z.evocate = [];
+    if (!first) { if (z.mazzo.length) z.mano.push(z.mazzo.shift()); else M.lost = 'mazzo'; }
+    M.phase = 'play'; M.began = true;
+  };
+  const txt = 'Turno ' + M.turn + ': carte riattivate' + (nev ? ', ' + nev + (nev === 1 ? ' carta evocata entra' : ' carte evocate entrano') + ' in gioco' : '') + (first ? ' (primo turno: niente pesca)' : z.mazzo.length ? ', pescata 1 carta' : ', mazzo vuoto');
+  (force ? mForce : mDo)(fn, txt);
+  toast(M.lost === 'mazzo' ? 'Non puoi pescare: hai perso' : txt);
+}
 /* negli scarti: scartata (scarto normale), sconfitta (ultimo danno da un avversario), distrutta (ultimo danno non da un avversario) */
 const HOWL = {scartata: 'Scartata', sconfitta: 'Sconfitta', distrutta: 'Distrutta'};
 const mHow = iid => HOWL[M.inst[iid].how] ? M.inst[iid].how : 'scartata';
@@ -3288,7 +3327,7 @@ function vMatch() {
     const decks = Object.values(S.decks).map(d => ({d, n: Object.values(d.cards).reduce((a, b) => a + (Number(b) || 0), 0)})).filter(x => x.n > 0).sort((a, b) => a.d.nome.localeCompare(b.d.nome, 'it'));
     return `<div class="gut"><div class="page-hd"><h1>Partita</h1><div class="count">Gestisci la tua area di gioco: mazzo, mano, campo, serbatoio del potere e scarti. Gli avversari non la vedono.</div><div class="btns">${btn('Indietro', 'mMode', {cls: 'alt sm', v: ''})}</div></div>
       ${decks.length ? `<div class="form mt-setup"><label class="fl"><span>Mazzo</span><select id="m-deck">${decks.map(x => `<option value="${esc(x.d.id)}"${S.mDeck === x.d.id ? ' selected' : ''}>${esc(x.d.nome)} · ${x.n} carte</option>`).join('')}</select></label>
-        <div class="row2"><label class="fl"><span>Giocatori</span><select id="m-pl">${Object.entries(GAME_RULES).map(([n, [v, g]]) => `<option value="${n}">${n} giocatori · ${v} vita · ${g} gloria</option>`).join('')}</select></label><label class="fl"><span>Carte in mano all’inizio</span><input id="m-hand" type="number" inputmode="numeric" min="0" max="20" value="5"></label></div>
+        <div class="row2"><label class="fl"><span>Giocatori</span><select id="m-pl">${Object.entries(GAME_RULES).map(([n, [v, g]]) => `<option value="${n}">${n} giocatori · ${v} vita · ${g} gloria</option>`).join('')}</select></label><label class="fl"><span>Carte in mano all’inizio</span><input id="m-hand" type="number" inputmode="numeric" min="0" max="20" value="7"></label></div>
         <div class="btns">${btn('Inizia partita', 'mStart')}</div></div>` : `<div class="empty"><h2>Nessun mazzo pronto</h2><p>Crea un mazzo con delle carte per iniziare una partita.</p><div class="btns">${btn('Vai ai mazzi', 'nav', {v: 'mazzi'})}</div></div>`}
     </div>`;
   }
@@ -3323,6 +3362,7 @@ function vMatch() {
         ${S.mDD ? `<button class="mt-ddx" data-act="mDDClose" aria-label="Chiudi il menu" tabindex="-1"></button><div class="mt-dd" role="menu">
           ${fsOn ? `<button role="menuitem" data-act="mFull">${document.fullscreenElement ? 'Esci da schermo intero' : 'Schermo intero'}</button>` : ''}
           <button role="menuitem" data-act="netOpen">Partita condivisa${NET.role ? ' · ' + esc(NET.code) : ''}</button>
+          ${!M.began ? `<button role="menuitem" data-act="mMull">Mulligan: rimescola e ripesca ${M.hand || 7} carte</button>` : ''}
           <button role="menuitem" data-act="mReady">Riattiva tutte le carte</button>
           <button role="menuitem" data-act="mExit">Esci e salva la partita</button>
           ${S.confirm === 'mrestart' ? `<div class="mt-ddc"><span>Ricominciare da capo con lo stesso mazzo?</span><div>${btn('Sì, ricomincia', 'mRestart', {cls: 'danger sm'})}${btn('No', 'confirmNo', {cls: 'alt sm'})}</div></div>` : `<button role="menuitem" data-act="confirm" data-v="mrestart">Ricomincia partita</button>`}
@@ -3332,7 +3372,13 @@ function vMatch() {
     </div>
     ${(() => { const opps = netOpps(), sel = opps.find(([pid]) => pid === S.mOpp) || opps[0]; return sel ? mOppHalf(sel[0], sel[1]) : ''; })()}
     <section class="mx-campo${NET.role && netOpps().length ? ' split' : ''}" aria-label="Carte in campo: ${z.campo.length}${z.evocate.length ? ', appena evocate: ' + z.evocate.length : ''}">
-      ${M.vita <= 0 ? '<p class="mt-alert">Hai finito i punti vita: hai perso.</p>' : M.gloria >= M.target ? '<p class="mt-alert win">Hai raggiunto i punti gloria: hai vinto!</p>' : !z.mazzo.length ? '<p class="mt-alert">Il mazzo è vuoto: se devi pescare, hai perso.</p>' : ''}
+      ${(() => { const op = netLive() ? netOpps().map(x => x[1].s || {}).filter(x => x.inGame) : [];
+        if (M.vita <= 0) return '<p class="mt-alert">Hai finito i punti vita: hai perso.</p>';
+        if (M.lost === 'mazzo') return '<p class="mt-alert">Non puoi più pescare dal tuo mazzo: hai perso.</p>';
+        if (M.gloria >= M.target) return '<p class="mt-alert win">Hai raggiunto i punti gloria: hai vinto!</p>';
+        if (op.length && op.every(x => x.lost)) return '<p class="mt-alert win">Sei l’unico ancora in gioco: hai vinto!</p>';
+        if (op.length && op.every(x => x.out || x.lost)) return '<p class="mt-alert win">Gli altri giocatori hanno finito il mazzo: hai vinto!</p>';
+        return !z.mazzo.length ? '<p class="mt-alert">Il mazzo è vuoto: al prossimo turno non potrai pescare e perderai.</p>' : ''; })()}
       ${z.campo.length || z.evocate.length ? `<div class="mx-row">${(() => { const all = [...z.campo, ...z.evocate], inF = new Set(all), one = i => z.evocate.includes(i) ? `<div class="mx-ev">${mFieldCard(i, true)}<span>Evocata</span></div>` : mFieldCard(i); return all.filter(i => !M.inst[i].at || !inF.has(M.inst[i].at)).map(h => { const att = all.filter(i => M.inst[i].at === h); return att.length ? `<div class="mx-grp${mTipo(h) === 'Luogo' ? ' luogo' : ''}" style="--n:${att.length}">${one(h)}<div class="mx-att">${att.map((i, k) => `<div class="mx-ai" style="--k:${k}">${one(i)}</div>`).join('')}</div></div>` : one(h); }).join(''); })()}</div>` : '<p class="mz-empty mx-empty">Nessuna carta in campo: tocca una carta della mano per giocarla.</p>'}
     </section>
     <div class="mx-bot">
@@ -3706,7 +3752,7 @@ const ACT = {
     putDeck(d, true); S.mDeck = id; S.mMode = 'deck'; renderAll(); toast('Mazzo creato: ' + d.nome);
   },
   drLeave() { drUnsub(); DR.code = ''; DR.session = null; DR.players = []; DR.packs = []; DR.picks = []; DR.sel = ''; drSave(); S.mMode = ''; renderAll(); },
-  mStart() { const n = Number($('#m-hand').value); mStart($('#m-deck').value, Number.isFinite(n) ? Math.max(0, Math.min(20, n)) : 5, Number($('#m-pl').value) || 2); renderAll(); window.scrollTo(0, 0); },
+  mStart() { const n = Number($('#m-hand').value); mStart($('#m-deck').value, Number.isFinite(n) ? Math.max(0, Math.min(20, n)) : 7, Number($('#m-pl').value) || 2); renderAll(); window.scrollTo(0, 0); },
   mRestart() { S.mDD = false;
     if (!M) return; S.confirm = '';
     const [vita, target] = GAME_RULES[M.players] || [M.vita, M.target], hand = M.hand != null ? M.hand : 5, all = Object.keys(M.inst);
@@ -3722,9 +3768,9 @@ const ACT = {
   mQuit() { S.mDD = false; M = null; MH = []; S.confirm = ''; S.mMode = ''; mSave(); renderAll(); toast('Partita terminata'); },
   mDraw() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } mDo(() => { M.zones.mano.push(M.zones.mazzo.shift()); }, 'Pescata 1 carta'); },
   mShuffle() { mDo(() => { mShuffle(M.zones.mazzo); }, 'Mazzo mescolato'); toast('Mazzo mescolato'); },
-  mPowerTop() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } const twice = M.powerTurn === M.turn; mDo(() => { const iid = M.zones.mazzo.shift(); M.zones.potere.push(iid); M.powerTurn = M.turn; }, 'Estratto potere dal mazzo'); if (twice) toast('Attenzione: hai già estratto potere in questo turno'); },
+  mPowerTop() { if (!M || !M.zones.mazzo.length) { toast('Il mazzo è vuoto'); return; } if (M.powerTurn === M.turn) { toast('Puoi estrarre potere una sola volta per turno'); return; } S.mPop = null; mDo(() => { const iid = M.zones.mazzo.shift(); M.zones.potere.push(iid); M.powerTurn = M.turn; }, 'Estratto potere dal mazzo'); },
   mAdj(t) { const k = t.dataset.k === 'gloria' ? 'gloria' : 'vita'; mDo(() => { M[k] = Math.max(0, M[k] + Number(t.dataset.d)); }); },
-  mStartTurn() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); M.phase = 'play'; }, 'Inizio turno ' + M.turn + ': carte riattivate'); toast('Turno ' + M.turn + ': carte riattivate'); },
+  mStartTurn() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } mBeginTurn(); },
   netOpen() { S.mDD = false; mPopOpen({type: 'net'}); },
   netOpp(t, v) { mPopOpen({type: 'opp', pid: v}); },
   oppCard(t, v) { mPopOpen({type: 'ocard', pid: t.dataset.p, k: v}); },
@@ -3781,6 +3827,7 @@ const ACT = {
   mSetSeg(t, v) { const st = M.inst[v], n = Math.max(0, mNum('mp-seg', 0)); mDo(() => { if (n) st.seg = n; else delete st.seg; }, 'Segnalini su ' + mName(v) + ': ' + n); toast('Segnalini salvati'); },
   mPlayPay(t, v, host) {
     if (mZoneOf(v) !== 'mano') return;
+    if (M.phase !== 'play' && !netLocked()) { toast('Prima inizia il turno'); return; }
     const cost = mCost(v), act = M.zones.potere.filter(i => !M.inst[i].ex), name = mName(v);
     if (cost > act.length) { toast('Potere insufficiente: servono ' + cost + ', ne hai ' + act.length + ' attive'); return; }
     S.mPop = null; S.mSel = null;
@@ -3794,6 +3841,7 @@ const ACT = {
       return;
     }
     const ev = mEvoca(v), h = host && mCanAttach(v, host) ? host : null;
+    if (mTipo(v) === 'Oggetto' && !h) { toast('Gli oggetti vanno assegnati a un personaggio in gioco: trascinalo su un tuo personaggio'); return; }
     mDo(() => { act.slice(0, cost).forEach(i => { M.inst[i].ex = true; }); mMove(v, ev ? 'evocate' : 'campo'); if (h) M.inst[v].at = h; }, (ev ? 'Evocata: ' : 'Giocata: ') + name + (h ? ' su ' + mName(h) : '') + pay);
     toast((ev ? 'Evocata: ' : 'Giocata: ') + name + (h ? ' → ' + mName(h) : '') + (cost ? ' · −' + cost + ' potere' : ''));
   },
@@ -3802,8 +3850,17 @@ const ACT = {
     mDo(() => { M.inst[iid].at = host; }, mName(iid) + ' assegnata a ' + mName(host)); toast(mName(iid) + ' → ' + mName(host));
   },
   mDetach(iid) { if (!M.inst[iid].at) return; mDo(() => { delete M.inst[iid].at; }, mName(iid) + ' staccata'); },
+  mMull() {
+    if (M.began) { toast('Il mulligan si fa solo prima di iniziare'); return; }
+    const n = M.hand || 7; S.mDD = false;
+    mDo(() => { M.zones.mazzo.push(...M.zones.mano); M.zones.mano = []; mShuffle(M.zones.mazzo); for (let k = 0; k < n && M.zones.mazzo.length; k++) M.zones.mano.push(M.zones.mazzo.shift()); M.mulls = (M.mulls || 0) + 1; }, 'Mulligan: nuove ' + n + ' carte');
+    if (netLive()) netOpps().forEach(([pid]) => netSend({t: 'mull', to: pid}));
+    toast('Mulligan fatto' + (netLive() ? ': gli avversari pescano 1 carta' : ': gli avversari pescano 1 carta aggiuntiva'));
+  },
   mHide() { S.mHide = !S.mHide; lsSet('bw:mhide', S.mHide); renderAll(); },
-  mEndTurn() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } const nev = M ? M.zones.evocate.length : 0; mDo(() => { M.phase = 'start'; M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.zones.campo.push(...M.zones.evocate); M.zones.evocate = []; M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno' + (nev ? '; ' + nev + (nev === 1 ? ' carta evocata entra' : ' carte evocate entrano') + ' in campo' : '')); if (netLive()) { netSend({t: 'endturn', pid: NET.pid}); if (NET.role === 'host') netNextTurn(NET.pid); toast('Turno passato a ' + netCurName()); } else toast('Turno ' + M.turn); },
+  mEndTurn() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } const tem = M.zones.campo.filter(i => !M.inst[i].ex && !M.inst[i].lock && hasAb(mCard(i), 'Temerario'));
+    if (tem.length && S.temWarn !== M.turn) { S.temWarn = M.turn; toast(mName(tem[0]) + ' è Temerario: deve attaccare ogni turno. Premi di nuovo Fine turno per chiudere comunque'); return; }
+    mDo(() => { M.phase = 'start'; M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno'); if (netLive()) { netSend({t: 'endturn', pid: NET.pid}); if (NET.role === 'host') netNextTurn(NET.pid); toast('Turno passato a ' + netCurName()); } else toast('Turno ' + M.turn); },
   mReady() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); }, 'Riattivate tutte le carte'); },
   mUndo() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
   mcOpen(t, v) { MSEL = v; MLIST = ''; mcRender(); $('#mc').hidden = false; },
@@ -3814,7 +3871,14 @@ const ACT = {
   mcInfo(t, v) { ACT.mcClose(); S.mPop = null; renderAll(); openDetail(M && M.inst[v] ? M.inst[v].id : v); },
   mToCampo(t, v) { const pw = mZoneOf(v) === 'mano', ev = pw && mEvoca(v); mDo(() => mMove(v, ev ? 'evocate' : 'campo'), ev ? 'Evocata: ' + mName(v) + ' (in campo dal prossimo turno)' : (pw ? 'Giocata in campo: ' : 'Messa in campo: ') + mName(v)); ACT.mcClose(); },
   mToField(t, v) { S.mPop = null; mDo(() => mMove(v, 'campo'), 'Messa in campo: ' + mName(v)); ACT.mcClose(); },
-  mToPotere(t, v) { S.mPop = null; S.mSel = null; const twice = M.powerTurn === M.turn; mDo(() => { mMove(v, 'potere'); M.powerTurn = M.turn; }, 'Messa nel potere: ' + mName(v)); ACT.mcClose(); if (twice) toast('Attenzione: hai già estratto potere in questo turno'); },
+  mToPotere(t, v) {
+    const fromHand = mZoneOf(v) === 'mano', c = mCard(v);
+    if (fromHand) {
+      if (M.powerTurn === M.turn) { toast('Puoi estrarre potere una sola volta per turno'); return; }
+      if (c.estrazione === false || ['Alleanza', 'Fumetto'].includes(c.tipo)) { toast(mName(v) + ' ha il costo rosso: non può andare nel potere'); return; }
+    }
+    S.mPop = null; S.mSel = null; mDo(() => { mMove(v, 'potere'); if (fromHand) M.powerTurn = M.turn; }, (fromHand ? 'Estratto potere: ' : 'Messa nel potere: ') + mName(v)); ACT.mcClose();
+  },
   mToScarti(t, v) { S.mPop = null; mDo(() => mMove(v, 'scarti'), 'Scartata: ' + mName(v)); ACT.mcClose(); },
   mToMano(t, v) { S.mPop = null; mDo(() => mMove(v, 'mano'), 'Tornata in mano: ' + mName(v)); ACT.mcClose(); },
   mToTop(t, v) { S.mPop = null; mDo(() => mMove(v, 'mazzo'), 'Messa in cima al mazzo: ' + mName(v)); ACT.mcClose(); },
