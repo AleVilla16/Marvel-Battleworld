@@ -1200,19 +1200,19 @@ body.mt-land.mt-rot #zoom.open{display:flex}
 /* badge forza / resistenza */
 .fr-b{position:absolute;right:3px;bottom:3px;display:flex;flex-direction:column;gap:2px;z-index:3;pointer-events:none}
 .fr-b i{display:flex;align-items:center;gap:2px;font-style:normal;background:rgba(10,10,20,.88);border-radius:10px;padding:1px 6px 1px 3px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
-.fr-b svg{width:13px;height:13px}
+.fr-b svg,.fr-b img{width:14px;height:14px;object-fit:contain;display:block}
 .fr-b b{font:800 13px/1 var(--font-display);color:#fff;min-width:9px;text-align:center}
 .fr-f svg{color:#ff6b4a}.fr-r svg{color:#5aa6ff}
 .fr-b i.up b{color:#4ee08a}.fr-b i.dn b{color:#ff8a80}
 .mx .mxf.ex .fr-b{right:auto;left:3px;bottom:3px;transform:rotate(90deg)}
 .mxp-ca{position:relative}
 .mxp-ca .fr-b{right:6px;bottom:6px}
-.mxp-ca .fr-b svg{width:16px;height:16px}
+.mxp-ca .fr-b svg,.mxp-ca .fr-b img{width:17px;height:17px}
 .mxp-ca .fr-b b{font-size:16px}
 .mx-tok{bottom:auto;top:22px}
 body.mt-land .fr-b{right:1px;bottom:1px;gap:1px}
 body.mt-land .fr-b i{padding:0 3px 0 1px;border-radius:6px}
-body.mt-land .fr-b svg{width:8px;height:8px}
+body.mt-land .fr-b svg,body.mt-land .fr-b img{width:9px;height:9px}
 body.mt-land .fr-b b{font-size:8px}
 /* finestre carta: carta a sinistra, dati a destra */
 .mxp-card,.mxp-cede{flex-direction:row!important;align-items:flex-start!important;text-align:left}
@@ -1221,6 +1221,12 @@ body.mt-land .fr-b b{font-size:8px}
 .mc-in .mc-art{flex:none;width:clamp(110px,32%,240px)}
 .mc-in .mc-side{flex:1;min-width:0}
 @media (max-width:560px){.mxp-card .mxp-ca,.mxp-cede .mxp-ca{width:34%}}
+
+/* carte in mano più grandi */
+.mx{--hw:calc(var(--cw) * 1.45)}
+.fan-c{width:var(--hw)!important;margin:0 calc(var(--hw) * -0.26)!important}
+.mx-hand{min-height:calc(var(--hw) * 1.12)}
+.fan-c.sel{transform:translateY(-38%) rotate(0deg) scale(1.15)!important}
 </style>
 
 <header class="top">
@@ -3246,7 +3252,9 @@ let TAP = {k: '', t: 0}, NOCLICK = 0;
 /* forza e resistenza effettive nell'angolo in basso a destra della carta */
 const IC_F = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 2.5l7 7-2 2-1.6-1.6-6.2 6.2 1.4 1.4-1.8 1.8-1.4-1.4-3.3 3.3a1.6 1.6 0 0 1-2.3 0l-.5-.5a1.6 1.6 0 0 1 0-2.3l3.3-3.3-1.4-1.4 1.8-1.8 1.4 1.4 6.2-6.2L12.5 4.5z" fill="currentColor"/></svg>';
 const IC_R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8l8.5 3.2v6.3c0 5.3-3.6 9.4-8.5 10.9-4.9-1.5-8.5-5.6-8.5-10.9V5z" fill="currentColor"/></svg>';
-const frBadge = (f, r, bf, br) => f == null && r == null ? '' : `<span class="fr-b" aria-label="Forza ${f}, resistenza ${r}"><i class="fr-f${bf != null && f !== bf ? (f > bf ? ' up' : ' dn') : ''}">${IC_F}<b>${f != null ? f : '–'}</b></i><i class="fr-r${br != null && r !== br ? (r > br ? ' up' : ' dn') : ''}">${IC_R}<b>${r != null ? r : '–'}</b></i></span>`;
+/* usa i simboli (F) e (R) caricati nell'app (Impostazioni → Icone → Simboli); se mancano, icone di riserva */
+const symIco = (k, fb) => { const o = icoGet('simbolo', k); return o && o.data ? `<img src="${esc(o.data)}" alt="">` : fb; };
+const frBadge = (f, r, bf, br) => f == null && r == null ? '' : `<span class="fr-b" aria-label="Forza ${f}, resistenza ${r}"><i class="fr-f${bf != null && f !== bf ? (f > bf ? ' up' : ' dn') : ''}">${symIco('F', IC_F)}<b>${f != null ? f : '–'}</b></i><i class="fr-r${br != null && r !== br ? (r > br ? ' up' : ' dn') : ''}">${symIco('R', IC_R)}<b>${r != null ? r : '–'}</b></i></span>`;
 const mFR = iid => { const c = mCard(iid); if (c.forza == null && c.resistenza == null && (c.tipo || 'Personaggio') !== 'Personaggio') return ''; return frBadge(mF(iid), mR(iid), c.forza || 0, c.resistenza || 0); };
 /* ---------- regolamento applicato alla partita ---------- */
 /* abilità speciale con valore (es. "Aggressivo 2", "Resistente +1"): se il numero non è scritto vale 1 */
