@@ -1176,6 +1176,15 @@ body.mt-land .oh-i small{display:none}
 body.mt-land .oh-row .op-c{width:40px}
 body.mt-land .oh-row{gap:5px}
 body.mt-land .mx-campo.split .mx-row .mxf{width:44px}
+
+/* turni e duelli */
+.mx-turnb.wait{background:#3a3f55;color:#cfd3e6;cursor:default;box-shadow:none}
+.op-c{cursor:pointer}
+.op-c.drop-on,[data-hitp].drop-on{outline:4px solid #ff4a3a;outline-offset:3px;border-radius:6px}
+.op-c.ex{cursor:crosshair}
+.oh-turn{font-style:normal;font-size:10px;letter-spacing:.08em;background:#f5b301;color:#111;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.mx-opp.turn{box-shadow:0 0 0 2px #f5b301}
+.oh-n{padding:2px 4px}
 </style>
 
 <header class="top">
@@ -3001,7 +3010,7 @@ const mThumb = (iid, zone) => { const c = mCard(iid), st = M.inst[iid]; return `
    chi crea la partita fa da "tavolo": riceve lo stato pubblico di ognuno e lo rimanda a tutti. */
 const NET_LIB = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js', QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
 const NETP = 'bwld-';
-let NET = Object.assign({role: '', code: '', name: '', pid: ''}, lsGet('bw:net', {}), {peer: null, conns: {}, host: null, players: {}, status: '', err: '', retry: 0, t: 0});
+let NET = Object.assign({role: '', code: '', name: '', pid: ''}, lsGet('bw:net', {}), {peer: null, conns: {}, host: null, players: {}, order: [], cur: '', status: '', err: '', retry: 0, t: 0});
 if (!NET.pid) NET.pid = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const netSave = () => lsSet('bw:net', {role: NET.role, code: NET.code, name: NET.name, pid: NET.pid});
 const LIBS = {};
@@ -3011,12 +3020,12 @@ function netSummary() {
   const z = M.zones, f = [...z.campo, ...z.evocate];
   return {inGame: true, deck: M.deckName, vita: M.vita, gloria: M.gloria, target: M.target, turn: M.turn, mano: z.mano.length, mazzo: z.mazzo.length, scarti: z.scarti.length,
     scTop: z.scarti.length ? M.inst[z.scarti[z.scarti.length - 1]].id : '', pwA: z.potere.filter(i => !M.inst[i].ex).length, pwT: z.potere.length,
-    campo: f.map(i => { const st = M.inst[i]; return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', evo: z.evocate.includes(i)}; })};
+    campo: f.map(i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', evo: z.evocate.includes(i), f: mF(i), r: mR(i), g: c.gloria || 0, cst: mCost(i), tipo: c.tipo || ''}; })};
 }
 const netName = () => NET.name || 'Giocatore';
 function netRender() { if (S.view === 'partita') { const el = $('.xd,.mxp') ? null : null; renderAll(); } }
 function netBroadcast() {
-  const msg = {t: 'all', players: NET.players};
+  const msg = {t: 'all', players: NET.players, order: NET.order, cur: NET.cur};
   Object.values(NET.conns).forEach(c => { try { if (c.open) c.send(msg); } catch (e) {} });
 }
 function netPush() {
@@ -3032,20 +3041,22 @@ function netStatus(st, err) { NET.status = st; NET.err = err || ''; if (S.view =
 async function netStart(role, code) {
   try { await loadLib(NET_LIB); } catch (e) { netStatus('', 'Non riesco a caricare il collegamento: serve internet.'); return; }
   netClose(true);
-  NET.role = role; NET.code = code; NET.players = {}; netSave(); netStatus('connecting');
+  NET.role = role; NET.code = code; NET.players = {}; NET.order = []; NET.cur = ''; netSave(); netStatus('connecting');
   const peer = role === 'host' ? new Peer(NETP + code) : new Peer(); NET.peer = peer;
   peer.on('open', () => {
-    if (role === 'host') { NET.retry = 0; netStatus('online'); netPush(); }
+    if (role === 'host') { NET.retry = 0; if (!NET.order.includes(NET.pid)) NET.order.unshift(NET.pid); if (!NET.cur) NET.cur = NET.pid; netStatus('online'); netPush(); }
     else netConnect();
   });
   peer.on('connection', conn => {
     if (NET.role !== 'host') { conn.close(); return; }
-    conn.on('open', () => { NET.conns[conn.peer] = conn; conn.send({t: 'all', players: NET.players}); });
+    conn.on('open', () => { NET.conns[conn.peer] = conn; conn.send({t: 'all', players: NET.players, order: NET.order, cur: NET.cur}); });
     conn.on('data', d => {
       if (!d || typeof d !== 'object') return;
-      if (d.t === 'state' && d.pid) { conn.pid = d.pid; NET.players[d.pid] = {name: String(d.name || 'Giocatore').slice(0, 24), s: d.s || {}, at: Date.now()}; netBroadcast(); if (S.view === 'partita') renderAll(); }
+      if (d.t === 'state' && d.pid) { conn.pid = d.pid; NET.players[d.pid] = {name: String(d.name || 'Giocatore').slice(0, 24), s: d.s || {}, at: Date.now()}; if (!NET.order.includes(d.pid)) NET.order.push(d.pid); netFixTurn(); netBroadcast(); if (S.view === 'partita') renderAll(); }
+      else if (d.t === 'endturn' && d.pid) netNextTurn(d.pid);
+      else if (d.to) netRoute(d);
     });
-    conn.on('close', () => { delete NET.conns[conn.peer]; if (conn.pid) delete NET.players[conn.pid]; netBroadcast(); if (S.view === 'partita') renderAll(); });
+    conn.on('close', () => { delete NET.conns[conn.peer]; if (conn.pid) { delete NET.players[conn.pid]; NET.order = NET.order.filter(x => x !== conn.pid); } netFixTurn(); netBroadcast(); if (S.view === 'partita') renderAll(); });
   });
   peer.on('disconnected', () => { if (NET.peer === peer) { try { peer.reconnect(); } catch (e) {} } });
   peer.on('error', e => {
@@ -3059,15 +3070,82 @@ async function netStart(role, code) {
 function netConnect() {
   const conn = NET.peer.connect(NETP + NET.code, {reliable: true}); NET.host = conn;
   conn.on('open', () => { netStatus('online'); netPush(); });
-  conn.on('data', d => { if (d && d.t === 'all' && d.players && typeof d.players === 'object') { NET.players = d.players; if (S.view === 'partita') renderAll(); } });
+  conn.on('data', d => {
+    if (!d || typeof d !== 'object') return;
+    if (d.t === 'all' && d.players && typeof d.players === 'object') { const prev = NET.cur; NET.players = d.players; NET.order = Array.isArray(d.order) ? d.order : []; NET.cur = d.cur || ''; if (NET.cur === NET.pid && prev !== NET.pid) netMyTurn(); if (S.view === 'partita') renderAll(); }
+    else if (d.to === NET.pid) netHandle(d);
+  });
   conn.on('close', () => { if (NET.host !== conn) return; NET.host = null; NET.players = {}; netStatus('', 'Il telefono che ha creato la partita si è scollegato. Riprovo…'); setTimeout(() => { if (NET.role === 'guest' && NET.peer && !NET.host) netConnect(); }, 4000); });
+}
+/* ---------- turni e duelli nella partita condivisa ---------- */
+const netLive = () => !!(NET.role && NET.status === 'online' && netOpps().length);
+const netLocked = () => netLive() && NET.cur && NET.cur !== NET.pid;
+const netCurName = () => { const p = NET.players[NET.cur]; return p ? p.name : 'un altro giocatore'; };
+function netSend(msg) { msg.from = NET.pid; msg.fromName = netName(); if (NET.role === 'host') { if (msg.to) netRoute(msg); } else if (NET.host && NET.host.open) { try { NET.host.send(msg); } catch (e) {} } }
+function netRoute(msg) {
+  if (msg.to === NET.pid) { netHandle(msg); return; }
+  const c = Object.values(NET.conns).find(x => x.pid === msg.to); if (c && c.open) { try { c.send(msg); } catch (e) {} }
+}
+function netFixTurn() {
+  if (NET.role !== 'host') return;
+  NET.order = NET.order.filter(x => x === NET.pid || NET.players[x]);
+  if (!NET.order.includes(NET.cur)) { const prev = NET.cur; NET.cur = NET.order[0] || NET.pid; if (NET.cur === NET.pid && prev !== NET.pid) netMyTurn(); }
+}
+function netNextTurn(pid) {
+  if (NET.role !== 'host' || pid !== NET.cur) return;
+  const ord = NET.order.filter(x => x === NET.pid || NET.players[x]); if (!ord.length) return;
+  const k = ord.indexOf(NET.cur); NET.cur = ord[(k + 1) % ord.length];
+  netBroadcast(); if (NET.cur === NET.pid) netMyTurn(); if (S.view === 'partita') renderAll();
+}
+let MFORCE = false;
+const mForce = (fn, text) => { MFORCE = true; try { mDo(fn, text); } finally { MFORCE = false; } };
+function netMyTurn() {
+  if (!M) { toast('È il tuo turno'); return; }
+  if (M.phase !== 'play') mForce(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); M.phase = 'play'; }, 'Inizio turno ' + M.turn + ': carte riattivate');
+  toast('È il tuo turno: carte riattivate');
+}
+function netHandle(d) {
+  const who = String(d.fromName || 'Un avversario');
+  if (d.t === 'hit' && M) { const n = Math.max(0, Number(d.n) || 0); mForce(() => { M.vita = Math.max(0, M.vita - n); }, who + ' ti infligge ' + n + ' danni con ' + (d.card || 'una carta')); toast(who + ': −' + n + ' vita'); return; }
+  if (d.t === 'gloria' && M) { const n = Math.max(0, Number(d.n) || 0); mForce(() => { M.gloria += n; }, 'Hai sconfitto ' + (d.card || 'una carta') + ' di ' + who + ': +' + n + ' gloria'); toast('Carta sconfitta: +' + n + ' gloria'); return; }
+  if (d.t === 'duel' && M) {
+    const k = d.k; if (!M.inst[k] || ![...M.zones.campo, ...M.zones.evocate].includes(k)) return;
+    const n = Math.max(0, Number(d.n) || 0), st = M.inst[k], tot = (st.dmg || 0) + n, r = mR(k), name = mName(k), g = mCard(k).gloria || 0;
+    if (tot >= r) {
+      mForce(() => { mMove(k, 'scarti', 'sconfitta'); }, who + ' attacca ' + name + ' con ' + (d.card || 'una carta') + ': ' + tot + ' danni, sconfitta');
+      netSend({t: 'gloria', to: d.from, n: g, card: name});
+      toast(name + ' è stata sconfitta da ' + who);
+    } else { mForce(() => { st.dmg = tot; }, who + ' attacca ' + name + ' con ' + (d.card || 'una carta') + ': ' + n + ' danni'); toast(who + ' attacca ' + name + ': −' + n); }
+  }
+}
+function netDuel(atk, pid, k) {
+  if (netLocked()) { toast('È il turno di ' + netCurName()); return; }
+  const p = NET.players[pid], d = p && p.s && (p.s.campo || []).find(c => c.k === k); if (!d) return;
+  if (!M.zones.campo.includes(atk)) { toast(M.zones.evocate.includes(atk) ? 'Le carte appena evocate non possono duellare' : 'Solo le carte in campo possono duellare'); return; }
+  if (M.inst[atk].ex) { toast('Questa carta è esaurita: non può attaccare'); return; }
+  if (!d.ex) { toast('Puoi attaccare solo le carte esaurite'); return; }
+  const af = mF(atk), df = d.f || 0, name = mName(atk), st = M.inst[atk], tot = (st.dmg || 0) + df, ar = mR(atk);
+  netSend({t: 'duel', to: pid, k, n: af, card: name});
+  if (tot >= ar) mDo(() => { mMove(atk, 'scarti', 'distrutta'); }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + df + ') di ' + p.name + ': ' + name + ' distrutta');
+  else mDo(() => { st.dmg = tot; if (!st.lock) st.ex = true; }, 'Duello: ' + name + ' (F' + af + ') contro ' + d.nome + ' (F' + df + ') di ' + p.name);
+  toast('Duello: infliggi ' + af + ', subisci ' + df + (tot >= ar ? ' · ' + name + ' distrutta' : ''));
+}
+function netHit(atk, pid) {
+  if (netLocked()) { toast('È il turno di ' + netCurName()); return; }
+  const p = NET.players[pid]; if (!p) return;
+  if (!M.zones.campo.includes(atk)) { toast(M.zones.evocate.includes(atk) ? 'Le carte appena evocate non possono attaccare' : 'Solo le carte in campo possono attaccare'); return; }
+  if (M.inst[atk].ex) { toast('Questa carta è esaurita: non può attaccare'); return; }
+  const af = mF(atk), name = mName(atk), st = M.inst[atk];
+  netSend({t: 'hit', to: pid, n: af, card: name});
+  mDo(() => { if (!st.lock) st.ex = true; }, name + ' infligge ' + af + ' danni a ' + p.name);
+  toast(name + ' infligge ' + af + ' danni a ' + p.name);
 }
 function netClose(keep) {
   clearTimeout(NET.t);
   try { Object.values(NET.conns).forEach(c => c.close()); } catch (e) {}
   try { if (NET.host) NET.host.close(); } catch (e) {}
   try { if (NET.peer) NET.peer.destroy(); } catch (e) {}
-  NET.peer = null; NET.host = null; NET.conns = {}; NET.players = {};
+  NET.peer = null; NET.host = null; NET.conns = {}; NET.players = {}; NET.order = []; NET.cur = '';
   if (!keep) { NET.role = ''; NET.code = ''; NET.status = ''; NET.err = ''; netSave(); }
 }
 const netCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; const r = new Uint8Array(5); crypto.getRandomValues(r); r.forEach(x => { c += A[x % A.length]; }); return c; };
@@ -3094,10 +3172,10 @@ function netPopHtml() {
 }
 function mOppHalf(pid, p) {
   const s = p.s || {}, name = esc(p.name || 'Giocatore');
-  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}">${sc ? art(sc, true) : `<div class="op-ph">${esc(c.nome || c.id)}</div>`}${c.dmg ? `<span class="mt-dmg">${c.dmg}</span>` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}</div>`; };
+  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}" role="button" tabindex="0" data-act="oppCard" data-v="${esc(c.k)}" data-p="${esc(pid)}" aria-label="${esc(c.nome || '')}${c.ex ? ', esaurita: trascina qui una tua carta per duellare' : ''}">${sc ? art(sc, true) : `<div class="op-ph">${esc(c.nome || c.id)}</div>`}${c.dmg ? `<span class="mt-dmg">${c.dmg}</span>` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}</div>`; };
   const it = (ic, l, v) => `<span class="oh-i" title="${l}"><i>${ic}</i><b>${v}</b><small>${l}</small></span>`;
   return `<section class="mx-opf" aria-label="Campo di ${name}">
-    <div class="oh-bar"><b class="oh-n">${name}</b>${s.inGame ? `${it('♥', 'Vita', s.vita)}${it('★', 'Gloria', s.gloria + '/' + s.target)}${it('✋', 'In mano', s.mano)}${it('⚡', 'Potere', s.pwA + '/' + s.pwT)}${it('🂠', 'Pesca', s.mazzo)}${it('♻', 'Scarti', s.scarti)}` : '<span class="muted">non ha ancora iniziato la partita</span>'}</div>
+    <div class="oh-bar"><b class="oh-n" data-hitp="${esc(pid)}" title="Trascina qui una tua carta per colpire direttamente ${name}">${name}${NET.cur === pid ? ' <em class="oh-turn">di turno</em>' : ''}</b>${s.inGame ? `${it('♥', 'Vita', s.vita)}${it('★', 'Gloria', s.gloria + '/' + s.target)}${it('✋', 'In mano', s.mano)}${it('⚡', 'Potere', s.pwA + '/' + s.pwT)}${it('🂠', 'Pesca', s.mazzo)}${it('♻', 'Scarti', s.scarti)}` : '<span class="muted">non ha ancora iniziato la partita</span>'}</div>
     <div class="oh-row">${s.inGame ? (s.campo.map(card).join('') || '<p class="mz-empty mx-empty">Nessuna carta in campo</p>') : ''}</div>
   </section>`;
 }
@@ -3135,6 +3213,11 @@ function mPopHtml() {
   const row = (label, ctrl, b) => `<div class="mxp-r"><span>${label}</span>${ctrl || ''}${b}</div>`;
   const nd = z.mazzo.length, ns = z.scarti.length;
   if (P.type === 'net') { setTimeout(netQR, 0); return wrap('Partita condivisa', netPopHtml()); }
+  if (P.type === 'ocard') {
+    const pl = NET.players[P.pid], c = pl && pl.s && (pl.s.campo || []).find(x => x.k === P.k); if (!c) return wrap('Carta', '<p class="muted">Questa carta non è più in campo.</p>');
+    const sc = S.cards[c.id], stat = (l, v) => `<div class="mxp-st"><i>${l}</i><b>${v}</b></div>`;
+    return wrap(esc(c.nome || 'Carta'), `<div class="mxp-card"><div class="mxp-ca">${sc ? art(sc, true) : `<div class="op-ph">${esc(c.nome || c.id)}</div>`}</div><div class="mxp-cm"><div class="lbl">Campo di ${esc(pl.name)}${c.tipo ? ' · ' + esc(c.tipo) : ''}${c.ex ? ' · esaurita' : ''}${c.evo ? ' · appena evocata' : ''}${c.lock ? ' · bloccata' : ''}</div><div class="mxp-sts">${stat('Costo', c.cst != null ? c.cst : '—')}${stat('Forza', c.f != null ? c.f : '—')}${stat('Resistenza', c.r != null ? c.r : '—')}${c.dmg ? stat('Danni', c.dmg) : ''}${stat('Gloria', c.g || 0)}</div><p class="mxp-hint" style="margin-top:0">${c.ex ? 'È esaurita: trascina su di lei una tua carta in campo per sfidarla a duello.' : 'Si può attaccare solo quando è esaurita.'}</p><div class="mxp-acts">${sc ? btn('Scheda carta', 'oppInfo', {cls: 'alt sm', v: c.id}) : ''}</div></div></div>`, 'wide');
+  }
   if (P.type === 'opp') { const pl = NET.players[P.pid]; return wrap(esc(pl ? pl.name : 'Giocatore'), netOppHtml(P.pid), 'wide'); }
   if (P.type === 'deck') return wrap(`Mazzo di pesca · ${nd}`, nd ? `<div class="mxp-l">
     ${row('Mischia il mazzo', '', btn('Mischia', 'mShuffle', {cls: 'alt sm'}))}
@@ -3208,7 +3291,7 @@ function vMatch() {
   return `<div class="gut mt-wrap mx${NET.role && netOpps().length ? ' sp' : ''}">
     <div class="mx-top">
       <div class="mx-tl">${mOrb('vita', 'Punti vita', M.vita, HEART, MINUS, PLUS)}${mOrb('gloria', 'Punti gloria', M.gloria, GLORY, MINUS, PLUS, M.target)}</div>
-      ${NET.role && netOpps().length ? `<div class="mx-opps">${netOpps().map(([pid, p]) => { const s2 = p.s || {}; return `<button class="mx-opp${(S.mOpp || (netOpps()[0] || [])[0]) === pid ? ' on' : ''}" data-act="netSel" data-v="${esc(pid)}" aria-pressed="${(S.mOpp || (netOpps()[0] || [])[0]) === pid}" aria-label="${esc(p.name)}: mostra il suo campo"><b>${esc(p.name)}</b>${s2.inGame ? `<span><i class="ov">♥ ${s2.vita}</i><i class="og">★ ${s2.gloria}</i><i>✋ ${s2.mano}</i><i>⚔ ${s2.campo.length}</i></span>` : '<span><i>in attesa</i></span>'}</button>`; }).join('')}</div>` : '<div class="mx-peek" aria-hidden="true"></div>'}
+      ${NET.role && netOpps().length ? `<div class="mx-opps">${netOpps().map(([pid, p]) => { const s2 = p.s || {}; return `<button class="mx-opp${(S.mOpp || (netOpps()[0] || [])[0]) === pid ? ' on' : ''}${NET.cur === pid ? ' turn' : ''}" data-hitp="${esc(pid)}" data-act="netSel" data-v="${esc(pid)}" aria-pressed="${(S.mOpp || (netOpps()[0] || [])[0]) === pid}" aria-label="${esc(p.name)}: mostra il suo campo"><b>${esc(p.name)}</b>${s2.inGame ? `<span><i class="ov">♥ ${s2.vita}</i><i class="og">★ ${s2.gloria}</i><i>✋ ${s2.mano}</i><i>⚔ ${s2.campo.length}</i></span>` : '<span><i>in attesa</i></span>'}</button>`; }).join('')}</div>` : '<div class="mx-peek" aria-hidden="true"></div>'}
       <div class="mx-tr">
         <button class="ib mx-ib${hide ? ' on' : ''}" data-act="mHide" aria-pressed="${hide}" aria-label="${hide ? 'Mostra' : 'Nascondi'} la mano" title="${hide ? 'Mostra' : 'Nascondi'} la mano">${IC.hide}</button>
         <button class="ib mx-ib" data-act="mUndo" aria-label="Annulla l’ultima azione" title="Annulla l’ultima azione"${MH.length ? '' : ' disabled'}>${IC.back}</button>
@@ -3237,7 +3320,7 @@ function vMatch() {
       <div class="mx-hand" aria-label="Carte in mano: ${n}">${n ? `<div class="fan">${fan}</div>` : '<span class="mx-nohand">Nessuna carta in mano</span>'}</div>
       <div class="mx-right">
         <button class="mx-dmgb${S.mDmgMode ? ' on' : ''}" data-act="mDmgMode" aria-pressed="${!!S.mDmgMode}" aria-label="Assegna danni: poi tocca una carta in campo" title="Assegna danni"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5l2.2 6.3 6.3-2.4-3.6 5.6 5.6 3.4-6.6.6.9 6.6L12 16.8l-4.8 4.8.9-6.6-6.6-.6 5.6-3.4-3.6-5.6 6.3 2.4z" fill="currentColor"/></svg><span>${S.mDmgMode ? 'Tocca una carta' : 'Danni'}</span></button>
-        <button class="mx-turnb ${phase === 'start' ? 'st' : 'en'}" data-act="${phase === 'start' ? 'mStartTurn' : 'mEndTurn'}">${phase === 'start' ? `Inizia turno ${M.turn}` : 'Fine turno'}</button>
+        ${netLocked() ? `<button class="mx-turnb wait" disabled>Turno di ${esc(netCurName())}</button>` : `<button class="mx-turnb ${phase === 'start' ? 'st' : 'en'}" data-act="${phase === 'start' ? 'mStartTurn' : 'mEndTurn'}">${phase === 'start' ? `Inizia turno ${M.turn}` : 'Fine turno'}</button>`}
         <div class="mx-pw" aria-label="Serbatoio del potere: ${act.length} attive, ${exh.length} esaurite">
           <div class="pw-stack" style="--k:${Math.max(0, z.potere.length - 1)}">${[...exh, ...act].map((i, k) => `<button class="pw3${M.inst[i].ex ? ' ex' : ''}" style="--i:${k}" data-act="mPopCard" data-v="${i}" aria-label="Carta potere ${M.inst[i].ex ? 'esaurita' : 'attiva'}"></button>`).join('') || '<span class="pw-empty">Vuoto</span>'}</div>
           <div class="pw-dots"><span class="pw-dot on" title="Attive">${act.length}</span><span class="pw-dot" title="Esaurite">${exh.length}</span></div>
@@ -3272,7 +3355,7 @@ function mcRender() {
   }[zn] || [];
   $('#mc-body').innerHTML = `<div class="mc-in"><div class="mc-art${st.ex ? ' ex' : ''}">${art(c)}</div><div class="mc-side"><div class="lbl">${esc(MZ[zn] || '')}</div><h3>${esc(c.nome || c.code)}</h3>${c.sottonome ? `<p class="muted">${esc(c.sottonome)}</p>` : ''}${st.dmg ? `<p class="mc-dmg">Danni: <b>${st.dmg}</b></p>` : ''}${st.ex ? '<p class="mc-dmg">Esaurita</p>' : ''}<div class="mc-acts">${acts.join('')}</div><button class="btn alt sm" data-act="mcInfo" data-v="${esc(c.id)}"><span>Scheda della carta</span></button></div></div>`;
 }
-function mDo(fn, text) { if (!M) return; mPush(); fn(); if (text) mLog(text); mSave(); renderAll(); if ($('#mc').hidden) return; if (MSEL) mcRender(); else if (MLIST === 'mazzo') mcDeck(); else if (MLIST === 'mano') mcHand(); else if (MLIST === 'scarti') mcDiscards(); }
+function mDo(fn, text) { if (!M) return; if (!MFORCE && typeof netLocked === 'function' && netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } mPush(); fn(); if (text) mLog(text); mSave(); renderAll(); if ($('#mc').hidden) return; if (MSEL) mcRender(); else if (MLIST === 'mazzo') mcDeck(); else if (MLIST === 'mano') mcHand(); else if (MLIST === 'scarti') mcDiscards(); }
 const mName = iid => { const c = mCard(iid); return c.nome || c.code; };
 
 /* ---------- draft tra giocatori: 2 buste da 10 carte per ogni classe, ci si passano le buste ---------- */
@@ -3621,6 +3704,8 @@ const ACT = {
   mStartTurn() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); M.phase = 'play'; }, 'Inizio turno ' + M.turn + ': carte riattivate'); toast('Turno ' + M.turn + ': carte riattivate'); },
   netOpen() { S.mDD = false; mPopOpen({type: 'net'}); },
   netOpp(t, v) { mPopOpen({type: 'opp', pid: v}); },
+  oppCard(t, v) { mPopOpen({type: 'ocard', pid: t.dataset.p, k: v}); },
+  oppInfo(t, v) { S.mPop = null; renderAll(); openDetail(v); },
   netSel(t, v) { if ((S.mOpp || (netOpps()[0] || [])[0]) === v) { mPopOpen({type: 'opp', pid: v}); return; } S.mOpp = v; renderAll(); },
   netHost() { const n = ($('#net-name') || {}).value; NET.name = (n || '').trim().slice(0, 24); netStart('host', netCode()); },
   netJoin() { const n = ($('#net-name') || {}).value, c = (($('#net-code') || {}).value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); NET.name = (n || '').trim().slice(0, 24); if (c.length < 4) { toast('Scrivi il codice della partita'); return; } netStart('guest', c); },
@@ -3695,9 +3780,9 @@ const ACT = {
   },
   mDetach(iid) { if (!M.inst[iid].at) return; mDo(() => { delete M.inst[iid].at; }, mName(iid) + ' staccata'); },
   mHide() { S.mHide = !S.mHide; lsSet('bw:mhide', S.mHide); renderAll(); },
-  mEndTurn() { const nev = M ? M.zones.evocate.length : 0; mDo(() => { M.phase = 'start'; M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.zones.campo.push(...M.zones.evocate); M.zones.evocate = []; M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno' + (nev ? '; ' + nev + (nev === 1 ? ' carta evocata entra' : ' carte evocate entrano') + ' in campo' : '')); toast('Turno ' + M.turn); },
+  mEndTurn() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } const nev = M ? M.zones.evocate.length : 0; mDo(() => { M.phase = 'start'; M.zones.campo.forEach(i => { const s = M.inst[i]; if (!s.ex && s.dmg > 0) s.dmg--; }); M.zones.campo.push(...M.zones.evocate); M.zones.evocate = []; M.turn++; }, 'Fine turno: i personaggi attivi rimuovono 1 danno' + (nev ? '; ' + nev + (nev === 1 ? ' carta evocata entra' : ' carte evocate entrano') + ' in campo' : '')); if (netLive()) { netSend({t: 'endturn', pid: NET.pid}); if (NET.role === 'host') netNextTurn(NET.pid); toast('Turno passato a ' + netCurName()); } else toast('Turno ' + M.turn); },
   mReady() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); }, 'Riattivate tutte le carte'); },
-  mUndo() { if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
+  mUndo() { if (netLocked()) { toast('Aspetta: è il turno di ' + netCurName()); return; } if (!MH.length) { toast('Niente da annullare'); return; } M = JSON.parse(MH.pop()); mSave(); renderAll(); if (MSEL && !$('#mc').hidden) { if (M.inst[MSEL]) mcRender(); else ACT.mcClose(); } toast('Azione annullata'); },
   mcOpen(t, v) { MSEL = v; MLIST = ''; mcRender(); $('#mc').hidden = false; },
   mDiscards() { MSEL = null; MLIST = 'scarti'; mcDiscards(); $('#mc').hidden = false; },
   mHand() { MSEL = null; MLIST = 'mano'; mcHand(); $('#mc').hidden = false; },
@@ -3956,7 +4041,8 @@ document.addEventListener('pointermove', e => {
     HD.ghost.style.transform = `translate(${e.clientX - HD.ghost.offsetWidth / 2}px,${e.clientY - HD.ghost.offsetHeight * .6}px) rotate(-4deg)`;
     const over = document.elementFromPoint(e.clientX, e.clientY);
     const tc = over && over.closest && over.closest('.mxf'), tv = tc && tc.dataset.v;
-    $$('.mxf.drop-on').forEach(x => x.classList.remove('drop-on'));
+    $$('.mxf.drop-on,.op-c.drop-on,[data-hitp].drop-on').forEach(x => x.classList.remove('drop-on'));
+    if (HD.fromField && over && over.closest) { const oc = over.closest('.op-c.ex,[data-hitp]'); if (oc) oc.classList.add('drop-on'); }
     const okHost = tv && tv !== HD.iid && mCanAttach(HD.iid, tv);
     if (okHost) tc.classList.add('drop-on');
     $$('.mx-campo,.mx-pw').forEach(z => z.classList.toggle('drop', !!(over && z.contains(over)) && !okHost));
@@ -3967,11 +4053,14 @@ function hdEnd(e, cancel) {
   if (h.drag) {
     const over = !cancel && document.elementFromPoint(e.clientX, e.clientY);
     if (h.ghost) h.ghost.remove(); h.el.classList.remove('dragging'); document.body.classList.remove('mx-dragging');
-    $$('.mx-campo,.mx-pw').forEach(z => z.classList.remove('drop')); $$('.mxf.drop-on').forEach(x => x.classList.remove('drop-on'));
+    $$('.mx-campo,.mx-pw').forEach(z => z.classList.remove('drop')); $$('.mxf.drop-on,.op-c.drop-on,[data-hitp].drop-on').forEach(x => x.classList.remove('drop-on'));
     NOCLICK = Date.now();
     const camp = $('.mx-campo'), pw = $('.mx-pw'), tc = over && over.closest && over.closest('.mxf'), tv = tc && tc.dataset.v !== h.iid ? tc.dataset.v : null;
     if (over && pw && pw.contains(over)) { ACT.mToPotere(null, h.iid); return; }
     if (h.fromField) {
+      const oc = over && over.closest && over.closest('.op-c[data-k],.op-c[data-v][data-p]'), hp = over && over.closest && over.closest('[data-hitp]');
+      if (oc) { netDuel(h.iid, oc.dataset.p, oc.dataset.v); return; }
+      if (hp) { netHit(h.iid, hp.dataset.hitp); return; }
       if (tv) ACT.mAttach(h.iid, tv);
       else if (over && camp && camp.contains(over)) ACT.mDetach(h.iid);
       return;
