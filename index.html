@@ -1185,6 +1185,17 @@ body.mt-land .mx-campo.split .mx-row .mxf{width:44px}
 .oh-turn{font-style:normal;font-size:10px;letter-spacing:.08em;background:#f5b301;color:#111;padding:2px 6px;margin-left:6px;vertical-align:middle}
 .mx-opp.turn{box-shadow:0 0 0 2px #f5b301}
 .oh-n{padding:2px 4px}
+
+/* telefono in verticale con la partita girata: anche avvisi, schede e immagini a tutto schermo vanno in orizzontale */
+body.mt-land.mt-rot #toast,body.mt-land.mt-rot #zoom,body.mt-land.mt-rot .sheet{inset:auto;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+body.mt-land.mt-rot #toast{bottom:auto;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px}
+body.mt-land.mt-rot #zoom.open{display:flex}
+
+.oc-l{margin:8px 0}
+.oc-l .lbl{margin-bottom:4px}
+.oc-l .chips{gap:4px}
+.oc-mv .move{margin:8px 0}
+.ocm{font-size:12px;color:var(--muted);font-weight:600}
 </style>
 
 <header class="top">
@@ -3020,7 +3031,7 @@ function netSummary() {
   const z = M.zones, f = [...z.campo, ...z.evocate];
   return {inGame: true, deck: M.deckName, vita: M.vita, gloria: M.gloria, target: M.target, turn: M.turn, mano: z.mano.length, mazzo: z.mazzo.length, scarti: z.scarti.length,
     scTop: z.scarti.length ? M.inst[z.scarti[z.scarti.length - 1]].id : '', pwA: z.potere.filter(i => !M.inst[i].ex).length, pwT: z.potere.length,
-    campo: f.map(i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', evo: z.evocate.includes(i), f: mF(i), r: mR(i), g: c.gloria || 0, cst: mCost(i), tipo: c.tipo || ''}; })};
+    campo: f.map(i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', evo: z.evocate.includes(i), f: mF(i), r: mR(i), g: c.gloria || 0, cst: mCost(i), tipo: c.tipo || '', cd: {nome: c.nome, sottonome: c.sottonome || '', code: c.code, tipo: c.tipo, classe: c.classe, rarita: c.rarita, set: c.set, costo: c.costo, forza: c.forza, resistenza: c.resistenza, gloria: c.gloria, spostamento: c.spostamento, caratteristiche: c.caratteristiche || [], abilita: c.abilita || [], affiliazioni: affList(c), mossaSpeciale: c.mossaSpeciale || null, mossaAttiva: c.mossaAttiva || '', mossaSecondaria: c.mossaSecondaria || null, mosse: cardMosse(c)}}; })};
 }
 const netName = () => NET.name || 'Giocatore';
 function netRender() { if (S.view === 'partita') { const el = $('.xd,.mxp') ? null : null; renderAll(); } }
@@ -3215,8 +3226,20 @@ function mPopHtml() {
   if (P.type === 'net') { setTimeout(netQR, 0); return wrap('Partita condivisa', netPopHtml()); }
   if (P.type === 'ocard') {
     const pl = NET.players[P.pid], c = pl && pl.s && (pl.s.campo || []).find(x => x.k === P.k); if (!c) return wrap('Carta', '<p class="muted">Questa carta non è più in campo.</p>');
-    const sc = S.cards[c.id], stat = (l, v) => `<div class="mxp-st"><i>${l}</i><b>${v}</b></div>`;
-    return wrap(esc(c.nome || 'Carta'), `<div class="mxp-card"><div class="mxp-ca">${sc ? art(sc, true) : `<div class="op-ph">${esc(c.nome || c.id)}</div>`}</div><div class="mxp-cm"><div class="lbl">Campo di ${esc(pl.name)}${c.tipo ? ' · ' + esc(c.tipo) : ''}${c.ex ? ' · esaurita' : ''}${c.evo ? ' · appena evocata' : ''}${c.lock ? ' · bloccata' : ''}</div><div class="mxp-sts">${stat('Costo', c.cst != null ? c.cst : '—')}${stat('Forza', c.f != null ? c.f : '—')}${stat('Resistenza', c.r != null ? c.r : '—')}${c.dmg ? stat('Danni', c.dmg) : ''}${stat('Gloria', c.g || 0)}</div><p class="mxp-hint" style="margin-top:0">${c.ex ? 'È esaurita: trascina su di lei una tua carta in campo per sfidarla a duello.' : 'Si può attaccare solo quando è esaurita.'}</p><div class="mxp-acts">${sc ? btn('Scheda carta', 'oppInfo', {cls: 'alt sm', v: c.id}) : ''}</div></div></div>`, 'wide');
+    const sc = S.cards[c.id], d = Object.assign({}, sc || {}, c.cd || {}), stat = (l, v) => `<div class="mxp-st"><i>${l}</i><b>${v}</b></div>`;
+    const mod = (base, now) => base == null ? (now != null ? now : '—') : (now != null && now !== base ? `${now}<small class="ocm"> (${base})</small>` : base);
+    const chips = (l, arr) => arr && arr.length ? `<div class="oc-l"><div class="lbl">${l}</div><div class="chips">${arr.map(x => `<span class="chip static">${esc(x)}</span>`).join('')}</div></div>` : '';
+    const mv = (k, nome, desc) => desc || nome ? `<div class="move"><div class="k">${k}</div>${nome ? `<h3>${rich(nome)}</h3>` : ''}<p>${rich(desc || '')}</p></div>` : '';
+    const ms = d.mossaSpeciale || {}, m2 = d.mossaSecondaria || {};
+    return wrap(esc(d.nome || c.nome || 'Carta'), `<div class="mxp-card"><div class="mxp-ca">${sc ? art(sc, true) : `<div class="op-ph">${esc(c.nome || c.id)}</div>`}</div><div class="mxp-cm">
+      <div class="lbl">Campo di ${esc(pl.name)}${d.tipo ? ' · ' + esc(d.tipo) : ''}${d.classe ? ' · ' + esc(d.classe) : ''}${d.rarita ? ' · ' + esc(d.rarita) : ''}${d.code ? ' · ' + esc(d.code) : ''}</div>
+      ${d.sottonome ? `<p class="muted" style="margin:2px 0 4px">${esc(d.sottonome)}</p>` : ''}
+      <div class="mxp-sts">${stat('Costo', mod(d.costo, c.cst))}${stat('Forza', mod(d.forza, c.f))}${stat('Resistenza', mod(d.resistenza, c.r))}${stat('Gloria', d.gloria != null ? d.gloria : (c.g || 0))}${d.spostamento != null ? stat('Spostamento', d.spostamento) : ''}${stat('Danni', c.dmg || 0)}</div>
+      <p class="mxp-hint" style="margin:0 0 6px">${[c.ex ? 'Esaurita' : 'Attiva', c.evo ? 'appena evocata' : '', c.lock ? 'bloccata' : '', c.tf ? 'segnalini forza ' + (c.tf > 0 ? '+' : '') + c.tf : '', c.tr ? 'segnalini resistenza ' + (c.tr > 0 ? '+' : '') + c.tr : ''].filter(Boolean).join(' · ')}${c.ex ? ' — trascina su di lei una tua carta per sfidarla a duello.' : ''}</p>
+      ${chips('Caratteristiche', d.caratteristiche)}${chips('Abilità speciali', d.abilita)}${chips('Affiliazioni', d.affiliazioni)}
+      <div class="oc-mv">${mv('Mossa speciale', ms.nome, ms.desc)}${mv('Mossa attiva', '', d.mossaAttiva)}${mv('Mossa secondaria', m2.nome, m2.desc)}</div>
+      ${chips('Tipi di mosse', d.mosse)}
+      <div class="mxp-acts">${sc ? btn('Scheda carta', 'oppInfo', {cls: 'alt sm', v: c.id}) : ''}</div></div></div>`, 'wide');
   }
   if (P.type === 'opp') { const pl = NET.players[P.pid]; return wrap(esc(pl ? pl.name : 'Giocatore'), netOppHtml(P.pid), 'wide'); }
   if (P.type === 'deck') return wrap(`Mazzo di pesca · ${nd}`, nd ? `<div class="mxp-l">
@@ -4038,7 +4061,7 @@ document.addEventListener('pointermove', e => {
   }
   if (HD.drag) {
     e.preventDefault();
-    HD.ghost.style.transform = `translate(${e.clientX - HD.ghost.offsetWidth / 2}px,${e.clientY - HD.ghost.offsetHeight * .6}px) rotate(-4deg)`;
+    HD.ghost.style.transform = `translate(${e.clientX - HD.ghost.offsetWidth / 2}px,${e.clientY - HD.ghost.offsetHeight * .6}px) rotate(${document.body.classList.contains('mt-rot') ? 86 : -4}deg)`;
     const over = document.elementFromPoint(e.clientX, e.clientY);
     const tc = over && over.closest && over.closest('.mxf'), tv = tc && tc.dataset.v;
     $$('.mxf.drop-on,.op-c.drop-on,[data-hitp].drop-on').forEach(x => x.classList.remove('drop-on'));
