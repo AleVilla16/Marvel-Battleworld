@@ -1385,6 +1385,19 @@ body.mt-land .mxp-ca .mt-dmg.dmg-i b{font-size:18px}
 .mxp-r select,.mxp-r input[list]{height:34px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);color:#fff;padding:0 6px;font-size:14px;max-width:200px}
 .mxp-r input[type=number][id$=n]{height:34px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);color:#fff;padding:0 6px;margin-left:4px}
 .mxp-r .chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+
+/* v26: spettatore girato in orizzontale come la partita */
+body.mt-rot .spx{inset:auto;top:0;left:100vw;width:100vh;width:100dvh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+
+/* v26: tablet in verticale girato in orizzontale: carte più grandi */
+body.mt-land.mt-big .mx{--cw:86px;--hw:calc(var(--cw) * 1.75)}
+body.mt-land.mt-big .mx-row .mxf,body.mt-land.mt-big .mx-grp{--fw:112px}
+body.mt-land.mt-big .mx-campo.split .mx-row .mxf,body.mt-land.mt-big .mx-campo.split .mx-grp{--fw:90px}
+body.mt-land.mt-big .oh-row .op-c{--ow:86px}
+body.mt-land.mt-big .fr-b svg,body.mt-land.mt-big .fr-b img{width:28px;height:28px}
+body.mt-land.mt-big .fr-b b{font-size:15px}
+body.mt-land.mt-big .mt-dmg.dmg-i svg,body.mt-land.mt-big .mt-dmg.dmg-i img{width:30px;height:30px}
+body.mt-land.mt-big .mt-dmg.dmg-i b{font-size:16px}
 </style>
 
 <header class="top">
@@ -1636,11 +1649,16 @@ function maybeMigrate() {
 }
 /* partita su telefono: sempre in orizzontale (se il telefono è in verticale, la schermata viene ruotata) */
 function mtOrient() {
-  const play = S.view === 'partita' && !!M, on = play && Math.min(window.innerWidth, window.innerHeight) < 600;
+  /* partita (e spettatore) sempre in orizzontale: se il dispositivo è in verticale la schermata viene ruotata */
+  const play = S.view === 'partita' && (!!M || !!(NET.spect && NET.role)), port = window.innerHeight > window.innerWidth;
+  const on = play && (Math.min(window.innerWidth, window.innerHeight) < 600 || port);
   document.body.classList.toggle('mt-land', on);
   document.body.classList.toggle('mt-full', play && !on);
   if (!play && document.fullscreenElement) document.exitFullscreen().catch(() => {});
-  document.body.classList.toggle('mt-rot', on && window.innerHeight > window.innerWidth);
+  document.body.classList.toggle('mt-rot', on && port);
+  document.body.classList.toggle('mt-big', on && Math.min(window.innerWidth, window.innerHeight) >= 600);
+  /* dove il sistema lo permette (app installata, schermo intero) blocca anche lo schermo in orizzontale */
+  try { if (play && screen.orientation && screen.orientation.lock && !mtOrient.locked) { mtOrient.locked = true; screen.orientation.lock('landscape').catch(() => { mtOrient.locked = false; }); } else if (!play && mtOrient.locked && screen.orientation && screen.orientation.unlock) { mtOrient.locked = false; screen.orientation.unlock(); } } catch (e) {}
 }
 window.addEventListener('resize', () => mtOrient());
 document.addEventListener('fullscreenchange', () => { if (S.view === 'partita') renderAll(); });
