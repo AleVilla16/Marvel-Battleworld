@@ -1739,19 +1739,40 @@ function fillNumeri() {
 }
 /* app installata dal sito: al primo avvio carica i dati pubblicati insieme all'app (dati.zip o dati.json) */
 let SEEDED = false;
-async function seedFromSite(auto) {
-  let data = null, pdf = null, name = '';
-  for (const f of ['dati.zip', 'dati.json']) {
+/* legge dati.json / dati.zip e poi dati2, dati3, … finché ce ne sono */
+async function siteDataFile(base) {
+  for (const f of [base + '.zip', base + '.json']) {
     try {
       const r = await fetch(f, {cache: 'no-store'}); if (!r.ok) continue;
       if (/\.zip$/.test(f)) {
         const z = unzipStore(await r.arrayBuffer()), jn = Object.keys(z).find(k => /\.json$/i.test(k)), pn = Object.keys(z).find(k => /\.pdf$/i.test(k));
-        if (!jn) continue; data = JSON.parse(new TextDecoder().decode(z[jn]));
-        if (pn) pdf = new File([z[pn]], data.rulesPdfName || 'regolamento.pdf', {type: 'application/pdf'});
-      } else data = await r.json();
-      name = f; break;
-    } catch (e) { data = null; pdf = null; }
+        if (!jn) continue; const data = JSON.parse(new TextDecoder().decode(z[jn]));
+        return {data, name: f, pdf: pn ? new File([z[pn]], data.rulesPdfName || 'regolamento.pdf', {type: 'application/pdf'}) : null};
+      }
+      const t = await r.text(); if (/^\s*</.test(t)) continue; /* il sito ha risposto con una pagina, non con il file */
+      return {data: JSON.parse(t), name: f, pdf: null};
+    } catch (e) {}
   }
+  return null;
+}
+function mergeSiteData(a, b) {
+  const out = Object.assign({}, a);
+  Object.entries(b || {}).forEach(([k, v]) => {
+    const o = out[k];
+    if (Array.isArray(o) && Array.isArray(v)) out[k] = o.concat(v);
+    else if (o && v && typeof o === 'object' && typeof v === 'object' && !Array.isArray(o) && !Array.isArray(v)) out[k] = Object.assign({}, o, v);
+    else if (o == null || o === '' || (Array.isArray(o) && !o.length)) out[k] = v;
+  });
+  return out;
+}
+async function seedFromSite(auto) {
+  let data = null, pdf = null; const names = [];
+  for (let n = 1, miss = 0; n <= 99 && miss < 2; n++) {
+    const f = await siteDataFile(n === 1 ? 'dati' : 'dati' + n);
+    if (!f || !f.data || typeof f.data !== 'object') { miss++; continue; }
+    miss = 0; data = data ? mergeSiteData(data, f.data) : f.data; if (!pdf && f.pdf) pdf = f.pdf; names.push(f.name);
+  }
+  const name = names.join(' + ');
   if (!data || typeof data !== 'object' || !(data.cards || data.decks || data.rules || data.rulesAreas)) { if (!auto) toast('Sul sito non c’è un file dei dati'); return; }
   S.imp = {data, pdf, name, mode: {cards: 'add', decks: 'add', icons: 'add', rules: 'add', pdf: pdf ? 'add' : 'skip', prefs: 'skip'}};
   if (auto) { toast('Carico le carte…'); await importRun(); } else renderAll();
@@ -2098,7 +2119,7 @@ function vSet() {
   <section class="set"><h2>Sfondo della partita</h2><p>Scegli lo sfondo del tavolo da gioco nella schermata Partita.</p><div class="mbg-g" role="group" aria-label="Sfondo della partita">${MBG.map(([k, l]) => `<button class="mbg-p" data-act="setMbg" data-v="${k}" aria-pressed="${(S.prefs.mbg || 'alto') === k}"><i class="mbg-i" aria-hidden="true"></i><span>${l}${(S.prefs.mbg || 'alto') === k ? ' ✓' : ''}</span></button>`).join('')}</div></section>
   ${setApp()}
   <section class="set"><h2>Salvataggio</h2><p>${window.__BW_LOCAL ? 'Carte, mazzi, regolamento, immagini e PDF sono salvati su questo dispositivo e funzionano anche senza connessione. Ogni dispositivo ha i suoi dati: per portarli su un altro usa “Esporta tutto” e poi “Importa da file”.' : S.mode === 'db' ? 'Carte, mazzi e regolamento sono salvati con questa pagina e li ritrovi da qualsiasi dispositivo.' : 'Questa visualizzazione non può salvare con la pagina: i dati restano solo in questo browser.'}${S.mode === 'db' && !ASSETS && !window.__BW_LOCAL ? ' Le immagini caricate qui vengono ridotte e salvate dentro la carta.' : ''}</p></section>
-  ${window.__BW_LOCAL ? `<section class="set"><h2>Dati dal sito</h2><p>Se sul sito è pubblicato il file dei dati (<b>dati.json</b> o <b>dati.zip</b>, creato con “Esporta tutto”), puoi caricarlo qui per aggiornare carte, mazzi e regolamento. Prima di applicare scegli cosa aggiungere o sostituire.</p><div class="btns">${btn('Carica i dati dal sito', 'seedSite', {cls: 'alt'})}</div></section>` : ''}
+  ${window.__BW_LOCAL ? `<section class="set"><h2>Dati dal sito</h2><p>Se sul sito è pubblicato il file dei dati (<b>dati.json</b> o <b>dati.zip</b>, creato con “Esporta tutto”, più eventuali <b>dati2</b>, <b>dati3</b> e così via, che vengono letti tutti insieme), puoi caricarlo qui per aggiornare carte, mazzi e regolamento. Prima di applicare scegli cosa aggiungere o sostituire.</p><div class="btns">${btn('Carica i dati dal sito', 'seedSite', {cls: 'alt'})}</div></section>` : ''}
   <section class="set"><h2>Schede nell’elenco</h2><div class="seg" role="group" aria-label="Dimensione schede"><button data-act="grid" data-v="big" aria-pressed="${S.prefs.grid === 'big'}">Grandi</button><button data-act="grid" data-v="small" aria-pressed="${S.prefs.grid === 'small'}">Compatte</button></div></section>
   ${setPdf()}
   ${vIcons()}

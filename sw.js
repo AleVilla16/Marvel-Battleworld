@@ -36,7 +36,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   const same = url.origin === self.location.origin;
   if (!same && !req.url.startsWith(CDN)) return;
-  if (same && /\/dati\.(json|zip)$/.test(url.pathname)) return; // il file dei dati non va in cache
+  if (same && /\/dati\d*\.(json|zip)$/.test(url.pathname)) return; // il file dei dati non va in cache
   event.respondWith(
     fetch(req)
       .then((res) => {
