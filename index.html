@@ -934,6 +934,7 @@ body.mt-land .tb-ev-row .mt{width:38px}
 
 /* ---------- tavolo della partita ---------- */
 body.mt-full .mt-wrap.mx,body.mt-land .mt-wrap.mx{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:6px}
+body.mt-full .mt-wrap.mx.sp,body.mt-land .mt-wrap.mx.sp{grid-template-rows:auto minmax(0,1fr) minmax(0,1fr) auto}
 .mx{--cw:92px}
 .mx-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;z-index:3}
 .mx-tl{display:flex;align-items:center;gap:14px}
@@ -1153,6 +1154,28 @@ body.mt-land .mx-grp{--fw:54px}
 body.mt-land .mx-opp{padding:3px 7px;min-width:0}
 body.mt-land .mx-opp b{font-size:10px}
 body.mt-land .mx-opp span{font-size:9px;gap:4px}
+
+/* campo diviso: in alto l'avversario selezionato, in basso il mio */
+.mx-opf{min-height:0;display:flex;flex-direction:column;gap:6px;background:rgba(224,38,46,.08);border:1px solid rgba(224,38,46,.35);padding:6px 8px;overflow:hidden}
+.oh-bar{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
+.oh-n{font:800 16px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase;color:#ff8a80;margin-right:4px}
+.oh-i{display:inline-flex;align-items:baseline;gap:4px;font-size:13px}
+.oh-i i{font-style:normal}
+.oh-i b{font:800 17px/1 var(--font-display)}
+.oh-i small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.oh-row{flex:1;min-height:0;overflow-y:auto;display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-start;gap:10px}
+.oh-row .op-c{width:clamp(70px,6.5vw,112px)}
+.mx-campo.split{border:1px solid rgba(47,107,255,.35);background:rgba(47,107,255,.06)}
+.mx-campo.split .mx-row .mxf{width:clamp(80px,7.5vw,128px)}
+.mx-opp.on{background:rgba(224,38,46,.35);border-color:#ff5a52}
+body.mt-land .mx-opf{padding:3px 6px;gap:3px}
+body.mt-land .oh-n{font-size:11px}
+body.mt-land .oh-i{font-size:10px}
+body.mt-land .oh-i b{font-size:12px}
+body.mt-land .oh-i small{display:none}
+body.mt-land .oh-row .op-c{width:40px}
+body.mt-land .oh-row{gap:5px}
+body.mt-land .mx-campo.split .mx-row .mxf{width:44px}
 </style>
 
 <header class="top">
@@ -3069,6 +3092,15 @@ function netPopHtml() {
     ${plist}
     <div class="btns">${NET.err && NET.role === 'guest' ? btn('Riprova', 'netRetry') : ''}${btn(NET.role === 'host' ? 'Chiudi la partita condivisa' : 'Esci dalla partita condivisa', 'netLeave', {cls: 'alt'})}</div>`;
 }
+function mOppHalf(pid, p) {
+  const s = p.s || {}, name = esc(p.name || 'Giocatore');
+  const card = c => { const sc = S.cards[c.id]; return `<div class="op-c${c.ex ? ' ex' : ''}${c.evo ? ' evo' : ''}" title="${esc(c.nome || '')}">${sc ? art(sc, true) : `<div class="op-ph">${esc(c.nome || c.id)}</div>`}${c.dmg ? `<span class="mt-dmg">${c.dmg}</span>` : ''}${c.tf || c.tr ? `<span class="mx-tok">${c.tf ? `<i class="tf">F${c.tf > 0 ? '+' : ''}${c.tf}</i>` : ''}${c.tr ? `<i class="tr">R${c.tr > 0 ? '+' : ''}${c.tr}</i>` : ''}</span>` : ''}${c.lock ? '<span class="mx-lock">🔒</span>' : ''}</div>`; };
+  const it = (ic, l, v) => `<span class="oh-i" title="${l}"><i>${ic}</i><b>${v}</b><small>${l}</small></span>`;
+  return `<section class="mx-opf" aria-label="Campo di ${name}">
+    <div class="oh-bar"><b class="oh-n">${name}</b>${s.inGame ? `${it('♥', 'Vita', s.vita)}${it('★', 'Gloria', s.gloria + '/' + s.target)}${it('✋', 'In mano', s.mano)}${it('⚡', 'Potere', s.pwA + '/' + s.pwT)}${it('🂠', 'Pesca', s.mazzo)}${it('♻', 'Scarti', s.scarti)}` : '<span class="muted">non ha ancora iniziato la partita</span>'}</div>
+    <div class="oh-row">${s.inGame ? (s.campo.map(card).join('') || '<p class="mz-empty mx-empty">Nessuna carta in campo</p>') : ''}</div>
+  </section>`;
+}
 function netOppHtml(pid) {
   const p = NET.players[pid]; if (!p) return '<p class="muted">Giocatore non più collegato.</p>';
   const s = p.s || {}; if (!s.inGame) return '<p class="muted">Non ha ancora iniziato la partita.</p>';
@@ -3173,10 +3205,10 @@ function vMatch() {
   /* serbatoio del potere */
   const act = z.potere.filter(i => !M.inst[i].ex), exh = z.potere.filter(i => M.inst[i].ex);
   const pwc = (i, ex) => `<button class="pw2${ex ? ' ex' : ''}" data-act="mcOpen" data-v="${i}" aria-label="Carta potere${ex ? ' esaurita' : ' attiva'}"></button>`;
-  return `<div class="gut mt-wrap mx">
+  return `<div class="gut mt-wrap mx${NET.role && netOpps().length ? ' sp' : ''}">
     <div class="mx-top">
       <div class="mx-tl">${mOrb('vita', 'Punti vita', M.vita, HEART, MINUS, PLUS)}${mOrb('gloria', 'Punti gloria', M.gloria, GLORY, MINUS, PLUS, M.target)}</div>
-      ${NET.role && netOpps().length ? `<div class="mx-opps">${netOpps().map(([pid, p]) => { const s2 = p.s || {}; return `<button class="mx-opp" data-act="netOpp" data-v="${esc(pid)}" aria-label="${esc(p.name)}: vedi il suo campo"><b>${esc(p.name)}</b>${s2.inGame ? `<span><i class="ov">♥ ${s2.vita}</i><i class="og">★ ${s2.gloria}</i><i>✋ ${s2.mano}</i><i>⚔ ${s2.campo.length}</i></span>` : '<span><i>in attesa</i></span>'}</button>`; }).join('')}</div>` : '<div class="mx-peek" aria-hidden="true"></div>'}
+      ${NET.role && netOpps().length ? `<div class="mx-opps">${netOpps().map(([pid, p]) => { const s2 = p.s || {}; return `<button class="mx-opp${(S.mOpp || (netOpps()[0] || [])[0]) === pid ? ' on' : ''}" data-act="netSel" data-v="${esc(pid)}" aria-pressed="${(S.mOpp || (netOpps()[0] || [])[0]) === pid}" aria-label="${esc(p.name)}: mostra il suo campo"><b>${esc(p.name)}</b>${s2.inGame ? `<span><i class="ov">♥ ${s2.vita}</i><i class="og">★ ${s2.gloria}</i><i>✋ ${s2.mano}</i><i>⚔ ${s2.campo.length}</i></span>` : '<span><i>in attesa</i></span>'}</button>`; }).join('')}</div>` : '<div class="mx-peek" aria-hidden="true"></div>'}
       <div class="mx-tr">
         <button class="ib mx-ib${hide ? ' on' : ''}" data-act="mHide" aria-pressed="${hide}" aria-label="${hide ? 'Mostra' : 'Nascondi'} la mano" title="${hide ? 'Mostra' : 'Nascondi'} la mano">${IC.hide}</button>
         <button class="ib mx-ib" data-act="mUndo" aria-label="Annulla l’ultima azione" title="Annulla l’ultima azione"${MH.length ? '' : ' disabled'}>${IC.back}</button>
@@ -3192,7 +3224,8 @@ function vMatch() {
         </div>` : ''}</div>
       </div>
     </div>
-    <section class="mx-campo" aria-label="Carte in campo: ${z.campo.length}${z.evocate.length ? ', appena evocate: ' + z.evocate.length : ''}">
+    ${(() => { const opps = netOpps(), sel = opps.find(([pid]) => pid === S.mOpp) || opps[0]; return sel ? mOppHalf(sel[0], sel[1]) : ''; })()}
+    <section class="mx-campo${NET.role && netOpps().length ? ' split' : ''}" aria-label="Carte in campo: ${z.campo.length}${z.evocate.length ? ', appena evocate: ' + z.evocate.length : ''}">
       ${M.vita <= 0 ? '<p class="mt-alert">Hai finito i punti vita: hai perso.</p>' : M.gloria >= M.target ? '<p class="mt-alert win">Hai raggiunto i punti gloria: hai vinto!</p>' : !z.mazzo.length ? '<p class="mt-alert">Il mazzo è vuoto: se devi pescare, hai perso.</p>' : ''}
       ${z.campo.length || z.evocate.length ? `<div class="mx-row">${(() => { const all = [...z.campo, ...z.evocate], inF = new Set(all), one = i => z.evocate.includes(i) ? `<div class="mx-ev">${mFieldCard(i, true)}<span>Evocata</span></div>` : mFieldCard(i); return all.filter(i => !M.inst[i].at || !inF.has(M.inst[i].at)).map(h => { const att = all.filter(i => M.inst[i].at === h); return att.length ? `<div class="mx-grp${mTipo(h) === 'Luogo' ? ' luogo' : ''}" style="--n:${att.length}">${one(h)}<div class="mx-att">${att.map((i, k) => `<div class="mx-ai" style="--k:${k}">${one(i)}</div>`).join('')}</div></div>` : one(h); }).join(''); })()}</div>` : '<p class="mz-empty mx-empty">Nessuna carta in campo: tocca una carta della mano per giocarla.</p>'}
     </section>
@@ -3588,6 +3621,7 @@ const ACT = {
   mStartTurn() { mDo(() => { [...M.zones.campo, ...M.zones.evocate, ...M.zones.potere].forEach(i => { if (!M.inst[i].lock) M.inst[i].ex = false; }); M.phase = 'play'; }, 'Inizio turno ' + M.turn + ': carte riattivate'); toast('Turno ' + M.turn + ': carte riattivate'); },
   netOpen() { S.mDD = false; mPopOpen({type: 'net'}); },
   netOpp(t, v) { mPopOpen({type: 'opp', pid: v}); },
+  netSel(t, v) { if ((S.mOpp || (netOpps()[0] || [])[0]) === v) { mPopOpen({type: 'opp', pid: v}); return; } S.mOpp = v; renderAll(); },
   netHost() { const n = ($('#net-name') || {}).value; NET.name = (n || '').trim().slice(0, 24); netStart('host', netCode()); },
   netJoin() { const n = ($('#net-name') || {}).value, c = (($('#net-code') || {}).value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); NET.name = (n || '').trim().slice(0, 24); if (c.length < 4) { toast('Scrivi il codice della partita'); return; } netStart('guest', c); },
   netRetry() { if (NET.code) netStart(NET.role || 'guest', NET.code); },
