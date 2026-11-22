@@ -1518,6 +1518,17 @@ body.mt-land .mx-opp .oh-ic.sm svg,body.mt-land .mx-opp .oh-ic.sm img{width:24px
 .ordr-n{position:absolute;top:-8px;right:-6px;z-index:2;min-width:24px;height:24px;padding:0 6px;display:grid;place-items:center;border-radius:12px;background:var(--red);color:#fff;font:900 13px/1 var(--font-display)}
 .ordr-d{position:absolute;left:4px;right:4px;top:40%;z-index:2;background:rgba(10,10,26,.88);color:#ffd43b;text-align:center;font:800 11px/1.2 var(--font-display);text-transform:uppercase;letter-spacing:.04em;padding:4px 2px}
 .ordr-t{font-size:12px;line-height:1.2;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* v41: vedi tutto, chiarimenti */
+.see-all{justify-content:center;margin-top:12px}
+.tmosse.chiar p{margin:4px 0 0;padding:8px 10px;background:rgba(245,179,1,.12);border-left:3px solid #f5b301;font-size:14px;line-height:1.45}
+.mxp-info.note{color:#f5b301}
+.mxp-info.note.on{background:#f5b301;color:#1a1200}
+.note-pop{position:sticky;top:0;z-index:7;margin:0 0 10px;padding:10px 12px;background:#2a2410;border:2px solid #f5b301;box-shadow:0 10px 24px rgba(0,0,0,.5);color:#fff}
+.note-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.note-hd b{font:800 13px/1 var(--font-display);text-transform:uppercase;letter-spacing:.08em;color:#f5b301}
+.note-hd .ib{width:28px;height:28px}
+.note-pop p{margin:0;font-size:14px;line-height:1.45}
 </style>
 
 <header class="top">
@@ -1823,7 +1834,7 @@ const normCard = (id, d) => ({
   caratteristiche: Array.isArray(d.caratteristiche) ? d.caratteristiche : [], abilita: Array.isArray(d.abilita) ? d.abilita : [],
   mossaSpeciale: d.mossaSpeciale || {nome: '', desc: ''}, mossaAttiva: d.mossaAttiva || '', mossaSecondaria: d.mossaSecondaria || null, mosse: Array.isArray(d.mosse) ? d.mosse : null,
   img: d.img || '', imgData: d.imgData || '', esempio: !!d.esempio, createdAt: d.createdAt || 0,
-  completa: d.completa != null ? !!d.completa : setOf(d, id) === 1, numero: d.numero ?? null, preferita: !!d.preferita, link: d.link || ''
+  completa: d.completa != null ? !!d.completa : setOf(d, id) === 1, numero: d.numero ?? null, preferita: !!d.preferita, link: d.link || '', chiarimenti: d.chiarimenti || ''
 });
 const normDeck = (id, d) => ({id, nome: d.nome || 'Mazzo', cards: d.cards || {}, created: d.created || 0, updated: d.updated || 0});
 
@@ -2394,6 +2405,7 @@ function openDetail(id) {
     ${c.mossaAttiva ? move('Mossa attiva', '', c.mossaAttiva) : ''}
     ${c.mossaSecondaria && (c.mossaSecondaria.nome || c.mossaSecondaria.desc) ? move('Mossa secondaria', c.mossaSecondaria.nome, c.mossaSecondaria.desc) : ''}
     ${(() => { const l = cardMosse(c); return l.length ? `<div class="tmosse"><div class="lbl">Tipi di mosse</div><ul>${l.map(x => `<li>${esc(x)}</li>`).join('')}</ul>${Array.isArray(c.mosse) ? '' : '<div class="muted" style="font-size:13px;margin-top:6px">Riconosciuti dal testo delle mosse: puoi correggerli con la matita.</div>'}</div>` : ''; })()}
+    ${c.chiarimenti ? `<div class="tmosse chiar"><div class="lbl">Chiarimenti</div><p>${esc(c.chiarimenti).replace(/\n/g, '<br>')}</p></div>` : ''}
     <div><div class="lbl">Aggiungi a un mazzo</div>${decks.length ? `<div class="deckadd"><select id="dtDeck" aria-label="Mazzo">${decks.map(d => `<option value="${esc(d.id)}">${esc(d.nome)} (${deckInfo(d).total})</option>`).join('')}</select>${btn('Aggiungi', 'addToDeck', {cls: 'sm'})}</div>` : `<div class="btns"><span class="muted">Non hai ancora mazzi.</span>${btn('Nuovo mazzo', 'newDeckGo', {cls: 'sm alt'})}</div>`}</div></div>`;
   $('#sh-detail').classList.toggle('confirming', S.confirm === 'card');
   $('#dt-acts').innerHTML = S.confirm === 'card' ? `<span class="cf-q">Eliminare?</span><button class="cf-b yes" data-act="delCard">Elimina</button><button class="cf-b" data-act="confirmNo">Annulla</button>` : `<button class="ib" data-act="editCard" aria-label="Modifica carta" title="Modifica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></button><button class="ib" data-act="confirmCard" aria-label="Elimina carta" title="Elimina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>`;
@@ -2444,6 +2456,7 @@ function openEdit(id) {
     <div class="fgrp"><div class="lbl">Mossa secondaria (solo alcune carte)</div><div><button type="button" class="chip" id="e-has2" data-act="toggle2" aria-pressed="${!!ms}">Questa carta ha una mossa secondaria</button></div>
       <div id="e-2box" class="fgrp" style="${ms ? '' : 'display:none'}"><label class="fl"><span>Nome mossa</span><input id="e-m2-n" value="${esc(ms ? ms.nome : '')}"></label><label class="fl"><span>Descrizione</span><textarea id="e-m2-d">${esc(ms ? ms.desc : '')}</textarea></label></div></div>
     <div><div class="lbl">Tipi di mosse <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· cosa fa questo personaggio</span></div>${pills('e-mosse', [...new Set([...allMosse(), ...cardMosse(d)])], cardMosse(d))}<div class="aff-new"><input id="e-mosse-new" placeholder="Nuovo tipo di mossa…" autocomplete="off" aria-label="Nuovo tipo di mossa" maxlength="40"><button type="button" class="btn alt sm" data-act="mosseAdd"><span>Aggiungi</span></button></div><div class="btns" style="margin-top:8px"><button type="button" class="btn alt sm" data-act="mosseAuto"><span>Riconosci dal testo delle mosse</span></button></div></div>
+    <label class="fl"><span>Chiarimenti <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">· note e chiarimenti sulle regole di questa carta</span></span><textarea id="e-chiar" rows="3" placeholder="Es. la mossa attiva si può usare anche nel turno dell’avversario">${esc(d.chiarimenti || '')}</textarea></label>
   </div>`;
   openSheet('sh-edit'); $('#ed-body').closest('.sheet-bd').scrollTop = 0;
 }
@@ -2476,7 +2489,7 @@ async function saveCard() {
     caratteristiche: pressed('e-car'), abilita: pressed('e-abi'),
     mossaSpeciale: {nome: $('#e-ms-n').value.trim(), desc: $('#e-ms-d').value.trim()}, mossaAttiva: $('#e-ma').value.trim(),
     mossaSecondaria: has2 ? {nome: $('#e-m2-n').value.trim(), desc: $('#e-m2-d').value.trim()} : null,
-    mosse: null,
+    mosse: null, chiarimenti: (($('#e-chiar') || {}).value || '').trim(),
     esempio: E.orig ? E.orig.esempio : false, completa: $('#e-compl').getAttribute('aria-pressed') === 'true', numero: num($('#e-num').value), preferita: E.orig ? !!E.orig.preferita : false, link: linkUrl($('#e-link').value), createdAt: E.orig ? (E.orig.createdAt || Date.now()) : Date.now(), img: E.img, imgData: E.imgData
   };
   STATS.forEach(([k]) => c[k] = num($('#e-' + k).value));
@@ -2752,7 +2765,7 @@ async function exportExcel() {
     ...STATS.map(([k, l]) => [l, c => c[k] ?? '', 10]), ['Rarità', c => c.rarita, 12], ['Estrazione', c => c.estrazione ? 'Sì' : 'No', 10], ['Caratteristiche', c => c.caratteristiche.join(', '), 30], ['Abilità speciali', c => c.abilita.join(', '), 22], ['Tipi di mosse', c => cardMosse(c).join(', '), 34],
     ['Mossa speciale', c => c.mossaSpeciale.nome, 22], ['Descrizione mossa speciale', c => c.mossaSpeciale.desc, 50], ['Mossa attiva', c => c.mossaAttiva, 50],
     ['Mossa secondaria', c => c.mossaSecondaria ? c.mossaSecondaria.nome : '', 22], ['Descrizione mossa secondaria', c => c.mossaSecondaria ? c.mossaSecondaria.desc : '', 40],
-    ['Citazione', c => c.citazione, 50], ['Link', c => c.link || '', 40], ['Completa', c => c.completa ? 'Sì' : 'No', 10], ['Preferita', c => c.preferita ? 'Sì' : 'No', 10], ['Immagine', c => imgSrc(c) ? 'Sì' : 'No', 10]];
+    ['Chiarimenti', c => c.chiarimenti || '', 50], ['Citazione', c => c.citazione, 50], ['Link', c => c.link || '', 40], ['Completa', c => c.completa ? 'Sì' : 'No', 10], ['Preferita', c => c.preferita ? 'Sì' : 'No', 10], ['Immagine', c => imgSrc(c) ? 'Sì' : 'No', 10]];
   sets.forEach(n => {
     const list = bySet(n).sort((a, b) => ((a.numero ?? 1e6) - (b.numero ?? 1e6)) || nat(a.code, b.code));
     sheets.push({name: sName(n) + (n != null && SETS[n] ? ' ' + SETS[n] : ''), rows: [COLS.map(x => x[0]), ...list.map(c => COLS.map(x => x[1](c)))], styles: {0: 2}, widths: COLS.map(x => x[2]), freeze: true, filter: true});
@@ -3209,8 +3222,8 @@ const XI_FIELDS = [
   ['N°', 'numero', xn], ['Set', 'set', xn], ['Tipo', 'tipo', xs], ['Nome', 'nome', xs], ['Sottonome', 'sottonome', xs], ['Classe', 'classe', xs], ['Affiliazioni', 'affiliazioni', xlist], ['Affiliazione', 'affiliazioni', xlist],
   ...STATS.map(([k, l]) => [l, k, xn]), ['Rarità', 'rarita', xs], ['Estrazione', 'estrazione', xb], ['Caratteristiche', 'caratteristiche', xlist], ['Abilità speciali', 'abilita', xlist],
   ['Mossa speciale', 'ms.nome', xs], ['Descrizione mossa speciale', 'ms.desc', xs], ['Mossa attiva', 'mossaAttiva', xs], ['Mossa secondaria', 'm2.nome', xs], ['Descrizione mossa secondaria', 'm2.desc', xs],
-  ['Citazione', 'citazione', xs], ['Link', 'link', v => linkUrl(xs(v))], ['Completa', 'completa', xb], ['Preferita', 'preferita', xb]];
-const XI_LABEL = {numero: 'N°', set: 'Set', tipo: 'Tipo', nome: 'Nome', sottonome: 'Sottonome', classe: 'Classe', affiliazioni: 'Affiliazioni', rarita: 'Rarità', estrazione: 'Estrazione', caratteristiche: 'Caratteristiche', abilita: 'Abilità', mossaSpeciale: 'Mossa speciale', mossaAttiva: 'Mossa attiva', mossaSecondaria: 'Mossa secondaria', citazione: 'Citazione', link: 'Link', completa: 'Completa', preferita: 'Preferita'};
+  ['Chiarimenti', 'chiarimenti', xs], ['Citazione', 'citazione', xs], ['Link', 'link', v => linkUrl(xs(v))], ['Completa', 'completa', xb], ['Preferita', 'preferita', xb]];
+const XI_LABEL = {numero: 'N°', set: 'Set', tipo: 'Tipo', nome: 'Nome', sottonome: 'Sottonome', classe: 'Classe', affiliazioni: 'Affiliazioni', rarita: 'Rarità', estrazione: 'Estrazione', caratteristiche: 'Caratteristiche', abilita: 'Abilità', mossaSpeciale: 'Mossa speciale', mossaAttiva: 'Mossa attiva', mossaSecondaria: 'Mossa secondaria', chiarimenti: 'Chiarimenti', citazione: 'Citazione', link: 'Link', completa: 'Completa', preferita: 'Preferita'};
 STATS.forEach(([k, l]) => { XI_LABEL[k] = l; });
 const xiSame = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 function xiAnalyse(sheets) {
@@ -3422,7 +3435,7 @@ if (!NET.pid) NET.pid = 'u' + Date.now().toString(36) + Math.random().toString(3
 const netSave = () => lsSet('bw:net', {role: NET.role, code: NET.code, name: NET.name, pid: NET.pid, spect: !!NET.spect});
 const LIBS = {};
 const loadLib = url => LIBS[url] || (LIBS[url] = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = url; sc.onload = res; sc.onerror = () => { delete LIBS[url]; rej(new Error('load')); }; document.head.appendChild(sc); }));
-const netCd = c => ({nome: c.nome, sottonome: c.sottonome || '', code: c.code, tipo: c.tipo, classe: c.classe, rarita: c.rarita, set: c.set, costo: c.costo, forza: c.forza, resistenza: c.resistenza, gloria: c.gloria, spostamento: c.spostamento, caratteristiche: c.caratteristiche || [], abilita: c.abilita || [], affiliazioni: affList(c), mossaSpeciale: c.mossaSpeciale || null, mossaAttiva: c.mossaAttiva || '', mossaSecondaria: c.mossaSecondaria || null, mosse: cardMosse(c)});
+const netCd = c => ({nome: c.nome, sottonome: c.sottonome || '', code: c.code, tipo: c.tipo, classe: c.classe, rarita: c.rarita, set: c.set, costo: c.costo, forza: c.forza, resistenza: c.resistenza, gloria: c.gloria, spostamento: c.spostamento, caratteristiche: c.caratteristiche || [], abilita: c.abilita || [], affiliazioni: affList(c), mossaSpeciale: c.mossaSpeciale || null, mossaAttiva: c.mossaAttiva || '', mossaSecondaria: c.mossaSecondaria || null, mosse: cardMosse(c), chiarimenti: c.chiarimenti || ''});
 const netCardOut = i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, code: c.code, nome: c.nome || st.nome || '', cd: netCd(c)}; };
 const netItem = i => { const st = M.inst[i], c = mCard(i); return {k: i, id: st.id, nome: st.nome || mName(i), ex: !!st.ex, dmg: st.dmg || 0, tf: st.tf || 0, tr: st.tr || 0, lock: !!st.lock, at: st.at || '', atx: st.atx || null, ao: !!st.ao, sw: !!st.sw, fc: st.fc != null ? st.fc : null, dc: st.dc != null ? st.dc : null, evo: M.zones.evocate.includes(i), f: mF(i), r: mR(i), g: mGlory(i), cst: mCost(i), tipo: c.tipo || '', cd: netCd(c)}; };
 function netSummary() {
@@ -3940,6 +3953,9 @@ const clsRows = (row, fc, dc, cls, act) => {
   return row(`Forza di classe${strong ? ` <span class="muted">(auto: contro ${esc(strong)})</span>` : ''}`, seg('fc', fc), '') + row(`Debolezza di classe${weak ? ` <span class="muted">(auto: contro ${esc(weak)})</span>` : ''}`, seg('dc', dc), '');
 };
 const CARD_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8.5 7h7M8.5 11h7M8.5 15h4"/></svg>';
+const NOTE_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8.5 11h7M8.5 14.5h7M8.5 18h4"/></svg>';
+const noteIco = () => `<button class="ib mxp-info note${(S.mPop || {}).note ? ' on' : ''}" data-act="noteTog" aria-label="Chiarimenti" title="Chiarimenti">${NOTE_ICO}</button>`;
+const notePop = txt => (S.mPop || {}).note && txt ? `<div class="note-pop" role="note"><div class="note-hd"><b>Chiarimenti</b><button class="ib" data-act="noteTog" aria-label="Chiudi">✕</button></div><p>${esc(txt).replace(/\n/g, '<br>')}</p></div>` : '';
 const infoIco = (act, v) => `<button class="ib mxp-info" data-act="${act}" data-v="${esc(v)}" aria-label="Scheda carta" title="Scheda carta">${CARD_ICO}</button>`;
 /* caratteristiche, abilità speciali e mosse (una sotto l'altra) nella finestra della carta */
 /* gruppo di carte collegate (personaggio/luogo + oggetti e personaggi collegati) */
@@ -4039,7 +4055,7 @@ function mPopHtml() {
     const chips = (l, arr) => arr && arr.length ? `<div class="oc-l"><div class="lbl">${l}</div><div class="chips">${arr.map(x => `<span class="chip static">${esc(x)}</span>`).join('')}</div></div>` : '';
     const mv = (k, nome, desc) => desc || nome ? `<div class="move"><div class="k">${k}</div>${nome ? `<h3>${rich(nome)}</h3>` : ''}<p>${rich(desc || '')}</p></div>` : '';
     const ms = d.mossaSpeciale || {}, m2 = d.mossaSecondaria || {};
-    return wrap(esc(d.nome || c.nome || 'Carta') + (sc ? infoIco('oppInfo', c.id) : ''), `${linkBar(linkGroupOpp(pl.s.campo || [], c.k))}<div class="mxp-card"><div class="mxp-ca"${sc ? ` data-act="mZoom" data-v="${esc(c.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta"` : ''}>${art(sc || xCard(c), true)}${linkArrows(linkGroupOpp(pl.s.campo || [], c.k), c.k)}</div><div class="mxp-cm">
+    return wrap(esc(d.nome || c.nome || 'Carta') + (sc ? infoIco('oppInfo', c.id) : '') + (d.chiarimenti ? noteIco() : ''), `${notePop(d.chiarimenti)}${linkBar(linkGroupOpp(pl.s.campo || [], c.k))}<div class="mxp-card"><div class="mxp-ca"${sc ? ` data-act="mZoom" data-v="${esc(c.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta"` : ''}>${art(sc || xCard(c), true)}${linkArrows(linkGroupOpp(pl.s.campo || [], c.k), c.k)}</div><div class="mxp-cm">
       <div class="lbl">Campo di ${esc(pl.name)}${d.tipo ? ' · ' + esc(d.tipo) : ''}${d.classe ? ' · ' + esc(d.classe) : ''}${d.rarita ? ' · ' + esc(d.rarita) : ''}${d.code ? ' · ' + esc(d.code) : ''}</div>
       ${d.sottonome ? `<p class="muted" style="margin:2px 0 4px">${esc(d.sottonome)}</p>` : ''}
       <div class="mxp-sts">${stat('Costo', mod(d.costo, c.cst))}${stat('Forza', mod(d.forza, c.f))}${stat('Resistenza', mod(d.resistenza, c.r))}${stat('Gloria', mod(d.gloria, c.g))}${d.spostamento != null ? stat('Spostamento', d.spostamento) : ''}${stat('Danni', c.dmg || 0)}</div>
@@ -4057,14 +4073,14 @@ function mPopHtml() {
     ${row('Guarda le prime carte', mStep('mp-look', Math.min(3, nd), 1, nd), btn('Guarda', 'mLookDeck', {cls: 'alt sm'}))}
     ${row('Riordina le prime carte', mStep('mp-ord', Math.min(3, nd), 1, nd), btn('Riordina', 'mOrderStart', {cls: 'alt sm'}))}
     ${row('Cerca una carta nel mazzo', '', btn('Cerca', 'mSearch', {cls: 'alt sm'}))}
-    ${row('Estrai potere dalla cima', '', btn('Al potere', 'mPowerTop', {cls: 'alt sm'}))}</div><p class="mxp-hint">Doppio tocco sul mazzo: pesca 1 carta.</p>` : '<p class="muted">Il mazzo è vuoto.</p>');
+    ${row('Estrai potere dalla cima', '', btn('Al potere', 'mPowerTop', {cls: 'alt sm'}))}</div><p class="mxp-hint">Doppio tocco sul mazzo: pesca 1 carta.</p><div class="btns see-all">${btn('Vedi tutto', 'mSeeAll', {cls: 'alt', v: 'mazzo'})}</div>` : '<p class="muted">Il mazzo è vuoto.</p>');
   if (P.type === 'disc') return wrap(`Scarti · ${ns}`, ns ? `<div class="mxp-l">
     ${row('Pesca dagli scarti (dalla più recente)', mStep('mp-dd', 1, 1, ns), btn('Pesca', 'mDiscDraw', {cls: 'sm'}))}
     ${row('Guarda le carte', mStep('mp-dl', Math.min(5, ns), 1, ns), btn('Guarda', 'mLookDisc', {cls: 'alt sm'}))}</div>
-    <p class="mxp-hint">${z.scarti.filter(i => mHow(i) === 'scartata').length} scartate · ${z.scarti.filter(i => mHow(i) === 'sconfitta').length} sconfitte · ${z.scarti.filter(i => mHow(i) === 'distrutta').length} distrutte</p>` : '<p class="muted">Non ci sono carte negli scarti.</p>');
+    <p class="mxp-hint">${z.scarti.filter(i => mHow(i) === 'scartata').length} scartate · ${z.scarti.filter(i => mHow(i) === 'sconfitta').length} sconfitte · ${z.scarti.filter(i => mHow(i) === 'distrutta').length} distrutte</p><div class="btns see-all">${btn('Vedi tutto', 'mSeeAll', {cls: 'alt', v: 'scarti'})}</div>` : '<p class="muted">Non ci sono carte negli scarti.</p>');
   if (P.type === 'look') {
     const ids = P.ids.filter(i => M.inst[i]);
-    return wrap(P.src === 'scarti' ? 'Carte negli scarti' : 'Prime carte del mazzo', `<p class="mxp-hint" style="margin-top:0">${P.src === 'scarti' ? 'Dalla più recente. Tocca una carta per le azioni.' : 'Dalla prima (in cima) in poi. Restano nel mazzo in questo ordine.'}</p><div class="mxp-cards">${ids.map((i, k) => `<div class="mxp-c">${P.src === 'scarti' ? `<button class="mxp-cb" data-act="mPopCard" data-v="${i}" aria-label="${esc(mName(i))}">${art(mCard(i), true)}</button>` : art(mCard(i), true)}<b>${P.src === 'scarti' ? `<em class="hw h-${mHow(i)}">${HOWL[mHow(i)]}</em>` : k + 1 + 'ª'}</b><span>${esc(mName(i))}</span></div>`).join('')}</div>`, 'wide');
+    return wrap(P.all ? (P.src === 'scarti' ? 'Tutti gli scarti · ' + ids.length : 'Tutto il mazzo di pesca · ' + ids.length) : P.src === 'scarti' ? 'Carte negli scarti' : 'Prime carte del mazzo', `<p class="mxp-hint" style="margin-top:0">${P.src === 'scarti' ? 'Dalla più recente. Tocca una carta per le azioni.' : 'Dalla prima (in cima) in poi. Restano nel mazzo in questo ordine.'}</p><div class="mxp-cards">${ids.map((i, k) => `<div class="mxp-c">${P.src === 'scarti' ? `<button class="mxp-cb" data-act="mPopCard" data-v="${i}" aria-label="${esc(mName(i))}">${art(mCard(i), true)}</button>` : art(mCard(i), true)}<b>${P.src === 'scarti' ? `<em class="hw h-${mHow(i)}">${HOWL[mHow(i)]}</em>` : k + 1 + 'ª'}</b><span>${esc(mName(i))}</span></div>`).join('')}</div>`, 'wide');
   }
   if (P.type === 'order') {
     const D = [['top', 'In cima'], ['bottom', 'In fondo'], ['potere', 'Nel potere'], ['mano', 'In mano'], ['campo', 'In campo']];
@@ -4126,7 +4142,7 @@ function mPopHtml() {
     else if (zn === 'potere') acts = `<div class="mxp-acts">${a('mExhaust', st.ex ? 'Ripristina' : 'Usa (esaurisci)', ' ')}${a('mToMano', 'Torna in mano')}${a('mToScarti', 'Scarta')}</div>`;
     else if (zn === 'scarti') acts = `<p class="mxp-hint" style="margin-top:0">${HOWL[mHow(i)]}</p><div class="mxp-acts">${a('mToMano', 'Torna in mano', ' ')}${a('mToCampo', 'Metti in campo')}${a('mToTop', 'In cima al mazzo')}${a('mToBottom', 'In fondo al mazzo')}</div>`;
     const inField = zn === 'campo' || zn === 'evocate';
-    return wrap(esc(c.nome || c.code) + infoIco('mcInfo', i), `${inField ? linkBar(linkGroupOwn(i)) : ''}<div class="mxp-card"><div class="mxp-ca${st.ex && zn !== 'mano' ? ' ex' : ''}${c.tipo === 'Luogo' ? ' lu' : ''}" data-act="mZoom" data-v="${esc(st.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta">${art(c, true)}${inField ? mFR(i) : ''}${st.dmg ? dmgBadge(st.dmg) : ''}<span class="mxp-zh">⤢ Ingrandisci</span>${inField ? linkArrows(linkGroupOwn(i), i) : ''}</div><div class="mxp-cm"><div class="lbl">${esc(MZ[zn] || '')}${c.classe ? ' · ' + esc(c.classe) : ''}${c.tipo ? ' · ' + esc(c.tipo) : ''}</div>${stats}${cardInfoHtml(c, inField)}${acts}</div></div>`, 'wide');
+    return wrap(esc(c.nome || c.code) + infoIco('mcInfo', i) + (c.chiarimenti ? noteIco() : ''), `${notePop(c.chiarimenti)}${inField ? linkBar(linkGroupOwn(i)) : ''}<div class="mxp-card"><div class="mxp-ca${st.ex && zn !== 'mano' ? ' ex' : ''}${c.tipo === 'Luogo' ? ' lu' : ''}" data-act="mZoom" data-v="${esc(st.id)}" role="button" tabindex="0" aria-label="Ingrandisci la carta">${art(c, true)}${inField ? mFR(i) : ''}${st.dmg ? dmgBadge(st.dmg) : ''}<span class="mxp-zh">⤢ Ingrandisci</span>${inField ? linkArrows(linkGroupOwn(i), i) : ''}</div><div class="mxp-cm"><div class="lbl">${esc(MZ[zn] || '')}${c.classe ? ' · ' + esc(c.classe) : ''}${c.tipo ? ' · ' + esc(c.tipo) : ''}</div>${stats}${cardInfoHtml(c, inField)}${acts}</div></div>`, 'wide');
   }
   return '';
 }
@@ -4757,6 +4773,8 @@ const ACT = {
       'Duello: ' + nA + ' (F' + af + ') contro il luogo ' + nL + ': ' + toD + ' danni al luogo' + (luDies ? ' (distrutto)' : '') + ', ' + toA + ' a ' + nA + (atkDies ? ' (distrutta)' : ''));
     toast('Duello con ' + nL + ': infliggi ' + toD + ', subisci ' + toA + (luDies ? ' · luogo distrutto' : '') + (atkDies ? ' · ' + nA + ' distrutta' : ''));
   },
+  noteTog() { if (S.mPop) { S.mPop.note = !S.mPop.note; renderAll(); } },
+  mSeeAll(t, v) { const z = M.zones; if (v === 'mazzo') { mPopOpen({type: 'look', src: 'mazzo', all: true, ids: z.mazzo.slice()}); mLog('Guardi tutto il mazzo di pesca'); } else mPopOpen({type: 'look', src: 'scarti', all: true, ids: z.scarti.slice().reverse()}); },
   rcCard(t, v) { const c = ((S.mPop || {}).cards || [])[Number(v)]; if (!c) return; $('#zoom-in').innerHTML = art(xCard(c)); $('#zoom').classList.add('open'); },
   popLink(t) {
     const P = S.mPop, dd = Number(t.dataset.d) || 1; if (!P) return;
